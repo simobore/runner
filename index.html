@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.16 -->
+<!-- RUNNER GPS v6.17 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -823,7 +823,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.16
+        🔧 DIAGNOSTICA GPS v6.17
     </div>
     <div class="grid">
         <div>
@@ -1624,7 +1624,7 @@ function showToast(message) {
 function showScreen(screen) {
 
     /*
-     * v6.16:
+     * v6.17:
      * cambiare schermata NON interrompe mai una corsa in corso.
      * running / GPS / timer / distanza / fase rimangono vivi.
      */
@@ -3242,12 +3242,10 @@ let gpsDiag = {
 let adaptiveSpeedMps = null;
 let adaptiveSource = "—";
 
-// v6.16: stato del ritmo istantaneo
+// v6.17: stato del ritmo istantaneo
 let paceSpeedSamplesV68 = [];
 let paceAverageSpeedV68 = null;
-let instantPaceV616 = null;
-let instantPaceWindowV616 = [];
-let instantPaceWindowStartV616 = null;
+
 let paceWindowStartV68 = null;
 let paceLastUpdateV68 = null;
 
@@ -3556,9 +3554,12 @@ function startRunEngine(
 
     totalDistance = 0;
 
-    instantPaceV616 = null;
-    instantPaceWindowV616 = [];
-    instantPaceWindowStartV616 = null;
+    resetInstantPaceV617();
+    resetDisplayedAveragePaceV617();
+
+    
+    
+    
 
     resetDistanceEngineV615();
 
@@ -3802,9 +3803,14 @@ function updateMovementState(speedMps, now) {
 
 
     if (!isMoving) {
-        instantPaceV616 = null;
-        instantPaceWindowV616 = [];
-        instantPaceWindowStartV616 = null;
+        
+        
+        
+    }
+
+
+    if (!isMoving) {
+        resetInstantPaceV617();
     }
 }
 
@@ -4070,7 +4076,7 @@ function positionReceived(position) {
 
     /*
      * ========================================================
-     * DISTANCE ENGINE v6.16
+     * DISTANCE ENGINE v6.17
      * ========================================================
      *
      * La velocità GPS è la misura primaria.
@@ -4521,134 +4527,124 @@ function getStableInstantSpeedKmh() {
    PACE ENGINE
    ========================= */
 
-function getFilteredPace() {
 
-    /*
-     * v6.16 — UNICA SORGENTE DEL RITMO ISTANTANEO.
-     *
-     * NON legge distanza.
-     * NON legge coordinate.
-     * NON legge ritmo medio.
-     * NON usa alcun vecchio stabilizzatore.
-     *
-     * selectedSpeed è m/s.
-     * -> km/h
-     * -> 10 secondi di campioni
-     * -> media delle VELOCITÀ
-     * -> 60 / km/h
-     * -> min/km
-     */
+/* ============================================================
+   RUNNER v6.17 — INSTANT PACE, REBUILT FROM ZERO
+   ============================================================ */
+let instantPaceV617 = null;
+let instantPaceSamplesV617 = [];
+let instantPaceStartedAtV617 = null;
 
+function resetInstantPaceV617() {
+    instantPaceV617 = null;
+    instantPaceSamplesV617 = [];
+    instantPaceStartedAtV617 = null;
+}
+
+function calculateInstantPaceV617() {
     const now = Date.now();
 
-    const mps =
+    /* ONLY input: the already validated GPS speed, in m/s. */
+    const speedMps =
         Number.isFinite(gpsDiag.selectedSpeed)
             ? gpsDiag.selectedSpeed
             : null;
 
-    if (
-        mps === null ||
-        mps < 0
-    ) {
-        instantPaceV616 = null;
-        instantPaceWindowV616 = [];
-        instantPaceWindowStartV616 = null;
+    if (speedMps === null || speedMps < 0) {
+        resetInstantPaceV617();
         return null;
     }
 
-    const kmh =
-        mps * 3.6;
+    /* One conversion only: m/s -> km/h. */
+    const speedKmh = speedMps * 3.6;
 
-    /*
-     * Sotto 1,2 km/h = fermo.
-     * A fermo il ritmo istantaneo NON deve trascinarsi.
-     */
-    if (kmh < 1.2) {
-        instantPaceV616 = null;
-        instantPaceWindowV616 = [];
-        instantPaceWindowStartV616 = null;
+    /* Below this threshold the athlete is considered stopped. */
+    if (speedKmh < 1.2) {
+        resetInstantPaceV617();
         return null;
     }
 
-    /*
-     * Scarto dei valori impossibili.
-     */
-    if (
-        kmh >= 2.0 &&
-        kmh <= 24.0
-    ) {
-
-        if (
-            instantPaceWindowStartV616 === null
-        ) {
-            instantPaceWindowStartV616 = now;
-        }
-
-        instantPaceWindowV616.push(kmh);
+    /* Reject impossible values. */
+    if (speedKmh < 2.0 || speedKmh > 24.0) {
+        return instantPaceV617;
     }
 
-    /*
-     * Prima lettura solo dopo 10 secondi completi.
-     */
-    if (
-        instantPaceWindowStartV616 === null ||
-        now - instantPaceWindowStartV616 < 10000
-    ) {
-        return instantPaceV616;
+    if (instantPaceStartedAtV617 === null) {
+        instantPaceStartedAtV617 = now;
     }
 
-    const valid =
-        instantPaceWindowV616.filter(
-            v =>
-                Number.isFinite(v) &&
-                v >= 2.0 &&
-                v <= 24.0
-        );
+    instantPaceSamplesV617.push(speedKmh);
 
-    if (valid.length > 0) {
+    /* Wait for a complete 10-second window. */
+    if (now - instantPaceStartedAtV617 < 10000) {
+        return instantPaceV617;
+    }
 
-        const avgKmh =
-            valid.reduce(
-                (sum, v) => sum + v,
-                0
-            ) / valid.length;
+    let sum = 0;
+    let count = 0;
 
+    for (const value of instantPaceSamplesV617) {
         if (
-            Number.isFinite(avgKmh) &&
-            avgKmh >= 2.0 &&
-            avgKmh <= 24.0
+            Number.isFinite(value) &&
+            value >= 2.0 &&
+            value <= 24.0
         ) {
-            /*
-             * QUESTO è l'unico valore canonico.
-             */
-            instantPaceV616 =
-                60 / avgKmh;
+            sum += value;
+            count++;
         }
     }
 
-    instantPaceWindowV616 = [];
-    instantPaceWindowStartV616 = now;
+    if (count > 0) {
+        const averageKmh = sum / count;
 
-    return instantPaceV616;
+        /* seconds/km = 3600 / km/h */
+        instantPaceV617 = 3600 / averageKmh;
+    }
+
+    instantPaceSamplesV617 = [];
+    instantPaceStartedAtV617 = now;
+
+    return instantPaceV617;
 }
 
 
-function getInstantPaceV616() {
-    /*
-     * Display e coach devono leggere SOLO questo valore.
-     */
-    return Number.isFinite(instantPaceV616)
-        ? instantPaceV616
-        : null;
+let displayedAveragePaceV617 = null;
+let lastAveragePaceDisplayUpdateV617 = 0;
+
+function resetDisplayedAveragePaceV617() {
+    displayedAveragePaceV617 = null;
+    lastAveragePaceDisplayUpdateV617 = 0;
+}
+
+function getDisplayedAveragePaceV617() {
+    const now = Date.now();
+    const exact = getAveragePace();
+
+    if (displayedAveragePaceV617 === null) {
+        if (Number.isFinite(exact)) {
+            displayedAveragePaceV617 = exact;
+            lastAveragePaceDisplayUpdateV617 = now;
+        }
+        return displayedAveragePaceV617;
+    }
+
+    if (
+        isMoving &&
+        now - lastAveragePaceDisplayUpdateV617 >= 30000 &&
+        Number.isFinite(exact)
+    ) {
+        displayedAveragePaceV617 = exact;
+        lastAveragePaceDisplayUpdateV617 = now;
+    }
+
+    return displayedAveragePaceV617;
 }
 
 function getAveragePace() {
-
     /*
-     * RITMO MEDIO = tempo attivo / distanza.
-     * Il ritmo istantaneo non entra nel calcolo.
+     * Ritmo medio = tempo attivo / distanza.
+     * Nessun dato del ritmo istantaneo entra qui.
      */
-
     if (
         activeElapsedV69 <= 0 ||
         totalDistance <= 0
@@ -4656,11 +4652,10 @@ function getAveragePace() {
         return null;
     }
 
-    return (
-        activeElapsedV69 /
-        totalDistance
-    );
+    return activeElapsedV69 / totalDistance;
 }
+
+
 
 
 function getSpeed() {
@@ -4740,11 +4735,11 @@ function updateDisplay() {
     updateGpsDiagnostics();
 
     const pace =
-        getFilteredPace();
+        calculateInstantPaceV617();
 
 
     const avgPace =
-        getAveragePace();
+        getDisplayedAveragePaceV617();
 
 
     $("distance").textContent =
@@ -5197,7 +5192,7 @@ function processCoach() {
 
 
     const pace =
-        getFilteredPace();
+        calculateInstantPaceV617();
 
 
     if (
@@ -5673,7 +5668,7 @@ function togglePause() {
 
 let phaseElapsedBeforePause = 0;
 
-// v6.16: tempo attivo usato esclusivamente per il ritmo medio.
+// v6.17: tempo attivo usato esclusivamente per il ritmo medio.
 let activeElapsedV69 = 0;
 let activeClockLastV69 = null;
 
@@ -6509,7 +6504,7 @@ function clearAllData() {
 function updateActiveRunRecoveryV610() {
 
     /*
-     * v6.16:
+     * v6.17:
      * "TORNA ALLA CORSA" è globale e fixed.
      * Non appartiene a Storico: segue l'utente in ogni schermata.
      */
