@@ -2993,8 +2993,32 @@ let elapsed = 0;
 let totalDistance = 0;
 
 let lastPosition = null;
+let lastPositionTime = 0;
 
-let lastPositionTime = null;
+// GPS tracking engine v5
+let movementState = "stopped";
+let movementCandidate = null;
+let movementCandidateSince = 0;
+let gpsRecentSpeeds = [];
+let gpsRecentAccuracy = [];
+let lastGoodPosition = null;
+let lastGoodPositionTime = 0;
+let stationaryAnchor = null;
+
+const GPS_FILTER = {
+    startSpeedKmh: 1.8,
+    stopSpeedKmh: 0.8,
+    startConfirmMs: 1400,
+    stopConfirmMs: 1800,
+    minDistanceMeters: 3.0,
+    maxJumpSpeedKmh: 28,
+    maxAccuracyMeters: 60,
+    speedHistoryMs: 5000,
+    stationaryRadiusMeters: 8,
+    stationaryAccuracyFactor: 0.7
+};
+
+
 
 let gpsSamples = [];
 
@@ -3174,6 +3198,15 @@ function startRunEngine(
 
     totalDistance = 0;
 
+    movementState = "stopped";
+    movementCandidate = null;
+    movementCandidateSince = 0;
+    gpsRecentSpeeds = [];
+    gpsRecentAccuracy = [];
+    lastGoodPosition = null;
+    lastGoodPositionTime = 0;
+    stationaryAnchor = null;
+
     lastPosition = null;
 
     lastPositionTime = null;
@@ -3270,54 +3303,37 @@ function startRunEngine(
 
 function startGPS() {
 
-    if (
-        !navigator.geolocation
-    ) {
-
-        $("gps").textContent =
-            "GPS ✕";
-
-        $("gpsStatus").textContent =
-            "● GPS NON SUPPORTATO";
-
-        $("coach").textContent =
-            "Questo browser non supporta la geolocalizzazione.";
-
+    if (!navigator.geolocation) {
+        $("gps").textContent = "GPS ✕";
+        $("gpsStatus").textContent = "● GPS NON SUPPORTATO";
+        $("coach").textContent = "Questo browser non supporta la geolocalizzazione.";
         return;
-
     }
 
+    $("gps").textContent = "GPS…";
+    $("gpsStatus").textContent = "● GPS IN ATTESA";
 
-    $("gps").textContent =
-        "GPS…";
-
-    $("gpsStatus").textContent =
-        "● GPS IN ATTESA";
-
-
-    watchId =
-        navigator.geolocation.watchPosition(
-
-            positionReceived,
-
-            gpsError,
-
-            {
-
-                enableHighAccuracy: true,
-
-                maximumAge: 1000,
-
-                timeout: 15000
-
-            }
-
-        );
-
+    watchId = navigator.geolocation.watchPosition(
+        positionReceived,
+        gpsError,
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        }
+    );
 }
 
 
 function stopGPS() {
+    movementState = "stopped";
+    movementCandidate = null;
+    movementCandidateSince = 0;
+    gpsRecentSpeeds = [];
+    gpsRecentAccuracy = [];
+    lastGoodPosition = null;
+    lastGoodPositionTime = 0;
+
 
     if (
         watchId !== null
@@ -3365,179 +3381,173 @@ function gpsError(error) {
 
 function positionReceived(position) {
 
-    if (
-        !running ||
-        paused
-    ) {
+    if (!running || paused) return;
 
+    const coords = position.coords;
+    const accuracy = Number(coords.accuracy);
+    const lat = Number(coords.latitude);
+    const lon = Number(coords.longitude);
+    const now = Number(position.timestamp) || Date.now();
+
+    if (!isFinite(lat) || !isFinite(lon) || !isFinite(accuracy)) return;
+
+    $("gps").textContent = `GPS ~${Math.round(accuracy)}m`;
+
+    const configuredAccuracy = Number(settings.gpsAccuracy) || 30;
+    const allowedAccuracy = Math.max(
+        configuredAccuracy,
+        Math.min(GPS_FILTER.maxAccuracyMeters, accuracy * 1.5)
+    );
+
+    // Very poor fixes are displayed but never used to move the track.
+    if (accuracy > GPS_FILTER.maxAccuracyMeters || accuracy > allowedAccuracy) {
+        $("gpsStatus").textContent = "● GPS DEBOLE";
         return;
-
     }
 
+    let meters = 0;
+    let seconds = 0;
+    let calculatedKmh = 0;
 
-    const accuracy =
-        Number(
-            position.coords.accuracy
+    if (lastPosition && lastPositionTime) {
+        meters = calculateDistance(lastPosition.lat, lastPosition.lon, lat, lon);
+        seconds = Math.max(0, (now - lastPositionTime) / 1000);
+        if (seconds > 0) calculatedKmh = meters / seconds * 3.6;
+    }
+
+    const deviceKmh =
+        Number.isFinite(Number(coords.speed)) && Number(coords.speed) >= 0
+            ? Number(coords.speed) * 3.6
+            : null;
+
+    // GPS speed is usually better than dividing two noisy coordinates.
+    let rawKmh = deviceKmh !== null ? deviceKmh : calculatedKmh;
+
+    // Reject impossible coordinate jumps.
+    const jumpKmh = seconds > 0 ? calculatedKmh : 0;
+    if (seconds > 0 && jumpKmh > GPS_FILTER.maxJumpSpeedKmh) {
+        meters = 0;
+        rawKmh = 0;
+    }
+
+    // Short robust median window: fast enough for a coach, stable enough for GPS noise.
+    if (isFinite(rawKmh) && rawKmh >= 0 && rawKmh <= GPS_FILTER.maxJumpSpeedKmh) {
+        gpsRecentSpeeds.push({ speed: rawKmh, time: now });
+        gpsRecentSpeeds = gpsRecentSpeeds.filter(s => now - s.time <= GPS_FILTER.speedHistoryMs);
+    }
+
+    const sortedSpeeds = gpsRecentSpeeds.map(s => s.speed).sort((a,b) => a-b);
+    const speedKmh = sortedSpeeds.length
+        ? sortedSpeeds[Math.floor(sortedSpeeds.length / 2)]
+        : rawKmh;
+
+    gpsRecentAccuracy.push({ accuracy, time: now });
+    gpsRecentAccuracy = gpsRecentAccuracy.filter(s => now - s.time <= 8000);
+
+    const previousState = movementState;
+    updateMovementState(speedKmh, now);
+
+    // On a stop, establish a stationary anchor. GPS wandering around this
+    // anchor is treated as noise rather than distance.
+    if (movementState === "stopped") {
+        if (!stationaryAnchor || previousState !== "stopped") {
+            stationaryAnchor = { lat, lon, accuracy };
+        }
+    }
+
+    // Never count the transition from stopped to moving as distance.
+    if (previousState === "stopped" && movementState === "moving") {
+        lastPosition = { lat, lon };
+        lastPositionTime = now;
+        gpsSamples = [];
+    }
+
+    if (movementState === "moving" && previousState === "moving" && seconds > 0) {
+
+        const minimumDistance = Math.max(
+            GPS_FILTER.minDistanceMeters,
+            Math.min(accuracy * GPS_FILTER.stationaryAccuracyFactor, 6)
         );
 
+        const physicallyPossible =
+            calculatedKmh <= GPS_FILTER.maxJumpSpeedKmh;
 
-    if (
-        settings.gpsFiltering &&
-        accuracy >
-        Number(settings.gpsAccuracy)
-    ) {
-
-        $("gps").textContent =
-            `GPS ~${Math.round(accuracy)}m`;
-
-        return;
-
-    }
-
-
-    const lat =
-        position.coords.latitude;
-
-    const lon =
-        position.coords.longitude;
-
-    const now =
-        Date.now();
-
-
-    if (lastPosition) {
-
-        const meters =
-            calculateDistance(
-                lastPosition.lat,
-                lastPosition.lon,
-                lat,
-                lon
-            );
-
-
-        const seconds =
-            (
-                now -
-                lastPositionTime
-            ) / 1000;
-
-
+        // If movement is real but coordinate displacement is tiny, keep the
+        // speed for pace smoothing but do not manufacture distance.
         if (
-            seconds > 0 &&
-            meters > 1
+            physicallyPossible &&
+            meters >= minimumDistance &&
+            meters <= (GPS_FILTER.maxJumpSpeedKmh / 3.6) * seconds
         ) {
+            totalDistance += meters / 1000;
 
-            const instantSpeed =
-                meters /
-                seconds;
-
-
-            const instantKmh =
-                instantSpeed * 3.6;
-
-
-            let valid =
-                true;
-
-
-            if (
-                settings.gpsFiltering
-            ) {
-
-                if (
-                    meters > 100
-                    &&
-                    seconds < 5
-                ) {
-
-                    valid = false;
-
-                }
-
-
-                if (
-                    instantKmh > 30
-                ) {
-
-                    valid = false;
-
-                }
-
-            }
-
-
-            if (valid) {
-
-                totalDistance +=
-                    meters / 1000;
-
-
-                gpsSamples.push({
-
-                    time: now,
-
-                    distance:
-                        meters / 1000,
-
-                    seconds,
-
-                    speed:
-                        instantSpeed
-
-                });
-
-
-                const maxAge =
-                    Math.max(
-                        10,
-                        Number(
-                            settings.paceWindow
-                        )
-                    ) * 1000;
-
-
-                gpsSamples =
-                    gpsSamples.filter(
-                        sample =>
-                            now -
-                            sample.time
-                            <= maxAge
-                    );
-
-            }
-
+            gpsSamples.push({
+                time: now,
+                distance: meters / 1000,
+                seconds,
+                speed: speedKmh / 3.6
+            });
         }
-
     }
 
+    const maxAge = Math.max(8, Number(settings.paceWindow) || 15) * 1000;
+    gpsSamples = gpsSamples.filter(s => now - s.time <= maxAge);
 
-    lastPosition = {
-        lat,
-        lon
-    };
+    lastPosition = { lat, lon };
+    lastPositionTime = now;
 
-    lastPositionTime =
-        now;
+    if (movementState === "moving") {
+        lastGoodPosition = { lat, lon };
+        lastGoodPositionTime = now;
+        stationaryAnchor = null;
+    }
 
-
-    $("gps").textContent =
-        `GPS ✓ ${Math.round(accuracy)}m`;
-
+    $("gps").textContent = `GPS ✓ ${Math.round(accuracy)}m`;
     $("gpsStatus").textContent =
-        "● GPS ATTIVO";
-
+        movementState === "moving" ? "● GPS IN MOVIMENTO" : "● GPS FERMO";
 
     if (runMode === "free") {
-
         $("coach").textContent =
-            "Registrazione attiva";
-
+            movementState === "moving" ? "Registrazione attiva" : "Fermo";
     }
 
-
     updateDisplay();
+}
 
+
+function updateMovementState(speedKmh, now) {
+
+    const speed = isFinite(speedKmh) ? speedKmh : 0;
+
+    if (movementState === "stopped") {
+        if (speed >= GPS_FILTER.startSpeedKmh) {
+            if (movementCandidate !== "moving") {
+                movementCandidate = "moving";
+                movementCandidateSince = now;
+            }
+            if (now - movementCandidateSince >= GPS_FILTER.startConfirmMs) {
+                movementState = "moving";
+                movementCandidate = null;
+            }
+        } else {
+            movementCandidate = null;
+        }
+        return;
+    }
+
+    if (speed <= GPS_FILTER.stopSpeedKmh) {
+        if (movementCandidate !== "stopped") {
+            movementCandidate = "stopped";
+            movementCandidateSince = now;
+        }
+        if (now - movementCandidateSince >= GPS_FILTER.stopConfirmMs) {
+            movementState = "stopped";
+            movementCandidate = null;
+            gpsRecentSpeeds = [];
+        }
+    } else {
+        movementCandidate = null;
+    }
 }
 
 
@@ -3889,6 +3899,12 @@ function getSpeed() {
    ========================= */
 
 function updateDisplay() {
+
+    if (movementState === "stopped") {
+        $("coach").textContent = "Fermo — ritmo in attesa di movimento";
+        lastCoachState = "stopped";
+        return;
+    }
 
     const pace =
         getFilteredPace();
