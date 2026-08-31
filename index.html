@@ -614,6 +614,21 @@ audio {
     <div style="font-size:28px;">🏃</div>
 </header>
 
+<div class="hero">
+
+    <div class="muted">OBIETTIVO</div>
+
+    <div class="target-big">
+        5 KM
+    </div>
+
+    <div class="muted">
+        Il tuo obiettivo è correre 5 km.
+        Il programma di allenamento lo decidi tu.
+    </div>
+
+</div>
+
 <div class="card">
 
     <div class="muted small">
@@ -2995,7 +3010,7 @@ let totalDistance = 0;
 let lastPosition = null;
 let lastPositionTime = 0;
 
-// GPS tracking engine v5
+// GPS movement filter
 let movementState = "stopped";
 let movementCandidate = null;
 let movementCandidateSince = 0;
@@ -3003,22 +3018,19 @@ let gpsRecentSpeeds = [];
 let gpsRecentAccuracy = [];
 let lastGoodPosition = null;
 let lastGoodPositionTime = 0;
-let stationaryAnchor = null;
 
 const GPS_FILTER = {
-    startSpeedKmh: 1.8,
-    stopSpeedKmh: 0.8,
-    startConfirmMs: 1400,
-    stopConfirmMs: 1800,
-    minDistanceMeters: 3.0,
-    maxJumpSpeedKmh: 28,
-    maxAccuracyMeters: 60,
-    speedHistoryMs: 5000,
-    stationaryRadiusMeters: 8,
-    stationaryAccuracyFactor: 0.7
+    startSpeedKmh: 2.0,
+    stopSpeedKmh: 1.0,
+    startConfirmMs: 1800,
+    stopConfirmMs: 2200,
+    minDistanceMeters: 3,
+    maxJumpSpeedKmh: 25,
+    maxUsefulAccuracyMeters: 50,
+    speedWindow: 5
 };
 
-
+let lastPositionTime = null;
 
 let gpsSamples = [];
 
@@ -3198,15 +3210,6 @@ function startRunEngine(
 
     totalDistance = 0;
 
-    movementState = "stopped";
-    movementCandidate = null;
-    movementCandidateSince = 0;
-    gpsRecentSpeeds = [];
-    gpsRecentAccuracy = [];
-    lastGoodPosition = null;
-    lastGoodPositionTime = 0;
-    stationaryAnchor = null;
-
     lastPosition = null;
 
     lastPositionTime = null;
@@ -3303,25 +3306,50 @@ function startRunEngine(
 
 function startGPS() {
 
-    if (!navigator.geolocation) {
-        $("gps").textContent = "GPS ✕";
-        $("gpsStatus").textContent = "● GPS NON SUPPORTATO";
-        $("coach").textContent = "Questo browser non supporta la geolocalizzazione.";
+    if (
+        !navigator.geolocation
+    ) {
+
+        $("gps").textContent =
+            "GPS ✕";
+
+        $("gpsStatus").textContent =
+            "● GPS NON SUPPORTATO";
+
+        $("coach").textContent =
+            "Questo browser non supporta la geolocalizzazione.";
+
         return;
+
     }
 
-    $("gps").textContent = "GPS…";
-    $("gpsStatus").textContent = "● GPS IN ATTESA";
 
-    watchId = navigator.geolocation.watchPosition(
-        positionReceived,
-        gpsError,
-        {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 10000
-        }
-    );
+    $("gps").textContent =
+        "GPS…";
+
+    $("gpsStatus").textContent =
+        "● GPS IN ATTESA";
+
+
+    watchId =
+        navigator.geolocation.watchPosition(
+
+            positionReceived,
+
+            gpsError,
+
+            {
+
+                enableHighAccuracy: true,
+
+                maximumAge: 1000,
+
+                timeout: 15000
+
+            }
+
+        );
+
 }
 
 
@@ -3381,134 +3409,188 @@ function gpsError(error) {
 
 function positionReceived(position) {
 
-    if (!running || paused) return;
+    if (!running || paused) {
+        return;
+    }
 
     const coords = position.coords;
     const accuracy = Number(coords.accuracy);
     const lat = Number(coords.latitude);
     const lon = Number(coords.longitude);
-    const now = Number(position.timestamp) || Date.now();
+    const now = Date.now();
 
-    if (!isFinite(lat) || !isFinite(lon) || !isFinite(accuracy)) return;
-
-    $("gps").textContent = `GPS ~${Math.round(accuracy)}m`;
-
-    const configuredAccuracy = Number(settings.gpsAccuracy) || 30;
-    const allowedAccuracy = Math.max(
-        configuredAccuracy,
-        Math.min(GPS_FILTER.maxAccuracyMeters, accuracy * 1.5)
-    );
-
-    // Very poor fixes are displayed but never used to move the track.
-    if (accuracy > GPS_FILTER.maxAccuracyMeters || accuracy > allowedAccuracy) {
-        $("gpsStatus").textContent = "● GPS DEBOLE";
+    if (
+        !isFinite(lat) ||
+        !isFinite(lon) ||
+        !isFinite(accuracy)
+    ) {
         return;
     }
 
-    let meters = 0;
+    $("gps").textContent =
+        `GPS ~${Math.round(accuracy)}m`;
+
+    // Reject clearly unreliable fixes for distance/pace calculations.
+    if (
+        settings.gpsFiltering &&
+        accuracy > Number(settings.gpsAccuracy)
+    ) {
+        $("gpsStatus").textContent =
+            "● GPS DEBOLE";
+
+        updateMovementState(0, now);
+
+        if (movementState === "stopped") {
+            $("coach").textContent = "Fermo — GPS in acquisizione";
+        }
+
+        return;
+    }
+
+    let calculatedSpeedKmh = 0;
+    let distanceMeters = 0;
     let seconds = 0;
-    let calculatedKmh = 0;
 
     if (lastPosition && lastPositionTime) {
-        meters = calculateDistance(lastPosition.lat, lastPosition.lon, lat, lon);
-        seconds = Math.max(0, (now - lastPositionTime) / 1000);
-        if (seconds > 0) calculatedKmh = meters / seconds * 3.6;
-    }
 
-    const deviceKmh =
-        Number.isFinite(Number(coords.speed)) && Number(coords.speed) >= 0
-            ? Number(coords.speed) * 3.6
-            : null;
+        distanceMeters =
+            calculateDistance(
+                lastPosition.lat,
+                lastPosition.lon,
+                lat,
+                lon
+            );
 
-    // GPS speed is usually better than dividing two noisy coordinates.
-    let rawKmh = deviceKmh !== null ? deviceKmh : calculatedKmh;
+        seconds =
+            (now - lastPositionTime) / 1000;
 
-    // Reject impossible coordinate jumps.
-    const jumpKmh = seconds > 0 ? calculatedKmh : 0;
-    if (seconds > 0 && jumpKmh > GPS_FILTER.maxJumpSpeedKmh) {
-        meters = 0;
-        rawKmh = 0;
-    }
-
-    // Short robust median window: fast enough for a coach, stable enough for GPS noise.
-    if (isFinite(rawKmh) && rawKmh >= 0 && rawKmh <= GPS_FILTER.maxJumpSpeedKmh) {
-        gpsRecentSpeeds.push({ speed: rawKmh, time: now });
-        gpsRecentSpeeds = gpsRecentSpeeds.filter(s => now - s.time <= GPS_FILTER.speedHistoryMs);
-    }
-
-    const sortedSpeeds = gpsRecentSpeeds.map(s => s.speed).sort((a,b) => a-b);
-    const speedKmh = sortedSpeeds.length
-        ? sortedSpeeds[Math.floor(sortedSpeeds.length / 2)]
-        : rawKmh;
-
-    gpsRecentAccuracy.push({ accuracy, time: now });
-    gpsRecentAccuracy = gpsRecentAccuracy.filter(s => now - s.time <= 8000);
-
-    const previousState = movementState;
-    updateMovementState(speedKmh, now);
-
-    // On a stop, establish a stationary anchor. GPS wandering around this
-    // anchor is treated as noise rather than distance.
-    if (movementState === "stopped") {
-        if (!stationaryAnchor || previousState !== "stopped") {
-            stationaryAnchor = { lat, lon, accuracy };
+        if (seconds > 0) {
+            calculatedSpeedKmh =
+                (distanceMeters / seconds) * 3.6;
         }
     }
 
-    // Never count the transition from stopped to moving as distance.
-    if (previousState === "stopped" && movementState === "moving") {
-        lastPosition = { lat, lon };
-        lastPositionTime = now;
-        gpsSamples = [];
+    // Prefer the device-provided GPS speed when available.
+    const reportedSpeedKmh =
+        Number.isFinite(Number(coords.speed)) &&
+        Number(coords.speed) >= 0
+            ? Number(coords.speed) * 3.6
+            : null;
+
+    let speedKmh =
+        reportedSpeedKmh !== null
+            ? reportedSpeedKmh
+            : calculatedSpeedKmh;
+
+    // Reject physically implausible jumps.
+    if (
+        seconds > 0 &&
+        calculatedSpeedKmh > GPS_FILTER.maxJumpSpeedKmh
+    ) {
+        speedKmh = 0;
+        distanceMeters = 0;
     }
 
-    if (movementState === "moving" && previousState === "moving" && seconds > 0) {
+    // Smooth speed over recent valid samples.
+    if (
+        speedKmh >= 0 &&
+        speedKmh <= GPS_FILTER.maxJumpSpeedKmh
+    ) {
+        gpsRecentSpeeds.push({
+            speed: speedKmh,
+            time: now
+        });
 
-        const minimumDistance = Math.max(
-            GPS_FILTER.minDistanceMeters,
-            Math.min(accuracy * GPS_FILTER.stationaryAccuracyFactor, 6)
-        );
+        gpsRecentSpeeds =
+            gpsRecentSpeeds.filter(
+                sample => now - sample.time <= 6000
+            );
 
-        const physicallyPossible =
-            calculatedKmh <= GPS_FILTER.maxJumpSpeedKmh;
+        const speeds =
+            gpsRecentSpeeds.map(sample => sample.speed);
 
-        // If movement is real but coordinate displacement is tiny, keep the
-        // speed for pace smoothing but do not manufacture distance.
-        if (
-            physicallyPossible &&
-            meters >= minimumDistance &&
-            meters <= (GPS_FILTER.maxJumpSpeedKmh / 3.6) * seconds
-        ) {
-            totalDistance += meters / 1000;
+        if (speeds.length) {
+            const sorted = [...speeds].sort((a, b) => a - b);
+            speedKmh =
+                sorted[Math.floor(sorted.length / 2)];
+        }
+    }
+
+    updateMovementState(speedKmh, now);
+
+    // Distance is accumulated only while the movement filter
+    // considers the user genuinely moving.
+    if (
+        movementState === "moving" &&
+        seconds > 0 &&
+        distanceMeters >= GPS_FILTER.minDistanceMeters &&
+        distanceMeters <=
+            (GPS_FILTER.maxJumpSpeedKmh / 3.6) * seconds
+    ) {
+
+        // When accuracy is poor, require a little more displacement
+        // to avoid GPS drift becoming real distance.
+        const minimumDistance =
+            Math.max(
+                GPS_FILTER.minDistanceMeters,
+                Math.min(accuracy * 0.25, 8)
+            );
+
+        if (distanceMeters >= minimumDistance) {
+
+            totalDistance +=
+                distanceMeters / 1000;
 
             gpsSamples.push({
                 time: now,
-                distance: meters / 1000,
-                seconds,
+                distance: distanceMeters / 1000,
+                seconds: seconds,
                 speed: speedKmh / 3.6
             });
         }
     }
 
-    const maxAge = Math.max(8, Number(settings.paceWindow) || 15) * 1000;
-    gpsSamples = gpsSamples.filter(s => now - s.time <= maxAge);
+    // Keep the pace window clean.
+    const maxAge =
+        Math.max(
+            8,
+            Number(settings.paceWindow)
+        ) * 1000;
 
-    lastPosition = { lat, lon };
+    gpsSamples =
+        gpsSamples.filter(
+            sample =>
+                now - sample.time <= maxAge
+        );
+
+    lastPosition = {
+        lat,
+        lon
+    };
+
     lastPositionTime = now;
 
     if (movementState === "moving") {
-        lastGoodPosition = { lat, lon };
+        lastGoodPosition = {
+            lat,
+            lon
+        };
         lastGoodPositionTime = now;
-        stationaryAnchor = null;
     }
 
-    $("gps").textContent = `GPS ✓ ${Math.round(accuracy)}m`;
+    $("gps").textContent =
+        `GPS ✓ ${Math.round(accuracy)}m`;
+
     $("gpsStatus").textContent =
-        movementState === "moving" ? "● GPS IN MOVIMENTO" : "● GPS FERMO";
+        movementState === "moving"
+            ? "● GPS IN MOVIMENTO"
+            : "● GPS FERMO";
 
     if (runMode === "free") {
         $("coach").textContent =
-            movementState === "moving" ? "Registrazione attiva" : "Fermo";
+            movementState === "moving"
+                ? "Registrazione attiva"
+                : "Fermo";
     }
 
     updateDisplay();
@@ -3517,36 +3599,65 @@ function positionReceived(position) {
 
 function updateMovementState(speedKmh, now) {
 
-    const speed = isFinite(speedKmh) ? speedKmh : 0;
+    const speed =
+        Number.isFinite(speedKmh)
+            ? speedKmh
+            : 0;
+
+    const movingThreshold =
+        GPS_FILTER.startSpeedKmh;
+
+    const stoppedThreshold =
+        GPS_FILTER.stopSpeedKmh;
 
     if (movementState === "stopped") {
-        if (speed >= GPS_FILTER.startSpeedKmh) {
-            if (movementCandidate !== "moving") {
+
+        if (speed >= movingThreshold) {
+
+            if (
+                movementCandidate !== "moving"
+            ) {
                 movementCandidate = "moving";
                 movementCandidateSince = now;
             }
-            if (now - movementCandidateSince >= GPS_FILTER.startConfirmMs) {
+
+            if (
+                now - movementCandidateSince >=
+                GPS_FILTER.startConfirmMs
+            ) {
                 movementState = "moving";
                 movementCandidate = null;
             }
-        } else {
+        }
+        else {
             movementCandidate = null;
         }
+
         return;
     }
 
-    if (speed <= GPS_FILTER.stopSpeedKmh) {
-        if (movementCandidate !== "stopped") {
-            movementCandidate = "stopped";
-            movementCandidateSince = now;
+    if (movementState === "moving") {
+
+        if (speed <= stoppedThreshold) {
+
+            if (
+                movementCandidate !== "stopped"
+            ) {
+                movementCandidate = "stopped";
+                movementCandidateSince = now;
+            }
+
+            if (
+                now - movementCandidateSince >=
+                GPS_FILTER.stopConfirmMs
+            ) {
+                movementState = "stopped";
+                movementCandidate = null;
+            }
         }
-        if (now - movementCandidateSince >= GPS_FILTER.stopConfirmMs) {
-            movementState = "stopped";
+        else {
             movementCandidate = null;
-            gpsRecentSpeeds = [];
         }
-    } else {
-        movementCandidate = null;
     }
 }
 
@@ -3899,12 +4010,6 @@ function getSpeed() {
    ========================= */
 
 function updateDisplay() {
-
-    if (movementState === "stopped") {
-        $("coach").textContent = "Fermo — ritmo in attesa di movimento";
-        lastCoachState = "stopped";
-        return;
-    }
 
     const pace =
         getFilteredPace();
@@ -5659,5 +5764,1160 @@ if ("serviceWorker" in navigator) {
 }
 </script> 
 
+<script>
+/* =========================================================
+   RUNNER — OBIETTIVI PERSONALIZZABILI
+   Modulo indipendente: non modifica il motore esistente
+   ========================================================= */
+
+(function () {
+
+    const GOAL_STORAGE_KEY = "runner_goal_v1";
+
+    const defaultGoal = {
+        type: "distance",
+        distance: 5,
+        targetTime: "",
+        targetPace: "",
+        date: "",
+        notes: ""
+    };
+
+    function loadGoal() {
+        try {
+            const saved =
+                localStorage.getItem(
+                    GOAL_STORAGE_KEY
+                );
+
+            if (!saved) {
+                return {
+                    ...defaultGoal
+                };
+            }
+
+            return {
+                ...defaultGoal,
+                ...JSON.parse(saved)
+            };
+
+        } catch (error) {
+
+            return {
+                ...defaultGoal
+            };
+
+        }
+    }
+
+
+    function saveGoal(goal) {
+
+        localStorage.setItem(
+            GOAL_STORAGE_KEY,
+            JSON.stringify(goal)
+        );
+
+    }
+
+
+    function getGoal() {
+        return loadGoal();
+    }
+
+
+    function formatGoalTime(value) {
+
+        if (!value) {
+            return "";
+        }
+
+        return value;
+
+    }
+
+
+    function formatGoalPace(value) {
+
+        if (!value) {
+            return "";
+        }
+
+        return value + " min/km";
+
+    }
+
+
+    function goalMainText(goal) {
+
+        if (goal.type === "distance") {
+
+            return (
+                Number(goal.distance || 0)
+                .toFixed(1)
+                +
+                " KM"
+            );
+
+        }
+
+
+        if (goal.type === "time") {
+
+            return goal.targetTime
+                ?
+                goal.targetTime
+                :
+                "TEMPO";
+
+        }
+
+
+        if (goal.type === "pace") {
+
+            return goal.targetPace
+                ?
+                goal.targetPace + " /KM"
+                :
+                "RITMO";
+
+        }
+
+
+        if (goal.type === "race") {
+
+            return (
+                Number(goal.distance || 0)
+                .toFixed(1)
+                +
+                " KM"
+            );
+
+        }
+
+
+        return "NESSUN OBIETTIVO";
+
+    }
+
+
+    function goalDescription(goal) {
+
+        const parts = [];
+
+
+        if (goal.type === "distance") {
+
+            parts.push(
+                "Distanza obiettivo: "
+                +
+                Number(goal.distance || 0)
+                .toFixed(1)
+                +
+                " km"
+            );
+
+        }
+
+
+        if (goal.type === "time") {
+
+            if (goal.targetTime) {
+
+                parts.push(
+                    "Tempo obiettivo: "
+                    +
+                    goal.targetTime
+                );
+
+            }
+
+        }
+
+
+        if (goal.type === "pace") {
+
+            if (goal.targetPace) {
+
+                parts.push(
+                    "Ritmo obiettivo: "
+                    +
+                    goal.targetPace
+                    +
+                    " min/km"
+                );
+
+            }
+
+        }
+
+
+        if (goal.type === "race") {
+
+            parts.push(
+                "Gara: "
+                +
+                Number(goal.distance || 0)
+                .toFixed(1)
+                +
+                " km"
+            );
+
+
+            if (goal.targetTime) {
+
+                parts.push(
+                    "Tempo target: "
+                    +
+                    goal.targetTime
+                );
+
+            }
+
+
+            if (goal.targetPace) {
+
+                parts.push(
+                    "Ritmo target: "
+                    +
+                    goal.targetPace
+                    +
+                    " min/km"
+                );
+
+            }
+
+        }
+
+
+        if (goal.date) {
+
+            const date =
+                new Date(
+                    goal.date + "T00:00:00"
+                );
+
+
+            if (!isNaN(date.getTime())) {
+
+                parts.push(
+                    "Data: "
+                    +
+                    date.toLocaleDateString(
+                        "it-IT"
+                    )
+                );
+
+            }
+
+        }
+
+
+        return parts.join(" · ");
+
+    }
+
+
+    function createGoalScreen() {
+
+        if (
+            document.getElementById(
+                "goalScreen"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const screen =
+            document.createElement(
+                "section"
+            );
+
+
+        screen.id =
+            "goalScreen";
+
+        screen.className =
+            "screen";
+
+
+        screen.innerHTML = `
+
+            <header>
+
+                <h1>
+                    OBIETTIVO
+                </h1>
+
+            </header>
+
+
+            <div class="card">
+
+                <div class="info-box">
+
+                    Il tuo obiettivo è indipendente
+                    dai singoli allenamenti.
+                    Puoi modificarlo quando vuoi.
+
+                </div>
+
+            </div>
+
+
+            <div class="section-title">
+                Tipo di obiettivo
+            </div>
+
+
+            <div class="card">
+
+                <div class="form-group">
+
+                    <label>
+                        Cosa vuoi raggiungere?
+                    </label>
+
+                    <select id="goalType">
+
+                        <option value="distance">
+                            Distanza
+                        </option>
+
+                        <option value="time">
+                            Tempo
+                        </option>
+
+                        <option value="pace">
+                            Ritmo
+                        </option>
+
+                        <option value="race">
+                            Gara
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="section-title">
+                Parametri
+            </div>
+
+
+            <div class="card">
+
+                <div
+                    id="goalDistanceGroup"
+                    class="form-group">
+
+                    <label>
+                        Distanza obiettivo · km
+                    </label>
+
+                    <input
+                        id="goalDistance"
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        placeholder="5">
+
+                </div>
+
+
+                <div
+                    id="goalTimeGroup"
+                    class="form-group">
+
+                    <label>
+                        Tempo obiettivo
+                    </label>
+
+                    <input
+                        id="goalTargetTime"
+                        type="time"
+                        step="1">
+
+                </div>
+
+
+                <div
+                    id="goalPaceGroup"
+                    class="form-group">
+
+                    <label>
+                        Ritmo obiettivo · min/km
+                    </label>
+
+                    <input
+                        id="goalTargetPace"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="5:30">
+
+                </div>
+
+
+                <div
+                    id="goalDateGroup"
+                    class="form-group">
+
+                    <label>
+                        Data obiettivo
+                    </label>
+
+                    <input
+                        id="goalDate"
+                        type="date">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Note
+                    </label>
+
+                    <input
+                        id="goalNotes"
+                        type="text"
+                        placeholder="Es. Prima gara 5K">
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="goalPreview"
+                class="card">
+
+            </div>
+
+
+            <button
+                class="primary"
+                onclick="runnerSaveGoal()">
+
+                💾 SALVA OBIETTIVO
+
+            </button>
+
+
+            <button
+                class="secondary mt"
+                onclick="runnerDeleteGoal()">
+
+                🗑 ELIMINA OBIETTIVO
+
+            </button>
+
+        `;
+
+
+        const nav =
+            document.querySelector(
+                ".nav"
+            );
+
+
+        document
+            .querySelector(".app")
+            .insertBefore(
+                screen,
+                nav
+            );
+
+
+        const navButton =
+            document.createElement(
+                "button"
+            );
+
+
+        navButton.dataset.screen =
+            "goalScreen";
+
+
+        navButton.innerHTML =
+            "🎯<br>Obiettivo";
+
+
+        navButton.onclick =
+            function () {
+
+                showScreen(
+                    "goalScreen"
+                );
+
+            };
+
+
+        nav.appendChild(
+            navButton
+        );
+
+
+        document
+            .getElementById(
+                "goalType"
+            )
+            .addEventListener(
+                "change",
+                runnerUpdateGoalUI
+            );
+
+
+        [
+            "goalDistance",
+            "goalTargetTime",
+            "goalTargetPace",
+            "goalDate",
+            "goalNotes"
+        ]
+        .forEach(
+            id => {
+
+                document
+                    .getElementById(id)
+                    .addEventListener(
+                        "input",
+                        runnerPreviewGoal
+                    );
+
+            }
+        );
+
+
+        runnerLoadGoalUI();
+
+    }
+
+
+    function runnerLoadGoalUI() {
+
+        const goal =
+            loadGoal();
+
+
+        document
+            .getElementById(
+                "goalType"
+            )
+            .value =
+            goal.type;
+
+
+        document
+            .getElementById(
+                "goalDistance"
+            )
+            .value =
+            goal.distance || "";
+
+
+        document
+            .getElementById(
+                "goalTargetTime"
+            )
+            .value =
+            goal.targetTime || "";
+
+
+        document
+            .getElementById(
+                "goalTargetPace"
+            )
+            .value =
+            goal.targetPace || "";
+
+
+        document
+            .getElementById(
+                "goalDate"
+            )
+            .value =
+            goal.date || "";
+
+
+        document
+            .getElementById(
+                "goalNotes"
+            )
+            .value =
+            goal.notes || "";
+
+
+        runnerUpdateGoalUI();
+
+    }
+
+
+    function runnerUpdateGoalUI() {
+
+        const type =
+            document
+                .getElementById(
+                    "goalType"
+                )
+                .value;
+
+
+        const distance =
+            document
+                .getElementById(
+                    "goalDistanceGroup"
+                );
+
+
+        const time =
+            document
+                .getElementById(
+                    "goalTimeGroup"
+                );
+
+
+        const pace =
+            document
+                .getElementById(
+                    "goalPaceGroup"
+                );
+
+
+        const date =
+            document
+                .getElementById(
+                    "goalDateGroup"
+                );
+
+
+        distance.style.display =
+            (
+                type === "distance"
+                ||
+                type === "race"
+            )
+            ?
+            "block"
+            :
+            "none";
+
+
+        time.style.display =
+            (
+                type === "time"
+                ||
+                type === "race"
+            )
+            ?
+            "block"
+            :
+            "none";
+
+
+        pace.style.display =
+            (
+                type === "pace"
+                ||
+                type === "race"
+            )
+            ?
+            "block"
+            :
+            "none";
+
+
+        date.style.display =
+            (
+                type === "race"
+            )
+            ?
+            "block"
+            :
+            "none";
+
+
+        runnerPreviewGoal();
+
+    }
+
+
+    function runnerPreviewGoal() {
+
+        const goal = {
+
+            type:
+                document
+                    .getElementById(
+                        "goalType"
+                    )
+                    .value,
+
+            distance:
+                Number(
+                    document
+                        .getElementById(
+                            "goalDistance"
+                        )
+                        .value
+                ) || 0,
+
+            targetTime:
+                document
+                    .getElementById(
+                        "goalTargetTime"
+                    )
+                    .value,
+
+            targetPace:
+                document
+                    .getElementById(
+                        "goalTargetPace"
+                    )
+                    .value,
+
+            date:
+                document
+                    .getElementById(
+                        "goalDate"
+                    )
+                    .value,
+
+            notes:
+                document
+                    .getElementById(
+                        "goalNotes"
+                    )
+                    .value
+
+        };
+
+
+        const preview =
+            document
+                .getElementById(
+                    "goalPreview"
+                );
+
+
+        preview.innerHTML = `
+
+            <div class="muted small">
+                ANTEPRIMA OBIETTIVO
+            </div>
+
+            <div
+                style="
+                    font-size:32px;
+                    font-weight:900;
+                    margin:6px 0;">
+                ${escapeHTML(
+                    goalMainText(goal)
+                )}
+            </div>
+
+            <div class="muted">
+
+                ${escapeHTML(
+                    goalDescription(goal)
+                )}
+
+            </div>
+
+            ${
+                goal.notes
+                ?
+                `
+                <div
+                    class="muted small"
+                    style="margin-top:8px;">
+                    ${escapeHTML(
+                        goal.notes
+                    )}
+                </div>
+                `
+                :
+                ""
+            }
+
+        `;
+
+    }
+
+
+    window.runnerSaveGoal =
+        function () {
+
+            const goal = {
+
+                type:
+                    document
+                        .getElementById(
+                            "goalType"
+                        )
+                        .value,
+
+                distance:
+                    Number(
+                        document
+                            .getElementById(
+                                "goalDistance"
+                            )
+                            .value
+                    ) || 0,
+
+                targetTime:
+                    document
+                        .getElementById(
+                            "goalTargetTime"
+                        )
+                        .value,
+
+                targetPace:
+                    document
+                        .getElementById(
+                            "goalTargetPace"
+                        )
+                        .value
+                        .trim(),
+
+                date:
+                    document
+                        .getElementById(
+                            "goalDate"
+                        )
+                        .value,
+
+                notes:
+                    document
+                        .getElementById(
+                            "goalNotes"
+                        )
+                        .value
+                        .trim()
+
+            };
+
+
+            if (
+                goal.type === "distance"
+                ||
+                goal.type === "race"
+            ) {
+
+                if (
+                    goal.distance <= 0
+                ) {
+
+                    showToast(
+                        "Inserisci una distanza valida."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            if (
+                goal.type === "time"
+                ||
+                goal.type === "race"
+            ) {
+
+                if (
+                    !goal.targetTime
+                ) {
+
+                    showToast(
+                        "Inserisci il tempo obiettivo."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            if (
+                goal.type === "pace"
+                ||
+                goal.type === "race"
+            ) {
+
+                if (
+                    !goal.targetPace
+                ) {
+
+                    showToast(
+                        "Inserisci il ritmo obiettivo."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            saveGoal(
+                goal
+            );
+
+
+            runnerUpdateHome();
+
+
+            showToast(
+                "Obiettivo salvato."
+            );
+
+        };
+
+
+    window.runnerDeleteGoal =
+        function () {
+
+            if (
+                !confirm(
+                    "Eliminare l'obiettivo?"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            localStorage.removeItem(
+                GOAL_STORAGE_KEY
+            );
+
+
+            runnerLoadGoalUI();
+
+
+            runnerUpdateHome();
+
+
+            showToast(
+                "Obiettivo eliminato."
+            );
+
+        };
+
+
+    function runnerUpdateHome() {
+
+        const goal =
+            loadGoal();
+
+
+        const hero =
+            document.querySelector(
+                ".hero"
+            );
+
+
+        if (!hero) {
+            return;
+        }
+
+
+        const target =
+            hero.querySelector(
+                ".target-big"
+            );
+
+
+        if (target) {
+
+            target.textContent =
+                goalMainText(
+                    goal
+                );
+
+        }
+
+
+        const description =
+            hero.querySelector(
+                ".muted:last-child"
+            );
+
+
+        if (description) {
+
+            const text =
+                goal.type === "distance"
+                ?
+                "Obiettivo personale di distanza."
+                :
+                goal.type === "time"
+                ?
+                "Obiettivo personale di tempo."
+                :
+                goal.type === "pace"
+                ?
+                "Obiettivo personale di ritmo."
+                :
+                "Obiettivo gara personalizzato.";
+
+
+            description.textContent =
+                text;
+
+        }
+
+
+        let goalCard =
+            document.getElementById(
+                "homeGoalDetails"
+            );
+
+
+        if (!goalCard) {
+
+            goalCard =
+                document.createElement(
+                    "div"
+                );
+
+            goalCard.id =
+                "homeGoalDetails";
+
+            goalCard.className =
+                "card";
+
+
+            const heroElement =
+                document.querySelector(
+                    ".hero"
+                );
+
+
+            heroElement
+                .insertAdjacentElement(
+                    "afterend",
+                    goalCard
+                );
+
+        }
+
+
+        goalCard.innerHTML = `
+
+            <div class="list-row">
+
+                <div>
+
+                    <div class="muted small">
+                        OBIETTIVO ATTUALE
+                    </div>
+
+                    <div
+                        style="
+                            font-size:18px;
+                            font-weight:850;
+                            margin-top:5px;">
+                        ${escapeHTML(
+                            goalMainText(goal)
+                        )}
+                    </div>
+
+                </div>
+
+                <button
+                    class="icon-btn"
+                    onclick="
+                        showScreen(
+                            'goalScreen'
+                        )">
+                    MODIFICA
+                </button>
+
+            </div>
+
+            <div
+                class="muted small"
+                style="margin-top:8px;">
+
+                ${escapeHTML(
+                    goalDescription(goal)
+                )}
+
+            </div>
+
+        `;
+
+    }
+
+
+    const originalInit =
+        window.init;
+
+
+    window.init =
+        function () {
+
+            if (
+                typeof originalInit ===
+                "function"
+            ) {
+
+                originalInit();
+
+            }
+
+
+            createGoalScreen();
+            runnerUpdateHome();
+
+        };
+
+
+    /*
+       Poiché init() è già stato chiamato
+       dal codice originale prima che questo
+       modulo venga caricato, eseguiamo anche
+       qui l'inizializzazione immediata.
+    */
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                createGoalScreen();
+                runnerUpdateHome();
+
+            }
+        );
+
+    }
+
+    else {
+
+        createGoalScreen();
+        runnerUpdateHome();
+
+    }
+
+})();
+</script>
+      
 </body>
 </html>
