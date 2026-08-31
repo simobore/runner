@@ -778,6 +778,44 @@ audio {
     ● GPS IN ATTESA
 </div>
 
+<div id="gpsDiagnostics"
+     class="card"
+     style="margin-top:12px;font-size:12px;">
+    <div style="font-weight:850;margin-bottom:9px;">DIAGNOSTICA GPS v6.3</div>
+    <div class="grid">
+        <div>
+            <div class="muted small">GPS SPEED</div>
+            <div id="diagRawSpeed">—</div>
+        </div>
+        <div>
+            <div class="muted small">COORD SPEED</div>
+            <div id="diagCoordSpeed">—</div>
+        </div>
+        <div>
+            <div class="muted small">USATA</div>
+            <div id="diagRobustSpeed">—</div>
+        </div>
+        <div>
+            <div class="muted small">DISTANZA FIX</div>
+            <div id="diagDistance">—</div>
+        </div>
+        <div>
+            <div class="muted small">INTERVALLO</div>
+            <div id="diagDt">—</div>
+        </div>
+        <div>
+            <div class="muted small">PRECISIONE</div>
+            <div id="diagAccuracy">—</div>
+        </div>
+    </div>
+    <div style="margin-top:10px;border-top:1px solid #333;padding-top:9px;">
+        <span class="muted">MOVIMENTO:</span>
+        <span id="diagMoving">—</span>
+        <span class="muted" style="margin-left:10px;">CANDIDATO:</span>
+        <span id="diagCandidate">—</span>
+    </div>
+</div>
+
 <div class="run-controls">
 
     <button
@@ -3006,6 +3044,16 @@ let gpsAcceptedPositions = [];
 let gpsLastMovingSpeed = 0;
 let gpsLastReliableTimestamp = 0;
 
+// v6.3 diagnostica: ultimo dato GPS grezzo e velocità derivata dalle coordinate.
+let gpsDiag = {
+    rawSpeed: null,
+    coordinateSpeed: null,
+    robustSpeed: null,
+    meters: null,
+    dt: null,
+    accuracy: null
+};
+
 let paceHistory = [];
 
 let lastPaceAnnouncement = 0;
@@ -3473,6 +3521,14 @@ function positionReceived(position) {
 
     const coordinateSpeed = meters / dt;
 
+    // v6.3: registriamo separatamente ciò che arriva dal GPS e ciò che
+    // ricaviamo dalle coordinate, prima di qualunque filtro.
+    gpsDiag.rawSpeed = deviceSpeed;
+    gpsDiag.coordinateSpeed = coordinateSpeed;
+    gpsDiag.meters = meters;
+    gpsDiag.dt = dt;
+    gpsDiag.accuracy = accuracy;
+
     // Un salto non può essere trasformato in distanza reale. Se il GPS
     // rimane molto tempo senza fix, concediamo più spazio, ma mai oltre una
     // velocità realistica per una corsa amatoriale.
@@ -3523,6 +3579,8 @@ function positionReceived(position) {
     const robustSpeed = recentSpeeds.length
         ? median(recentSpeeds)
         : speedForMovement;
+
+    gpsDiag.robustSpeed = robustSpeed;
 
     updateMovementState(robustSpeed, timestamp);
 
@@ -3917,7 +3975,66 @@ function getSpeed() {
    DISPLAY
    ========================= */
 
+function updateGpsDiagnostics() {
+
+    const fmt = (value, digits = 2) =>
+        Number.isFinite(value) ? value.toFixed(digits) : "—";
+
+    $("diagRawSpeed").textContent =
+        gpsDiag.rawSpeed !== null
+            ? `${fmt(gpsDiag.rawSpeed * 3.6, 2)} km/h`
+            : "null";
+
+    $("diagCoordSpeed").textContent =
+        Number.isFinite(gpsDiag.coordinateSpeed)
+            ? `${fmt(gpsDiag.coordinateSpeed * 3.6, 2)} km/h`
+            : "—";
+
+    $("diagRobustSpeed").textContent =
+        Number.isFinite(gpsDiag.robustSpeed)
+            ? `${fmt(gpsDiag.robustSpeed * 3.6, 2)} km/h`
+            : "—";
+
+    $("diagDistance").textContent =
+        Number.isFinite(gpsDiag.meters)
+            ? `${fmt(gpsDiag.meters, 1)} m`
+            : "—";
+
+    $("diagDt").textContent =
+        Number.isFinite(gpsDiag.dt)
+            ? `${fmt(gpsDiag.dt, 2)} s`
+            : "—";
+
+    $("diagAccuracy").textContent =
+        Number.isFinite(gpsDiag.accuracy)
+            ? `${Math.round(gpsDiag.accuracy)} m`
+            : "—";
+
+    $("diagMoving").textContent =
+        isMoving ? "SÌ" : "NO";
+
+    let candidate = "—";
+
+    if (movementCandidateSince) {
+        const age = Math.max(
+            0,
+            (Date.now() - movementCandidateSince) / 1000
+        );
+        candidate = `partenza ${age.toFixed(1)} s`;
+    } else if (stationaryCandidateSince) {
+        const age = Math.max(
+            0,
+            (Date.now() - stationaryCandidateSince) / 1000
+        );
+        candidate = `arresto ${age.toFixed(1)} s`;
+    }
+
+    $("diagCandidate").textContent = candidate;
+}
+
 function updateDisplay() {
+
+    updateGpsDiagnostics();
 
     const pace =
         getFilteredPace();
