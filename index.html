@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.1 -->
+<!-- RUNNER GPS v6.2 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -714,7 +714,7 @@ audio {
 </div>
 
 <div class="unit">
-    min/km · ritmo GPS filtrato
+    min/km · ritmo GPS istantaneo
 </div>
 
 <div class="grid" style="margin-top:25px;">
@@ -3368,7 +3368,7 @@ function updateMovementState(speedMps, now) {
         stationaryCandidateSince = 0;
         if (!isMoving) {
             if (!movementCandidateSince) movementCandidateSince = now;
-            if (now - movementCandidateSince >= 1400) {
+            if (now - movementCandidateSince >= 600) {
                 isMoving = true;
             }
         }
@@ -3512,7 +3512,7 @@ function positionReceived(position) {
         ...current,
         speed: speedForMovement
     });
-    if (gpsPositionHistory.length > 7) {
+    if (gpsPositionHistory.length > 3) {
         gpsPositionHistory.shift();
     }
 
@@ -3842,60 +3842,32 @@ function paceToSeconds(value) {
 
 function getFilteredPace() {
 
-    if (
-        gpsSamples.length < 2
-    ) {
+    // v6.2: passo ISTANTANEO, derivato dalla velocità GPS corrente.
+    // Non usa più la finestra paceWindow, che resta disponibile per altre logiche.
+    const speedMps = getInstantaneousSpeedMps();
 
+    if (!(speedMps > 0)) {
         return null;
-
     }
 
+    return 1000 / speedMps;
 
-    let totalMeters = 0;
-    let totalSeconds = 0;
-
-
-    gpsSamples.forEach(
-        sample => {
-
-            totalMeters +=
-                sample.distance * 1000;
-
-            totalSeconds +=
-                sample.seconds;
-
-        }
-    );
+}
 
 
-    if (
-        totalMeters < 10 ||
-        totalSeconds <= 0
-    ) {
+function getInstantaneousSpeedMps() {
 
-        return null;
+    const latest = gpsPositionHistory.length
+        ? gpsPositionHistory[gpsPositionHistory.length - 1]
+        : null;
 
+    if (latest && Number.isFinite(latest.speed) && latest.speed >= 0) {
+        return latest.speed;
     }
 
-
-    const metersPerSecond =
-        totalMeters /
-        totalSeconds;
-
-
-    if (
-        metersPerSecond <= 0
-    ) {
-
-        return null;
-
-    }
-
-
-    return (
-        1000 /
-        metersPerSecond
-    );
+    return gpsLastMovingSpeed > 0
+        ? gpsLastMovingSpeed
+        : 0;
 
 }
 
@@ -3924,22 +3896,19 @@ function getAveragePace() {
 
 function getSpeed() {
 
-    if (
-        elapsed <= 0 ||
-        totalDistance <= 0
-    ) {
+    // v6.2: velocità ISTANTANEA, non media del tragitto.
+    // Usiamo l'ultimo fix GPS filtrato; fallback sull'ultima velocità affidabile.
+    const latest = gpsPositionHistory.length
+        ? gpsPositionHistory[gpsPositionHistory.length - 1]
+        : null;
 
-        return 0;
-
+    if (latest && Number.isFinite(latest.speed) && latest.speed >= 0) {
+        return latest.speed * 3.6;
     }
 
-
-    return (
-        totalDistance /
-        elapsed
-        *
-        3600
-    );
+    return gpsLastMovingSpeed > 0
+        ? gpsLastMovingSpeed * 3.6
+        : 0;
 
 }
 
