@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.8 -->
+<!-- RUNNER GPS v6.11 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -543,6 +543,45 @@ select:focus {
     padding-top: 12px;
 }
 
+.history-clickable {
+    cursor: pointer;
+}
+
+.history-detail-panel {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #333;
+}
+
+.phase-history-card {
+    background: #242424;
+    border-radius: 15px;
+    padding: 13px;
+    margin-top: 9px;
+}
+
+.phase-history-title {
+    font-weight: 850;
+    margin-bottom: 8px;
+}
+
+.history-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.history-actions button {
+    flex: 1;
+    width: auto;
+    border: none;
+    border-radius: 12px;
+    padding: 10px;
+    background: #333;
+    color: white;
+    font-weight: 750;
+}
+
 .toast {
     position: fixed;
     left: 16px;
@@ -784,7 +823,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.8
+        🔧 DIAGNOSTICA GPS v6.11
     </div>
     <div class="grid">
         <div>
@@ -1584,6 +1623,12 @@ function showToast(message) {
 
 function showScreen(screen) {
 
+    /*
+     * v6.11:
+     * cambiare schermata NON interrompe mai una corsa in corso.
+     * running / GPS / timer / distanza / fase rimangono vivi.
+     */
+
     document
         .querySelectorAll(".screen")
         .forEach(
@@ -1595,46 +1640,38 @@ function showScreen(screen) {
     document
         .querySelectorAll(".nav button")
         .forEach(button => {
-
             button.classList.toggle(
                 "active",
                 button.dataset.screen === screen
             );
-
         });
 
-
     if (screen === "home") {
-
         refreshHome();
-
     }
 
     if (screen === "plans") {
-
         renderPlans();
-
     }
 
     if (screen === "calendarScreen") {
-
         renderCalendar();
         renderScheduleList();
-
     }
 
     if (screen === "history") {
-
         renderHistory();
-
     }
 
     if (screen === "settings") {
-
         loadSettingsUI();
-
     }
 
+    /*
+     * Se c'è una corsa attiva, ogni schermata diversa da RUN mostra
+     * una possibilità esplicita di rientrare nella corsa.
+     */
+    updateActiveRunRecoveryV610();
 }
 
 
@@ -3079,7 +3116,7 @@ let gpsDiag = {
 let adaptiveSpeedMps = null;
 let adaptiveSource = "—";
 
-// v6.8: stato del ritmo istantaneo
+// v6.11: stato del ritmo istantaneo
 let paceSpeedSamplesV68 = [];
 let paceAverageSpeedV68 = null;
 
@@ -3383,6 +3420,9 @@ function startRunEngine(
 
     elapsed = 0;
 
+    activeElapsedV69 = 0;
+    activeClockLastV69 = null;
+
     totalDistance = 0;
 
     lastPosition = null;
@@ -3474,6 +3514,15 @@ function startRunEngine(
 
 
     updateDisplay();
+
+    const recoveryBarV610 =
+        document.getElementById(
+            "activeRunRecoveryV610"
+        );
+
+    if (recoveryBarV610) {
+        recoveryBarV610.remove();
+    }
 
     showScreen("run");
 
@@ -3870,38 +3919,41 @@ function tickRun() {
         !running ||
         paused
     ) {
-
         return;
-
     }
 
+    const now = Date.now();
 
     elapsed =
-        (
-            Date.now() -
-            runStartTime
-        ) / 1000;
+        (now - runStartTime) / 1000;
 
+    if (activeClockLastV69 === null) {
+        activeClockLastV69 = now;
+    } else {
+
+        const dt =
+            now - activeClockLastV69;
+
+        if (
+            isMoving &&
+            dt > 0 &&
+            dt < 5000
+        ) {
+            activeElapsedV69 +=
+                dt / 1000;
+        }
+
+        activeClockLastV69 = now;
+    }
 
     updateDisplay();
 
-
-    if (
-        runMode === "plan"
-    ) {
-
+    if (runMode === "plan") {
         processPhase();
-
         processCoach();
-
-    }
-
-    else {
-
+    } else {
         processFreeRunAnnouncements();
-
     }
-
 }
 
 
@@ -4133,15 +4185,12 @@ function getStableInstantPace() {
 function getFilteredPace() {
 
     /*
-     * v6.8
-     *
-     * Il Coach riceve un ritmo derivato dalla VELOCITÀ:
-     *   1. prendiamo la velocità selezionata;
-     *   2. scartiamo i fix impossibili;
-     *   3. facciamo la media temporale delle velocità valide;
-     *   4. convertiamo la velocità media in min/km.
-     *
-     * Non facciamo la media di valori di ritmo.
+     * v6.11:
+     * selectedSpeed è in m/s.
+     * 1) conversione in km/h;
+     * 2) eliminazione valori impossibili;
+     * 3) media temporale della VELOCITÀ;
+     * 4) conversione della velocità media in min/km.
      */
 
     const now = Date.now();
@@ -4156,68 +4205,72 @@ function getFilteredPace() {
             ? speedMps * 3.6
             : null;
 
-    // Sotto questa soglia siamo considerati fermi.
+    // Sotto 1.2 km/h: fermo, quindi niente ritmo.
     if (
         speedKmh === null ||
-        speedKmh < STOP_SPEED_KMH_V68
+        speedKmh < 1.2
     ) {
         paceSpeedSamplesV68 = [];
         paceAverageSpeedV68 = null;
         return null;
     }
 
-    // I fix troppo bassi o troppo alti non sono utilizzabili
-    // per il ritmo, ma non cancellano i campioni validi recenti.
+    // Valori plausibili per la corsa. Quelli fuori non entrano nella media.
+    const minValidKmh = 2.0;
+    const maxValidKmh = 24.0;
+
     if (
-        Number.isFinite(speedKmh) &&
-        speedKmh >= PACE_MIN_VALID_KMH_V68 &&
-        speedKmh <= PACE_MAX_VALID_KMH_V68
+        speedKmh >= minValidKmh &&
+        speedKmh <= maxValidKmh
     ) {
         paceSpeedSamplesV68.push({
             t: now,
-            speedKmh
+            speedKmh: speedKmh
         });
     }
+
+    const windowMs =
+        Math.max(
+            5000,
+            Number(settings.paceWindow || 20) * 1000
+        );
 
     paceSpeedSamplesV68 =
         paceSpeedSamplesV68.filter(
             sample =>
-                now - sample.t <= PACE_WINDOW_MS_V68
+                now - sample.t <= windowMs
         );
 
-    if (paceSpeedSamplesV68.length > 20) {
+    if (paceSpeedSamplesV68.length > 80) {
         paceSpeedSamplesV68 =
-            paceSpeedSamplesV68.slice(-20);
+            paceSpeedSamplesV68.slice(-80);
     }
 
     if (!paceSpeedSamplesV68.length) {
-        return paceAverageSpeedV68 !== null
-            ? 60 / paceAverageSpeedV68
-            : null;
+        return null;
     }
 
-    // MEDIA DELLA VELOCITÀ.
-    const totalSpeed =
+    // Media DELLE VELOCITÀ.
+    const averageKmh =
         paceSpeedSamplesV68.reduce(
             (sum, sample) =>
                 sum + sample.speedKmh,
             0
-        );
-
-    paceAverageSpeedV68 =
-        totalSpeed /
+        ) /
         paceSpeedSamplesV68.length;
 
     if (
-        !Number.isFinite(paceAverageSpeedV68) ||
-        paceAverageSpeedV68 < PACE_MIN_VALID_KMH_V68 ||
-        paceAverageSpeedV68 > PACE_MAX_VALID_KMH_V68
+        !Number.isFinite(averageKmh) ||
+        averageKmh < minValidKmh ||
+        averageKmh > maxValidKmh
     ) {
         return null;
     }
 
-    // Conversione finale: km/h -> min/km.
-    return 60 / paceAverageSpeedV68;
+    paceAverageSpeedV68 = averageKmh;
+
+    // km/h -> min/km.
+    return 60 / averageKmh;
 }
 
 
@@ -4240,23 +4293,21 @@ function getInstantaneousSpeedMps() {
 
 function getAveragePace() {
 
+    /*
+     * Ritmo medio:
+     *   tempo attivo totale / distanza totale.
+     *
+     * Non usa il ritmo istantaneo.
+     */
+
     if (
-        elapsed <= 0 ||
+        activeElapsedV69 <= 0 ||
         totalDistance <= 0
     ) {
-
         return null;
-
     }
 
-
-    return (
-        elapsed /
-        (totalDistance * 1000)
-        *
-        1000
-    );
-
+    return activeElapsedV69 / totalDistance;
 }
 
 
@@ -5146,6 +5197,11 @@ function togglePause() {
 
 let phaseElapsedBeforePause = 0;
 
+// v6.11: tempo attivo usato esclusivamente per il ritmo medio.
+let activeElapsedV69 = 0;
+let activeClockLastV69 = null;
+
+
 
 /* =========================================================
    FINISH
@@ -5262,12 +5318,74 @@ async function copyChatGPTActivityV68(activity) {
     }
 }
 
+
+function buildPhaseSnapshotV69() {
+
+    if (
+        !Array.isArray(expandedPhases) ||
+        !expandedPhases.length
+    ) {
+        return [];
+    }
+
+    return expandedPhases.map((phase, index) => ({
+        index,
+        name: phase.name || `Fase ${index + 1}`,
+        type: phase.type || "run",
+        repeatIndex:
+            Number(phase.repeatIndex || 1),
+        repeatTotal:
+            Number(phase.repeatTotal || 1),
+        durationType:
+            phase.durationType || "time",
+        targetType:
+            phase.targetType || "none",
+        targetMin:
+            Number.isFinite(phase.targetMin)
+                ? phase.targetMin
+                : null,
+        targetMax:
+            Number.isFinite(phase.targetMax)
+                ? phase.targetMax
+                : null,
+
+        // Questi campi sono presenti per mantenere una struttura
+        // stabile anche per attività con dati storici incompleti.
+        time: 0,
+        elapsed: 0,
+        distance: 0,
+        activeTime: 0,
+        avgPace: null,
+        avgSpeed: null,
+        maxSpeed: null
+    }));
+}
+
 function finishRun() {
 
     if (!running) {
         return;
     }
 
+
+    const finishNowV69 = Date.now();
+
+    if (
+        activeClockLastV69 !== null &&
+        isMoving &&
+        !paused
+    ) {
+        const dt =
+            finishNowV69 -
+            activeClockLastV69;
+
+        if (dt > 0 && dt < 5000) {
+            activeElapsedV69 +=
+                dt / 1000;
+        }
+    }
+
+    activeClockLastV69 = null;
 
     running = false;
 
@@ -5348,6 +5466,9 @@ function finishRun() {
 
         speed:
             getSpeed(),
+
+        activeTime:
+            activeElapsedV69,
 
         scheduleId:
             activeScheduleId
@@ -5892,6 +6013,78 @@ function clearAllData() {
    HISTORY
    ========================================================= */
 
+
+function updateActiveRunRecoveryV610() {
+
+    /*
+     * v6.11:
+     * "TORNA ALLA CORSA" è globale e fixed.
+     * Non appartiene a Storico: segue l'utente in ogni schermata.
+     */
+
+    let button =
+        document.getElementById(
+            "globalActiveRunRecoveryV611"
+        );
+
+    if (!running) {
+
+        if (button) {
+            button.remove();
+        }
+
+        return;
+    }
+
+    if (!button) {
+
+        button =
+            document.createElement("button");
+
+        button.id =
+            "globalActiveRunRecoveryV611";
+
+        button.type =
+            "button";
+
+        button.textContent =
+            "🏃 TORNA ALLA CORSA";
+
+        button.onclick =
+            function(event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                showScreen("run");
+            };
+
+        button.style.cssText = `
+            position: fixed;
+            left: 50%;
+            bottom: calc(
+                76px + env(safe-area-inset-bottom, 0px)
+            );
+            transform: translateX(-50%);
+            z-index: 99999;
+            width: min(calc(100vw - 32px), 360px);
+            padding: 13px 18px;
+            border: 2px solid currentColor;
+            border-radius: 16px;
+            background: #111;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 850;
+            box-shadow: 0 8px 24px rgba(0,0,0,.35);
+            cursor: pointer;
+        `;
+
+        document.body.appendChild(button);
+    }
+
+    button.style.display = "block";
+}
+
 function renderHistory() {
 
     const history =
@@ -5900,161 +6093,312 @@ function renderHistory() {
             []
         );
 
-
     const container =
         $("historyList");
 
-
     container.innerHTML = "";
 
-
     if (!history.length) {
-
         container.innerHTML = `
             <div class="card empty">
                 Nessuna uscita registrata.
             </div>
         `;
-
         return;
-
     }
 
+    history.forEach(activity => {
 
-    history.forEach(
-        activity => {
+        const date =
+            new Date(activity.date);
 
-            const date =
-                new Date(
-                    activity.date
-                );
+        const div =
+            document.createElement("div");
 
+        div.className =
+            "list-item history-clickable";
 
-            const div =
-                document.createElement(
-                    "div"
-                );
+        const pace =
+            Number.isFinite(activity.pace)
+                ? secondsToPace(activity.pace)
+                : "--:--";
 
+        div.innerHTML = `
 
-            div.className =
-                "list-item";
+            <div class="list-row">
 
-
-            const pace =
-                activity.pace
-                ?
-                secondsToPace(
-                    activity.pace
-                )
-                :
-                "--:--";
-
-
-            div.innerHTML = `
-
-                <div class="list-row">
-
-                    <div>
-
-                        <div
-                            style="
-                                font-size:17px;
-                                font-weight:850;">
-                            ${
-                                escapeHTML(
-                                    activity.planName ||
-                                    "Corsa"
-                                )
-                            }
-                        </div>
-
-                        <div
-                            class="muted small"
-                            style="margin-top:4px;">
-                            ${
-                                date.toLocaleDateString(
-                                    "it-IT"
-                                )
-                            }
-                            ·
-                            ${
-                                date.toLocaleTimeString(
-                                    "it-IT",
-                                    {
-                                        hour: "2-digit",
-                                        minute: "2-digit"
-                                    }
-                                )
-                            }
-                        </div>
-
+                <div>
+                    <div
+                        style="
+                            font-size:17px;
+                            font-weight:850;">
+                        ${escapeHTML(
+                            activity.planName || "Corsa"
+                        )}
                     </div>
 
-                    <button
-                        class="icon-btn"
-                        onclick="
-                            deleteHistory(
-                                '${activity.id}'
-                            )">
-                        🗑
-                    </button>
-
+                    <div
+                        class="muted small"
+                        style="margin-top:4px;">
+                        ${date.toLocaleDateString("it-IT")}
+                        ·
+                        ${date.toLocaleTimeString(
+                            "it-IT",
+                            {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            }
+                        )}
+                    </div>
                 </div>
 
-                <div class="history-stat">
+                <button
+                    class="icon-btn"
+                    onclick="
+                        event.stopPropagation();
+                        deleteHistory('${activity.id}')">
+                    🗑
+                </button>
 
-                    <div class="metric">
-                        <div class="value">
-                            ${activity.distance.toFixed(2)}
-                        </div>
-                        <div class="label">
-                            KM
-                        </div>
+            </div>
+
+            <div class="history-stat">
+
+                <div class="metric">
+                    <div class="value">
+                        ${Number(activity.distance || 0).toFixed(2)}
                     </div>
-
-                    <div class="metric">
-                        <div class="value">
-                            ${formatTime(activity.time)}
-                        </div>
-                        <div class="label">
-                            TEMPO
-                        </div>
-                    </div>
-
-                    <div class="metric">
-                        <div class="value">
-                            ${pace}
-                        </div>
-                        <div class="label">
-                            RITMO
-                        </div>
-                    </div>
-
+                    <div class="label">KM</div>
                 </div>
 
-                <div class="history-detail muted small">
-
-                    Velocità media:
-                    ${
-                        Number(
-                            activity.speed || 0
-                        ).toFixed(1)
-                    } km/h
-
+                <div class="metric">
+                    <div class="value">
+                        ${formatTime(Number(activity.time || 0))}
+                    </div>
+                    <div class="label">TEMPO</div>
                 </div>
 
-            `;
+                <div class="metric">
+                    <div class="value">${pace}</div>
+                    <div class="label">RITMO MEDIO</div>
+                </div>
 
+            </div>
 
-            container.appendChild(
-                div
+            <div class="history-detail muted small">
+                Velocità media:
+                ${Number(activity.speed || 0).toFixed(1)} km/h
+                <br>
+                ▶ Tocca per aprire il dettaglio
+            </div>
+
+            <div
+                id="historyDetail_${activity.id}"
+                class="history-detail-panel"
+                style="display:none;">
+            </div>
+        `;
+
+        div.addEventListener("click", event => {
+
+            if (event.target.closest("button")) {
+                return;
+            }
+
+            toggleHistoryDetailV69(
+                activity.id
             );
+        });
 
-        }
-    );
+        container.appendChild(div);
+    });
 
+    updateActiveRunRecoveryV610();
 }
 
+
+
+function toggleHistoryDetailV69(activityId) {
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        );
+
+    const activity =
+        history.find(
+            item => item.id === activityId
+        );
+
+    if (!activity) return;
+
+    const panel =
+        $("historyDetail_" + activityId);
+
+    if (!panel) return;
+
+    if (panel.style.display !== "none") {
+        panel.style.display = "none";
+        return;
+    }
+
+    const phases =
+        Array.isArray(activity.phases)
+            ? activity.phases
+            : [];
+
+    let detail = `
+
+        <div class="grid">
+
+            <div class="metric">
+                <div class="value">
+                    ${Number(activity.distance || 0).toFixed(3)}
+                </div>
+                <div class="label">KM</div>
+            </div>
+
+            <div class="metric">
+                <div class="value">
+                    ${formatTime(Number(activity.time || 0))}
+                </div>
+                <div class="label">TEMPO</div>
+            </div>
+
+            <div class="metric">
+                <div class="value">
+                    ${
+                        Number.isFinite(activity.pace)
+                            ? secondsToPace(activity.pace)
+                            : "--:--"
+                    }
+                </div>
+                <div class="label">RITMO MEDIO</div>
+            </div>
+
+            <div class="metric">
+                <div class="value">
+                    ${Number(activity.speed || 0).toFixed(1)}
+                </div>
+                <div class="label">KM/H</div>
+            </div>
+
+        </div>
+
+        <div class="section-title">
+            FASI DELL'ALLENAMENTO
+        </div>
+    `;
+
+    if (!phases.length) {
+
+        detail += `
+            <div class="empty">
+                Nessuna suddivisione delle fasi è stata salvata
+                in questa attività.
+            </div>
+        `;
+
+    } else {
+
+        phases.forEach((phase, index) => {
+
+            const phasePace =
+                Number.isFinite(phase.avgPace)
+                    ? secondsToPace(phase.avgPace)
+                    : "--:--";
+
+            detail += `
+
+                <div class="phase-history-card">
+
+                    <div class="phase-history-title">
+                        FASE ${index + 1}
+                        ·
+                        ${escapeHTML(
+                            phase.name || "—"
+                        )}
+                        ${
+                            phase.repeatTotal > 1
+                                ? ` · ${phase.repeatIndex}/${phase.repeatTotal}`
+                                : ""
+                        }
+                    </div>
+
+                    <div class="history-stat">
+
+                        <div class="metric">
+                            <div class="value">
+                                ${formatTime(
+                                    Number(
+                                        phase.time ||
+                                        phase.elapsed ||
+                                        0
+                                    )
+                                )}
+                            </div>
+                            <div class="label">TEMPO</div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="value">
+                                ${Number(
+                                    phase.distance || 0
+                                ).toFixed(3)}
+                            </div>
+                            <div class="label">KM</div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="value">
+                                ${phasePace}
+                            </div>
+                            <div class="label">RITMO</div>
+                        </div>
+
+                    </div>
+
+                    <div class="muted small" style="margin-top:8px;">
+                        Velocità media:
+                        ${
+                            Number.isFinite(phase.avgSpeed)
+                                ? Number(phase.avgSpeed).toFixed(2) + " km/h"
+                                : "—"
+                        }
+                        <br>
+                        Velocità massima:
+                        ${
+                            Number.isFinite(phase.maxSpeed)
+                                ? Number(phase.maxSpeed).toFixed(2) + " km/h"
+                                : "—"
+                        }
+                    </div>
+
+                </div>
+            `;
+        });
+    }
+
+    detail += `
+
+        <div class="history-actions">
+
+            <button
+                onclick="
+                    event.stopPropagation();
+                    copyChatGPTActivityV68(
+                        ${JSON.stringify(activity).replace(/</g, "\\u003c")}
+                    )">
+                📋 COPIA DATI PER CHATGPT
+            </button>
+
+        </div>
+    `;
+
+    panel.innerHTML = detail;
+    panel.style.display = "block";
+}
 
 function deleteHistory(id) {
 
