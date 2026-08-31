@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.17 -->
+<!-- RUNNER GPS v6.18 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -823,7 +823,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.17
+        🔧 DIAGNOSTICA GPS v6.18
     </div>
     <div class="grid">
         <div>
@@ -1624,7 +1624,7 @@ function showToast(message) {
 function showScreen(screen) {
 
     /*
-     * v6.17:
+     * v6.18:
      * cambiare schermata NON interrompe mai una corsa in corso.
      * running / GPS / timer / distanza / fase rimangono vivi.
      */
@@ -3242,7 +3242,7 @@ let gpsDiag = {
 let adaptiveSpeedMps = null;
 let adaptiveSource = "—";
 
-// v6.17: stato del ritmo istantaneo
+// v6.18: stato del ritmo istantaneo
 let paceSpeedSamplesV68 = [];
 let paceAverageSpeedV68 = null;
 
@@ -3554,6 +3554,8 @@ function startRunEngine(
 
     totalDistance = 0;
 
+    resetInstantPaceV618();
+
     resetInstantPaceV617();
     resetDisplayedAveragePaceV617();
 
@@ -3811,6 +3813,11 @@ function updateMovementState(speedMps, now) {
 
     if (!isMoving) {
         resetInstantPaceV617();
+    }
+
+
+    if (!isMoving) {
+        resetInstantPaceV618();
     }
 }
 
@@ -4076,7 +4083,7 @@ function positionReceived(position) {
 
     /*
      * ========================================================
-     * DISTANCE ENGINE v6.17
+     * DISTANCE ENGINE v6.18
      * ========================================================
      *
      * La velocità GPS è la misura primaria.
@@ -4529,83 +4536,13 @@ function getStableInstantSpeedKmh() {
 
 
 /* ============================================================
-   RUNNER v6.17 — INSTANT PACE, REBUILT FROM ZERO
+   RUNNER v6.18 — INSTANT PACE, REBUILT FROM ZERO
    ============================================================ */
-let instantPaceV617 = null;
-let instantPaceSamplesV617 = [];
-let instantPaceStartedAtV617 = null;
 
-function resetInstantPaceV617() {
-    instantPaceV617 = null;
-    instantPaceSamplesV617 = [];
-    instantPaceStartedAtV617 = null;
-}
 
-function calculateInstantPaceV617() {
-    const now = Date.now();
 
-    /* ONLY input: the already validated GPS speed, in m/s. */
-    const speedMps =
-        Number.isFinite(gpsDiag.selectedSpeed)
-            ? gpsDiag.selectedSpeed
-            : null;
 
-    if (speedMps === null || speedMps < 0) {
-        resetInstantPaceV617();
-        return null;
-    }
 
-    /* One conversion only: m/s -> km/h. */
-    const speedKmh = speedMps * 3.6;
-
-    /* Below this threshold the athlete is considered stopped. */
-    if (speedKmh < 1.2) {
-        resetInstantPaceV617();
-        return null;
-    }
-
-    /* Reject impossible values. */
-    if (speedKmh < 2.0 || speedKmh > 24.0) {
-        return instantPaceV617;
-    }
-
-    if (instantPaceStartedAtV617 === null) {
-        instantPaceStartedAtV617 = now;
-    }
-
-    instantPaceSamplesV617.push(speedKmh);
-
-    /* Wait for a complete 10-second window. */
-    if (now - instantPaceStartedAtV617 < 10000) {
-        return instantPaceV617;
-    }
-
-    let sum = 0;
-    let count = 0;
-
-    for (const value of instantPaceSamplesV617) {
-        if (
-            Number.isFinite(value) &&
-            value >= 2.0 &&
-            value <= 24.0
-        ) {
-            sum += value;
-            count++;
-        }
-    }
-
-    if (count > 0) {
-        const averageKmh = sum / count;
-
-        /* seconds/km = 3600 / km/h */
-        instantPaceV617 = 3600 / averageKmh;
-    }
-
-    instantPaceSamplesV617 = [];
-    instantPaceStartedAtV617 = now;
-
-    return instantPaceV617;
-}
 
 
 let displayedAveragePaceV617 = null;
@@ -4638,6 +4575,309 @@ function getDisplayedAveragePaceV617() {
     }
 
     return displayedAveragePaceV617;
+}
+
+
+/* ============================================================
+   RUNNER v6.18 — ADAPTIVE INSTANT PACE FILTER
+   ============================================================ */
+
+let instantPaceV618 = null;
+let instantPaceFilteredSpeedV618 = null;
+let instantPaceSpeedHistoryV618 = [];
+let instantPaceCandidateSpeedV618 = null;
+let instantPaceCandidateSinceV618 = 0;
+let instantPaceLastSampleV618 = 0;
+let instantPaceWindowStartV618 = null;
+let instantPaceWindowSpeedsV618 = [];
+
+function resetInstantPaceV618() {
+    instantPaceV618 = null;
+    instantPaceFilteredSpeedV618 = null;
+    instantPaceSpeedHistoryV618 = [];
+    instantPaceCandidateSpeedV618 = null;
+    instantPaceCandidateSinceV618 = 0;
+    instantPaceLastSampleV618 = 0;
+    instantPaceWindowStartV618 = null;
+    instantPaceWindowSpeedsV618 = [];
+}
+
+function medianV618(values) {
+    if (!values.length) return null;
+
+    const sorted = values
+        .slice()
+        .sort((a, b) => a - b);
+
+    const middle =
+        Math.floor(sorted.length / 2);
+
+    if (sorted.length % 2) {
+        return sorted[middle];
+    }
+
+    return (
+        sorted[middle - 1] +
+        sorted[middle]
+    ) / 2;
+}
+
+function calculateInstantPaceV618() {
+
+    const now = Date.now();
+
+    /*
+     * ONLY input:
+     * the already validated/selected GPS speed.
+     */
+    const rawMps =
+        Number.isFinite(gpsDiag.selectedSpeed)
+            ? gpsDiag.selectedSpeed
+            : null;
+
+    if (
+        rawMps === null ||
+        rawMps < 0
+    ) {
+        resetInstantPaceV618();
+        return null;
+    }
+
+    const rawKmh =
+        rawMps * 3.6;
+
+    /*
+     * Stop/reset.
+     */
+    if (rawKmh < 1.2) {
+        resetInstantPaceV618();
+        return null;
+    }
+
+    /*
+     * Physical range for this application.
+     * Impossible values never enter the filter.
+     */
+    if (
+        rawKmh < 2.0 ||
+        rawKmh > 24.0
+    ) {
+        return instantPaceV618;
+    }
+
+    /*
+     * A short history protects against one-off GPS jumps.
+     */
+    instantPaceSpeedHistoryV618.push({
+        t: now,
+        v: rawKmh
+    });
+
+    instantPaceSpeedHistoryV618 =
+        instantPaceSpeedHistoryV618.filter(
+            sample =>
+                now - sample.t <= 8000
+        );
+
+    const recent =
+        instantPaceSpeedHistoryV618
+            .map(sample => sample.v);
+
+    const medianSpeed =
+        medianV618(recent);
+
+    if (
+        !Number.isFinite(medianSpeed)
+    ) {
+        return instantPaceV618;
+    }
+
+    /*
+     * First valid speed: initialize immediately.
+     * The 10-second averaging below still controls the pace output.
+     */
+    if (
+        instantPaceFilteredSpeedV618 === null
+    ) {
+        instantPaceFilteredSpeedV618 =
+            medianSpeed;
+    } else {
+
+        const current =
+            instantPaceFilteredSpeedV618;
+
+        const difference =
+            medianSpeed - current;
+
+        const absDifference =
+            Math.abs(difference);
+
+        /*
+         * Large change:
+         * do not believe it immediately.
+         * It must persist for about 4 seconds.
+         */
+        const largeChangeKmh = 1.5;
+
+        if (
+            absDifference >=
+            largeChangeKmh
+        ) {
+
+            if (
+                instantPaceCandidateSpeedV618 === null
+            ) {
+                instantPaceCandidateSpeedV618 =
+                    medianSpeed;
+
+                instantPaceCandidateSinceV618 =
+                    now;
+            } else {
+
+                /*
+                 * Candidate itself must remain reasonably close
+                 * to the current median; otherwise the "change"
+                 * is just another GPS fluctuation.
+                 */
+                const candidateDifference =
+                    Math.abs(
+                        medianSpeed -
+                        instantPaceCandidateSpeedV618
+                    );
+
+                if (
+                    candidateDifference <= 0.9
+                ) {
+
+                    instantPaceCandidateSpeedV618 =
+                        (
+                            instantPaceCandidateSpeedV618 * 0.50
+                        ) +
+                        (
+                            medianSpeed * 0.50
+                        );
+
+                } else {
+
+                    instantPaceCandidateSpeedV618 =
+                        medianSpeed;
+
+                    instantPaceCandidateSinceV618 =
+                        now;
+                }
+
+                if (
+                    now -
+                    instantPaceCandidateSinceV618 >=
+                    4000
+                ) {
+
+                    /*
+                     * Confirmed real change.
+                     * Follow it progressively, never jump to it.
+                     */
+                    instantPaceFilteredSpeedV618 =
+                        (
+                            current * 0.55
+                        ) +
+                        (
+                            medianSpeed * 0.45
+                        );
+
+                    instantPaceCandidateSpeedV618 =
+                        null;
+
+                    instantPaceCandidateSinceV618 =
+                        0;
+                }
+            }
+
+        } else {
+
+            /*
+             * Normal fluctuation:
+             * smooth but continue following the athlete.
+             */
+            instantPaceCandidateSpeedV618 =
+                null;
+
+            instantPaceCandidateSinceV618 =
+                0;
+
+            /*
+             * Faster response to small real changes,
+             * but never a raw jump.
+             */
+            const alpha =
+                absDifference < 0.45
+                    ? 0.22
+                    : 0.16;
+
+            instantPaceFilteredSpeedV618 =
+                (
+                    current * (1 - alpha)
+                ) +
+                (
+                    medianSpeed * alpha
+                );
+        }
+    }
+
+    /*
+     * Now use the filtered speed in the existing 10-second concept.
+     * The pace is NEVER averaged directly.
+     */
+    if (
+        instantPaceWindowStartV618 === null
+    ) {
+        instantPaceWindowStartV618 =
+            now;
+    }
+
+    instantPaceWindowSpeedsV618.push(
+        instantPaceFilteredSpeedV618
+    );
+
+    /*
+     * First pace only after 10 seconds.
+     */
+    if (
+        now -
+        instantPaceWindowStartV618 <
+        10000
+    ) {
+        return instantPaceV618;
+    }
+
+    const valid =
+        instantPaceWindowSpeedsV618.filter(
+            value =>
+                Number.isFinite(value) &&
+                value >= 2.0 &&
+                value <= 24.0
+        );
+
+    if (valid.length) {
+
+        const averageKmh =
+            valid.reduce(
+                (sum, value) =>
+                    sum + value,
+                0
+            ) /
+            valid.length;
+
+        instantPaceV618 =
+            3600 / averageKmh;
+    }
+
+    /*
+     * Every output interval starts with a fresh 10-second window.
+     */
+    instantPaceWindowSpeedsV618 = [];
+    instantPaceWindowStartV618 = now;
+
+    return instantPaceV618;
 }
 
 function getAveragePace() {
@@ -4735,7 +4975,7 @@ function updateDisplay() {
     updateGpsDiagnostics();
 
     const pace =
-        calculateInstantPaceV617();
+        calculateInstantPaceV618();
 
 
     const avgPace =
@@ -5192,7 +5432,7 @@ function processCoach() {
 
 
     const pace =
-        calculateInstantPaceV617();
+        calculateInstantPaceV618();
 
 
     if (
@@ -5668,7 +5908,7 @@ function togglePause() {
 
 let phaseElapsedBeforePause = 0;
 
-// v6.17: tempo attivo usato esclusivamente per il ritmo medio.
+// v6.18: tempo attivo usato esclusivamente per il ritmo medio.
 let activeElapsedV69 = 0;
 let activeClockLastV69 = null;
 
@@ -6504,7 +6744,7 @@ function clearAllData() {
 function updateActiveRunRecoveryV610() {
 
     /*
-     * v6.17:
+     * v6.18:
      * "TORNA ALLA CORSA" è globale e fixed.
      * Non appartiene a Storico: segue l'utente in ogni schermata.
      */
