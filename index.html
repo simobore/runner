@@ -1,9 +1,7 @@
 ```html
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-
 <meta charset="UTF-8">
 
 <meta name="viewport"
@@ -18,422 +16,519 @@
 
 <style>
 
-/* =========================
-   BASE
-========================= */
-
 * {
     box-sizing: border-box;
 }
 
+html,
 body {
-
     margin: 0;
-
+    padding: 0;
     background: #101010;
-
     color: white;
-
     font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+}
 
-    -webkit-user-select: none;
-    user-select: none;
+body {
+    min-height: 100vh;
+}
+
+button,
+input,
+select {
+    font-family: inherit;
+}
+
+button {
+    border: none;
+    cursor: pointer;
 }
 
 .app {
-
     max-width: 500px;
-
     margin: auto;
-
-    padding:
-        25px
-        18px
-        110px;
+    padding: 22px 18px 110px;
 }
 
-
 /* =========================
-   HEADER
+   GENERAL
 ========================= */
 
 header {
-
     display: flex;
-
     justify-content: space-between;
-
     align-items: center;
-
-    margin-bottom: 25px;
+    margin-bottom: 22px;
 }
 
 h1 {
-
     margin: 0;
-
     font-size: 28px;
-
     letter-spacing: 1px;
 }
 
 h2 {
-
-    font-size: 18px;
-
-    margin-top: 0;
+    font-size: 19px;
+    margin: 0 0 15px;
 }
 
-
-/* =========================
-   CARD
-========================= */
-
-.card {
-
-    background: #1c1c1c;
-
-    border-radius: 22px;
-
-    padding: 20px;
-
-    margin-bottom: 16px;
+h3 {
+    font-size: 16px;
+    margin: 0 0 10px;
 }
 
 .muted {
-
     color: #999;
 }
 
+.small {
+    font-size: 13px;
+    color: #999;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
 
 /* =========================
-   TARGET
+   CARDS
 ========================= */
 
-.target {
-
-    font-size: 36px;
-
-    font-weight: 900;
-
-    margin:
-        5px
-        0
-        15px;
+.card {
+    background: #1c1c1c;
+    border-radius: 22px;
+    padding: 20px;
+    margin-bottom: 16px;
 }
-
-.targetBox {
-
-    text-align: center;
-
-    background: #242424;
-
-    border-radius: 17px;
-
-    padding: 14px;
-
-    margin-top: 15px;
-
-    font-size: 18px;
-}
-
 
 /* =========================
    BUTTONS
 ========================= */
 
 button {
-
-    border: none;
-
-    border-radius: 18px;
-
-    padding: 17px;
-
+    border-radius: 17px;
+    padding: 16px;
     width: 100%;
-
-    font-size: 17px;
-
+    font-size: 16px;
     font-weight: 800;
-
-    cursor: pointer;
-
-    -webkit-tap-highlight-color: transparent;
 }
 
 .primary {
-
     background: #8cff72;
-
     color: #101010;
 }
 
 .secondary {
-
     background: #292929;
-
     color: white;
-
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
 .danger {
-
     background: #ff5757;
-
     color: white;
-
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
+.smallButton {
+    width: auto;
+    padding: 10px 14px;
+    font-size: 13px;
+    background: #292929;
+    color: white;
+    border-radius: 12px;
+}
 
 /* =========================
-   GRID
+   HOME
+========================= */
+
+.target {
+    font-size: 38px;
+    font-weight: 900;
+    margin: 4px 0 12px;
+}
+
+.planName {
+    font-size: 22px;
+    font-weight: 850;
+    margin-bottom: 7px;
+}
+
+/* =========================
+   GRID / METRICS
 ========================= */
 
 .grid {
-
     display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
 .metric {
-
     background: #242424;
-
     border-radius: 17px;
-
-    padding:
-        17px
-        8px;
-
+    padding: 15px 8px;
     text-align: center;
 }
 
 .value {
-
     font-size: 28px;
-
     font-weight: 850;
 }
 
 .label {
-
     font-size: 11px;
-
     color: #999;
-
     margin-top: 5px;
 }
 
+/* =========================
+   FORMS
+========================= */
+
+.formGroup {
+    margin-bottom: 15px;
+}
+
+.formGroup:last-child {
+    margin-bottom: 0;
+}
+
+.formGroup label {
+    display: block;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 7px;
+}
+
+input,
+select {
+    width: 100%;
+    border: 1px solid #333;
+    background: #242424;
+    color: white;
+    border-radius: 13px;
+    padding: 13px;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus,
+select:focus {
+    border-color: #8cff72;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* =========================
+   BUILDER
+========================= */
+
+.builderSection {
+    margin-bottom: 20px;
+}
+
+.builderSectionTitle {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.blockCard {
+    background: #242424;
+    border-radius: 17px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.blockHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.blockNumber {
+    width: 29px;
+    height: 29px;
+    border-radius: 50%;
+    background: #8cff72;
+    color: #101010;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.blockTitle {
+    flex: 1;
+    margin-left: 10px;
+    font-weight: 850;
+}
+
+.deleteBlock {
+    width: auto;
+    padding: 5px 8px;
+    background: transparent;
+    color: #ff5757;
+    font-size: 21px;
+}
+
+.repeatBox {
+    background: #292929;
+    border-radius: 17px;
+    padding: 16px;
+    margin-top: 10px;
+}
+
+.repeatTitle {
+    font-weight: 850;
+    margin-bottom: 12px;
+    font-size: 17px;
+}
+
+.repeatPreview {
+    background: #1c1c1c;
+    border-radius: 13px;
+    padding: 12px;
+    margin-top: 12px;
+    color: #bbb;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* =========================
+   SAVED PLANS
+========================= */
+
+.savedPlan {
+    background: #242424;
+    border-radius: 17px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.savedPlanTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.savedPlanName {
+    font-weight: 850;
+    font-size: 17px;
+}
+
+.savedPlanInfo {
+    color: #999;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.planActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 12px;
+}
+
+.planActions button {
+    padding: 11px 8px;
+    font-size: 13px;
+}
+
+.empty {
+    text-align: center;
+    color: #777;
+    padding: 15px 0;
+}
 
 /* =========================
    RUN SCREEN
 ========================= */
 
-.big {
-
-    text-align: center;
-
-    font-size: 58px;
-
-    font-weight: 900;
-
-    margin-top: 35px;
-
-    letter-spacing: -2px;
-}
-
-.unit {
-
-    text-align: center;
-
-    color: #999;
-}
-
 .phase {
-
     text-align: center;
+    font-size: 23px;
+    font-weight: 900;
+    margin-top: 10px;
+}
 
-    font-size: 21px;
-
+.phaseCounter {
+    text-align: center;
+    color: #8cff72;
+    font-size: 17px;
     font-weight: 800;
+    margin-top: 5px;
+}
 
-    margin-top: 15px;
+.phaseDetails {
+    text-align: center;
+    color: #aaa;
+    margin-top: 6px;
 }
 
 .coach {
-
     text-align: center;
-
     color: #ddd;
-
     min-height: 25px;
-
-    margin:
-        8px
-        0;
+    margin: 10px 0;
 }
 
+.big {
+    text-align: center;
+    font-size: 58px;
+    font-weight: 900;
+    margin-top: 25px;
+}
 
-/* =========================
-   GPS STATUS
-========================= */
+.unit {
+    text-align: center;
+    color: #999;
+}
+
+.progressOuter {
+    width: 100%;
+    height: 8px;
+    background: #292929;
+    border-radius: 10px;
+    margin: 18px 0;
+    overflow: hidden;
+}
+
+.progressInner {
+    width: 0%;
+    height: 100%;
+    background: #8cff72;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
 
 .status {
-
     text-align: center;
-
-    margin:
-        18px
-        0;
-
+    margin: 15px 0;
     color: #8cff72;
-
     font-weight: 700;
 }
 
+.blockTime {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    margin-top: 10px;
+}
 
 /* =========================
-   SCREENS
+   SUMMARY
 ========================= */
 
-.screen {
-
-    display: none;
+.summaryTitle {
+    font-size: 20px;
+    font-weight: 850;
+    margin-bottom: 15px;
 }
-
-.screen.active {
-
-    display: block;
-}
-
 
 /* =========================
-   NAVIGATION
+   NAV
 ========================= */
 
 .nav {
-
     position: fixed;
-
     bottom: 0;
-
     left: 0;
-
     right: 0;
 
     background: #181818;
-
-    border-top:
-        1px solid
-        #292929;
+    border-top: 1px solid #292929;
 
     display: flex;
-
     justify-content: center;
-
-    gap: 25px;
+    gap: 18px;
 
     padding:
-        10px
+        9px
         8px
-        calc(
-            10px +
-            env(
-                safe-area-inset-bottom
-            )
-        );
+        calc(9px + env(safe-area-inset-bottom));
 
-    z-index: 10;
+    z-index: 100;
 }
 
 .nav button {
-
     background: none;
-
     color: #999;
-
     padding: 8px;
-
     width: auto;
-
     font-size: 12px;
 }
 
 .nav button.active {
-
     color: #8cff72;
 }
-
 
 /* =========================
-   COACH COLORS
+   RESPONSIVE
 ========================= */
 
-.coach.good {
+@media (max-width: 380px) {
 
-    color: #8cff72;
-}
+    .app {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
 
-.coach.fast {
+    .big {
+        font-size: 50px;
+    }
 
-    color: #ffb347;
-}
-
-.coach.slow {
-
-    color: #ff5757;
+    .value {
+        font-size: 25px;
+    }
 }
 
 </style>
-
 </head>
 
 
 <body>
 
-
 <div class="app">
-
 
 <!-- =====================================================
      HOME
 ===================================================== -->
 
-<section
-    id="home"
-    class="screen active">
-
+<section id="home" class="screen active">
 
 <header>
 
 <div>
-
-<h1>
-RUNNER
-</h1>
+<h1>RUNNER</h1>
 
 <div class="muted">
 Il tuo allenatore
 </div>
-
 </div>
 
-<div>
+<div style="font-size:30px;">
 🏃
 </div>
 
 </header>
-
 
 
 <div class="card">
@@ -454,42 +549,40 @@ un allenamento alla volta.
 </div>
 
 
-
 <div class="card">
 
 <h2>
 Prossimo allenamento
 </h2>
 
+<div id="nextPlanContent">
+
 <div class="muted">
-Corsa facile · 30 minuti
+Nessun allenamento selezionato.
 </div>
 
-
-<div class="targetBox">
-
-🎯
-
-<b>
-5:15–5:30 min/km
-</b>
-
 </div>
-
-
-<br>
 
 
 <button
-    class="primary"
-    onclick="startRun()">
+class="primary"
+onclick="openPlans()"
+style="margin-top:15px;">
 
-▶ INIZIA CORSA
+🏃 SCEGLI ALLENAMENTO
+
+</button>
+
+
+<button
+class="secondary"
+onclick="startFreeRun()">
+
+▶ CORSA LIBERA
 
 </button>
 
 </div>
-
 
 
 <div class="card">
@@ -498,18 +591,12 @@ Corsa facile · 30 minuti
 Questa settimana
 </h2>
 
-
 <div class="grid">
-
 
 <div class="metric">
 
-<div
-    id="weekKm"
-    class="value">
-
+<div id="weekKm" class="value">
 0.0
-
 </div>
 
 <div class="label">
@@ -519,15 +606,10 @@ KM
 </div>
 
 
-
 <div class="metric">
 
-<div
-    id="weekRuns"
-    class="value">
-
+<div id="weekRuns" class="value">
 0
-
 </div>
 
 <div class="label">
@@ -536,84 +618,465 @@ USCITE
 
 </div>
 
-
 </div>
 
 </div>
-
 
 </section>
 
+
+<!-- =====================================================
+     PLANS
+===================================================== -->
+
+<section id="plans" class="screen">
+
+<header>
+
+<button
+onclick="showHome()"
+style="
+width:auto;
+background:none;
+color:white;
+padding:5px 10px;
+">
+
+←
+
+</button>
+
+<h1 style="font-size:21px;">
+ALLENAMENTI
+</h1>
+
+<div></div>
+
+</header>
+
+
+<div class="card">
+
+<h2>
+I miei allenamenti
+</h2>
+
+<div id="savedPlansList">
+</div>
+
+
+<button
+class="primary"
+onclick="openPlanBuilder()">
+
+＋ CREA NUOVO PIANO
+
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     BUILDER
+===================================================== -->
+
+<section id="builder" class="screen">
+
+<header>
+
+<button
+onclick="openPlans()"
+style="
+width:auto;
+background:none;
+color:white;
+padding:5px 10px;
+">
+
+←
+
+</button>
+
+<h1 style="font-size:21px;">
+CREA PIANO
+</h1>
+
+<div></div>
+
+</header>
+
+
+<div class="card">
+
+<h2>
+Informazioni
+</h2>
+
+
+<div class="formGroup">
+
+<label>
+Nome allenamento
+</label>
+
+<input
+id="planName"
+type="text"
+placeholder="Es. 6 × 400 m">
+
+</div>
+
+
+<div class="formGroup">
+
+<label>
+Obiettivo
+</label>
+
+<select id="planGoal">
+
+<option value="5km">
+5 km
+</option>
+
+<option value="10km">
+10 km
+</option>
+
+<option value="fitness">
+Fitness / corsa
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<!-- WARM UP -->
+
+<div class="card">
+
+<h2>
+Riscaldamento
+</h2>
+
+
+<div class="formGroup">
+
+<label>
+Durata (minuti)
+</label>
+
+<input
+id="warmupDuration"
+type="number"
+min="0"
+step="1"
+value="10">
+
+</div>
+
+
+<div class="formGroup">
+
+<label>
+Ritmo target
+</label>
+
+<input
+id="warmupPace"
+type="text"
+value="6:30"
+placeholder="6:30">
+
+</div>
+
+</div>
+
+
+<!-- REPEAT BUILDER -->
+
+<div class="card">
+
+<h2>
+Ripetute
+</h2>
+
+
+<div class="repeatBox">
+
+<div class="repeatTitle">
+⚡ Crea automaticamente le ripetute
+</div>
+
+
+<div class="formGroup">
+
+<label>
+Numero di ripetute
+</label>
+
+<input
+id="repeatCount"
+type="number"
+min="1"
+max="50"
+value="6"
+oninput="updateRepeatPreview()">
+
+</div>
+
+
+<div class="row">
+
+<div class="formGroup">
+
+<label>
+Distanza ripetuta (m)
+</label>
+
+<input
+id="repeatDistance"
+type="number"
+min="50"
+step="50"
+value="400"
+oninput="updateRepeatPreview()">
+
+</div>
+
+
+<div class="formGroup">
+
+<label>
+Ritmo ripetuta
+</label>
+
+<input
+id="repeatPace"
+type="text"
+value="5:00"
+oninput="updateRepeatPreview()">
+
+</div>
+
+</div>
+
+
+<div class="row">
+
+<div class="formGroup">
+
+<label>
+Recupero (min)
+</label>
+
+<input
+id="recoveryDuration"
+type="number"
+min="0"
+step="0.5"
+value="2"
+oninput="updateRepeatPreview()">
+
+</div>
+
+
+<div class="formGroup">
+
+<label>
+Ritmo recupero
+</label>
+
+<input
+id="recoveryPace"
+type="text"
+value="6:45"
+oninput="updateRepeatPreview()">
+
+</div>
+
+</div>
+
+
+<div
+id="repeatPreview"
+class="repeatPreview">
+
+6 × 400 m @ 5:00/km
+<br>
+Recupero: 2 min @ 6:45/km
+
+</div>
+
+
+<button
+class="primary"
+onclick="addRepeatBlock()"
+style="margin-top:12px;">
+
+＋ AGGIUNGI RIPETUTE
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- OTHER BLOCKS -->
+
+<div class="card">
+
+<h2>
+Altri blocchi
+</h2>
+
+
+<button
+class="secondary"
+onclick="addSimpleBlock('run')">
+
+＋ CORSA
+
+</button>
+
+
+<button
+class="secondary"
+onclick="addSimpleBlock('recovery')">
+
+＋ RECUPERO
+
+</button>
+
+
+<button
+class="secondary"
+onclick="addSimpleBlock('cooldown')">
+
+＋ DEFATICAMENTO
+
+</button>
+
+</div>
+
+
+<!-- PLAN PREVIEW -->
+
+<div class="card">
+
+<h2>
+Struttura allenamento
+</h2>
+
+<div id="builderBlocks">
+</div>
+
+</div>
+
+
+<div class="card">
+
+<button
+class="primary"
+onclick="savePlan()">
+
+💾 SALVA ALLENAMENTO
+
+</button>
+
+
+<button
+class="secondary"
+onclick="openPlans()">
+
+ANNULLA
+
+</button>
+
+</div>
+
+</section>
 
 
 <!-- =====================================================
      RUN
 ===================================================== -->
 
-<section
-    id="run"
-    class="screen">
-
+<section id="run" class="screen">
 
 <header>
 
-
 <button
-    onclick="cancelRun()"
-    style="
-        width:auto;
-        background:none;
-        color:white;
-        padding:5px 10px;
-    ">
+onclick="cancelRun()"
+style="
+width:auto;
+background:none;
+color:white;
+padding:5px 10px;
+">
 
 ←
 
 </button>
 
 
-<h1
-    style="font-size:20px">
-
+<h1 style="font-size:20px;">
 CORSA
-
 </h1>
 
 
 <div
-    id="gps"
-    style="color:#999">
+id="gps"
+style="color:#999;">
 
 GPS…
 
 </div>
 
-
 </header>
 
 
-
-<div class="phase">
+<div
+id="phase"
+class="phase">
 
 CORSA LIBERA
 
 </div>
 
 
+<div
+id="phaseCounter"
+class="phaseCounter">
+
+</div>
+
 
 <div
-    id="coach"
-    class="coach">
+id="phaseDetails"
+class="phaseDetails">
+
+</div>
+
+
+<div
+id="coach"
+class="coach">
 
 Acquisizione GPS…
 
 </div>
 
 
-
 <div
-    id="pace"
-    class="big">
+id="pace"
+class="big">
 
 --:--
 
@@ -621,23 +1084,37 @@ Acquisizione GPS…
 
 
 <div class="unit">
-
 min/km · ritmo medio
+</div>
+
+
+<div
+id="blockTime"
+class="blockTime">
 
 </div>
 
 
+<div class="progressOuter">
 
 <div
-    class="grid"
-    style="margin-top:25px">
+id="progressInner"
+class="progressInner">
 
+</div>
+
+</div>
+
+
+<div
+class="grid"
+style="margin-top:15px;">
 
 <div class="metric">
 
 <div
-    id="distance"
-    class="value">
+id="distance"
+class="value">
 
 0.00
 
@@ -650,12 +1127,11 @@ KM
 </div>
 
 
-
 <div class="metric">
 
 <div
-    id="time"
-    class="value">
+id="time"
+class="value">
 
 00:00
 
@@ -668,12 +1144,11 @@ TEMPO
 </div>
 
 
-
 <div class="metric">
 
 <div
-    id="speed"
-    class="value">
+id="speed"
+class="value">
 
 0.0
 
@@ -686,70 +1161,60 @@ KM/H
 </div>
 
 
-
 <div class="metric">
 
 <div
-    id="instantPace"
-    class="value">
+id="avgPace"
+class="value">
 
 --:--
 
 </div>
 
 <div class="label">
-RITMO ATTUALE
+RITMO MEDIO
 </div>
 
 </div>
 
-
 </div>
-
 
 
 <div
-    id="gpsStatus"
-    class="status">
+id="gpsStatus"
+class="status">
 
 ● GPS
 
 </div>
 
 
-
 <button
-    id="pauseButton"
-    class="secondary"
-    onclick="togglePause()">
+id="pauseButton"
+class="secondary"
+onclick="togglePause()">
 
 Ⅱ PAUSA
 
 </button>
 
 
-
 <button
-    class="danger"
-    onclick="finishRun()">
+class="danger"
+onclick="finishRun()">
 
 ■ TERMINA
 
 </button>
 
-
 </section>
-
 
 
 <!-- =====================================================
      SUMMARY
 ===================================================== -->
 
-<section
-    id="summary"
-    class="screen">
-
+<section id="summary" class="screen">
 
 <header>
 
@@ -760,18 +1225,24 @@ RISULTATO
 </header>
 
 
-
 <div class="card">
+
+<div
+id="summaryPlan"
+class="summaryTitle">
+
+Corsa
+
+</div>
 
 
 <div class="grid">
 
-
 <div class="metric">
 
 <div
-    id="summaryDistance"
-    class="value">
+id="summaryDistance"
+class="value">
 
 0.00
 
@@ -784,12 +1255,11 @@ KM
 </div>
 
 
-
 <div class="metric">
 
 <div
-    id="summaryTime"
-    class="value">
+id="summaryTime"
+class="value">
 
 00:00
 
@@ -802,12 +1272,11 @@ TEMPO
 </div>
 
 
-
 <div class="metric">
 
 <div
-    id="summaryPace"
-    class="value">
+id="summaryPace"
+class="value">
 
 --:--
 
@@ -820,12 +1289,11 @@ RITMO
 </div>
 
 
-
 <div class="metric">
 
 <div
-    id="summarySpeed"
-    class="value">
+id="summarySpeed"
+class="value">
 
 0.0
 
@@ -837,27 +1305,22 @@ KM/H
 
 </div>
 
-
 </div>
 
 </div>
-
 
 
 <button
-    class="primary"
-    onclick="showHome()">
+class="primary"
+onclick="showHome()">
 
 ← HOME
 
 </button>
 
-
 </section>
 
-
 </div>
-
 
 
 <!-- =====================================================
@@ -866,114 +1329,76 @@ KM/H
 
 <nav class="nav">
 
-
 <button
-    class="active"
-    onclick="showHome()">
+id="navHome"
+class="active"
+onclick="showHome()">
 
 🏠 Home
 
 </button>
 
 
-
 <button
-    onclick="startRun()">
+id="navRun"
+onclick="openPlans()">
 
 🏃 Corri
 
 </button>
 
 
-
 <button
-    onclick="
-        alert(
-            'Le statistiche avanzate arriveranno nella prossima versione.'
-        )
-    ">
+onclick="openPlans()">
 
-📊 Stats
+📋 Piani
 
 </button>
-
 
 </nav>
 
 
-
 <script>
 
-
 /* =====================================================
-   STATO CORSA
+   GLOBAL STATE
 ===================================================== */
 
 let watchId = null;
-
 let timer = null;
 
 let running = false;
-
 let paused = false;
 
 let startTime = 0;
-
 let elapsed = 0;
 
 let totalDistance = 0;
 
 let lastPosition = null;
-
 let lastPositionTime = null;
 
+let currentPlan = null;
 
-/* =====================================================
-   RITMO ATTUALE
-===================================================== */
+let currentBlockIndex = 0;
 
-let paceSamples = [];
-
-/*
-   Finestra temporale usata
-   per il ritmo attuale.
-*/
-
-const PACE_WINDOW_SECONDS = 30;
-
-
-/* =====================================================
-   TARGET
-===================================================== */
-
-const TARGET_MIN = 5 * 60 + 15;
-
-const TARGET_MAX = 5 * 60 + 30;
-
-
-/* =====================================================
-   COACH VOCALE
-===================================================== */
+let blockElapsed = 0;
+let blockDistance = 0;
 
 let lastVoiceTime = 0;
+let lastCoachState = "";
 
-const VOICE_INTERVAL = 60;
+let builderBlocks = [];
 
 
 /* =====================================================
-   UTILITY
+   HELPERS
 ===================================================== */
 
 function $(id) {
-
     return document.getElementById(id);
-
 }
 
-
-/* =====================================================
-   CAMBIO SCHERMATA
-===================================================== */
 
 function show(screen) {
 
@@ -983,84 +1408,199 @@ function show(screen) {
             s => s.classList.remove("active")
         );
 
-    $(screen)
-        .classList.add("active");
+    $(screen).classList.add("active");
 
+
+    document
+        .querySelectorAll(".nav button")
+        .forEach(
+            b => b.classList.remove("active")
+        );
+
+
+    if (screen === "home") {
+        $("navHome").classList.add("active");
+    }
+
+    if (screen === "run") {
+        $("navRun").classList.add("active");
+    }
 }
 
-
-/* =====================================================
-   FORMATTA TEMPO
-===================================================== */
 
 function formatTime(seconds) {
 
     seconds =
-        Math.floor(seconds);
+        Math.max(
+            0,
+            Math.floor(seconds)
+        );
+
+
+    const hours =
+        Math.floor(seconds / 3600);
+
 
     const minutes =
-        Math.floor(seconds / 60);
+        Math.floor(
+            (seconds % 3600) / 60
+        );
+
 
     const secs =
         seconds % 60;
 
-    return (
-        String(minutes).padStart(2, "0")
-        +
-        ":"
-        +
-        String(secs).padStart(2, "0")
-    );
 
+    if (hours > 0) {
+
+        return (
+            String(hours).padStart(2,"0")
+            + ":"
+            + String(minutes).padStart(2,"0")
+            + ":"
+            + String(secs).padStart(2,"0")
+        );
+    }
+
+
+    return (
+        String(minutes).padStart(2,"0")
+        + ":"
+        + String(secs).padStart(2,"0")
+    );
 }
 
-
-/* =====================================================
-   FORMATTA RITMO
-===================================================== */
 
 function formatPace(seconds) {
 
     if (
-        !isFinite(seconds)
-        ||
+        !isFinite(seconds) ||
         seconds <= 0
     ) {
 
         return "--:--";
-
     }
 
 
     let minutes =
-        Math.floor(seconds / 60);
+        Math.floor(
+            seconds / 60
+        );
+
 
     let secs =
-        Math.round(seconds % 60);
+        Math.round(
+            seconds % 60
+        );
 
 
     if (secs >= 60) {
 
         minutes++;
-
         secs = 0;
-
     }
 
 
     return (
         minutes
-        +
-        ":"
-        +
-        String(secs).padStart(2, "0")
+        + ":"
+        + String(secs).padStart(2,"0")
     );
+}
 
+
+function parsePace(value) {
+
+    value =
+        String(value)
+            .trim();
+
+
+    if (
+        value.includes(":")
+    ) {
+
+        const parts =
+            value.split(":");
+
+
+        const minutes =
+            Number(parts[0]);
+
+
+        const seconds =
+            Number(parts[1]);
+
+
+        if (
+            isFinite(minutes) &&
+            isFinite(seconds) &&
+            seconds < 60
+        ) {
+
+            return (
+                minutes * 60 +
+                seconds
+            );
+        }
+    }
+
+
+    if (
+        value.includes(".")
+    ) {
+
+        const parts =
+            value.split(".");
+
+
+        if (
+            parts.length === 2
+        ) {
+
+            const minutes =
+                Number(parts[0]);
+
+
+            const seconds =
+                Number(parts[1]);
+
+
+            if (
+                isFinite(minutes) &&
+                isFinite(seconds) &&
+                seconds < 60
+            ) {
+
+                return (
+                    minutes * 60 +
+                    seconds
+                );
+            }
+        }
+    }
+
+
+    return 0;
+}
+
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
 }
 
 
 /* =====================================================
-   DISTANZA HAVERSINE
+   DISTANCE
 ===================================================== */
 
 function calculateDistance(
@@ -1075,8 +1615,10 @@ function calculateDistance(
     const rad =
         Math.PI / 180;
 
+
     const dLat =
         (lat2 - lat1) * rad;
+
 
     const dLon =
         (lon2 - lon1) * rad;
@@ -1093,738 +1635,45 @@ function calculateDistance(
 
 
     return (
-        R
-        *
-        2
-        *
+        R *
+        2 *
         Math.atan2(
             Math.sqrt(a),
             Math.sqrt(1 - a)
         )
     );
-
 }
 
 
 /* =====================================================
-   AVVIO CORSA
+   VOICE
 ===================================================== */
 
-function startRun() {
-
-
-    /*
-       Se esiste già una corsa,
-       la interrompiamo prima
-       di iniziarne una nuova.
-    */
-
-    if (watchId !== null) {
-
-        navigator.geolocation
-            .clearWatch(watchId);
-
-        watchId = null;
-
-    }
-
-
-    clearInterval(timer);
-
-
-    running = true;
-
-    paused = false;
-
-    elapsed = 0;
-
-    totalDistance = 0;
-
-    lastPosition = null;
-
-    lastPositionTime = null;
-
-    paceSamples = [];
-
-    startTime = Date.now();
-
-    lastVoiceTime = 0;
-
-
-    show("run");
-
-
-    $("coach").textContent =
-        "Acquisizione GPS…";
-
-    $("coach").className =
-        "coach";
-
-
-    $("gps").textContent =
-        "GPS…";
-
-    $("gpsStatus").textContent =
-        "● GPS in attesa";
-
-
-    $("distance").textContent =
-        "0.00";
-
-    $("time").textContent =
-        "00:00";
-
-    $("speed").textContent =
-        "0.0";
-
-    $("pace").textContent =
-        "--:--";
-
-    $("instantPace").textContent =
-        "--:--";
-
-
-    $("pauseButton").textContent =
-        "Ⅱ PAUSA";
-
-
-    /*
-       TIMER
-    */
-
-    timer =
-        setInterval(
-            function() {
-
-                if (
-                    running
-                    &&
-                    !paused
-                ) {
-
-                    elapsed =
-                        (
-                            Date.now()
-                            -
-                            startTime
-                        ) / 1000;
-
-                    updateDisplay();
-
-                }
-
-            },
-            250
-        );
-
-
-    /*
-       CONTROLLO GPS
-    */
+function speak(text) {
 
     if (
-        !navigator.geolocation
-    ) {
-
-        $("coach").textContent =
-            "Questo browser non supporta il GPS.";
-
-        return;
-
-    }
-
-
-    /*
-       AVVIO WATCH GPS
-    */
-
-    watchId =
-        navigator.geolocation.watchPosition(
-
-            positionReceived,
-
-            gpsError,
-
-            {
-
-                enableHighAccuracy: true,
-
-                maximumAge: 1000,
-
-                timeout: 15000
-
-            }
-
-        );
-
-}
-
-
-/* =====================================================
-   RICEZIONE GPS
-===================================================== */
-
-function positionReceived(position) {
-
-
-    if (
-        !running
-        ||
-        paused
+        !("speechSynthesis" in window)
     ) {
 
         return;
-
     }
 
-
-    const lat =
-        position.coords.latitude;
-
-    const lon =
-        position.coords.longitude;
-
-    const accuracy =
-        position.coords.accuracy;
 
     const now =
         Date.now();
 
 
-    /*
-       Se la precisione GPS è
-       veramente pessima, ignoriamo
-       il dato.
-    */
-
     if (
-        accuracy
-        &&
-        accuracy > 50
+        now - lastVoiceTime < 30000
     ) {
 
-        $("gps").textContent =
-            "GPS ~" +
-            Math.round(accuracy) +
-            "m";
-
         return;
-
     }
 
 
-    /*
-       Primo punto GPS.
-    */
-
-    if (!lastPosition) {
-
-        lastPosition = {
-
-            lat: lat,
-
-            lon: lon
-
-        };
-
-        lastPositionTime =
-            now;
-
-        $("gps").textContent =
-            "GPS ✓";
-
-        $("gpsStatus").textContent =
-            "● GPS attivo";
-
-        $("coach").textContent =
-            "GPS acquisito";
-
-        return;
-
-    }
-
-
-    /*
-       Distanza dall'ultimo punto.
-    */
-
-    const meters =
-        calculateDistance(
-
-            lastPosition.lat,
-            lastPosition.lon,
-
-            lat,
-            lon
-
-        );
-
-
-    const seconds =
-        (
-            now
-            -
-            lastPositionTime
-        ) / 1000;
-
-
-    /*
-       Aggiorniamo sempre
-       l'ultima posizione.
-    */
-
-    lastPosition = {
-
-        lat: lat,
-
-        lon: lon
-
-    };
-
-    lastPositionTime =
+    lastVoiceTime =
         now;
 
-
-    /*
-       Filtro GPS.
-
-       Ignoriamo:
-       - meno di 2 metri
-       - più di 50 metri
-       - intervalli anomali
-    */
-
-    if (
-        meters >= 2
-        &&
-        meters <= 50
-        &&
-        seconds > 0
-        &&
-        seconds <= 10
-    ) {
-
-
-        const km =
-            meters / 1000;
-
-
-        /*
-           Aggiungiamo la distanza.
-        */
-
-        totalDistance += km;
-
-
-        /*
-           Salviamo il campione
-           per il ritmo attuale.
-        */
-
-        paceSamples.push({
-
-            distance: km,
-
-            time: seconds
-
-        });
-
-
-        /*
-           Manteniamo solo
-           gli ultimi 30 secondi.
-        */
-
-        let accumulatedTime = 0;
-
-
-        for (
-            let i =
-                paceSamples.length - 1;
-
-            i >= 0;
-
-            i--
-        ) {
-
-            accumulatedTime +=
-                paceSamples[i].time;
-
-
-            if (
-                accumulatedTime
-                >
-                PACE_WINDOW_SECONDS
-            ) {
-
-                paceSamples =
-                    paceSamples.slice(i);
-
-                break;
-
-            }
-
-        }
-
-    }
-
-
-    $("gps").textContent =
-        "GPS ✓";
-
-    $("gpsStatus").textContent =
-        "● GPS attivo";
-
-
-    updateDisplay();
-
-}
-
-
-/* =====================================================
-   ERRORE GPS
-===================================================== */
-
-function gpsError(error) {
-
-
-    $("gps").textContent =
-        "GPS ✕";
-
-
-    $("gpsStatus").textContent =
-        "● GPS non disponibile";
-
-
-    if (
-        error.code === 1
-    ) {
-
-        $("coach").textContent =
-            "Consenti l'accesso alla posizione.";
-
-    }
-
-    else if (
-        error.code === 2
-    ) {
-
-        $("coach").textContent =
-            "Posizione GPS non disponibile.";
-
-    }
-
-    else if (
-        error.code === 3
-    ) {
-
-        $("coach").textContent =
-            "Ricerca GPS in corso…";
-
-    }
-
-}
-
-
-/* =====================================================
-   CALCOLO RITMO ATTUALE
-===================================================== */
-
-function calculateInstantPace() {
-
-
-    if (
-        paceSamples.length === 0
-    ) {
-
-        return 0;
-
-    }
-
-
-    let distance = 0;
-
-    let time = 0;
-
-
-    for (
-        const sample
-        of paceSamples
-    ) {
-
-        distance +=
-            sample.distance;
-
-        time +=
-            sample.time;
-
-    }
-
-
-    if (
-        distance <= 0
-        ||
-        time <= 0
-    ) {
-
-        return 0;
-
-    }
-
-
-    /*
-       secondi / km
-    */
-
-    return (
-        time / distance
-    );
-
-}
-
-
-/* =====================================================
-   AGGIORNAMENTO DISPLAY
-===================================================== */
-
-function updateDisplay() {
-
-
-    if (
-        elapsed <= 0
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-       RITMO MEDIO
-    */
-
-    let avgPace = 0;
-
-
-    if (
-        totalDistance >= 0.05
-    ) {
-
-        avgPace =
-            elapsed
-            /
-            totalDistance;
-
-    }
-
-
-    /*
-       VELOCITÀ MEDIA
-    */
-
-    let speed = 0;
-
-
-    if (
-        elapsed > 0
-    ) {
-
-        speed =
-            (
-                totalDistance
-                /
-                elapsed
-            )
-            *
-            3600;
-
-    }
-
-
-    /*
-       RITMO ATTUALE
-    */
-
-    const instantPace =
-        calculateInstantPace();
-
-
-    /*
-       DISPLAY
-    */
-
-    $("distance").textContent =
-        totalDistance.toFixed(2);
-
-
-    $("time").textContent =
-        formatTime(elapsed);
-
-
-    $("speed").textContent =
-        speed.toFixed(1);
-
-
-    $("pace").textContent =
-        formatPace(avgPace);
-
-
-    $("instantPace").textContent =
-        formatPace(instantPace);
-
-
-    /*
-       COACH
-    */
-
-    if (
-        totalDistance >= 0.10
-        &&
-        elapsed >= 60
-        &&
-        instantPace > 0
-    ) {
-
-        coachPace(
-            instantPace
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   COACH
-===================================================== */
-
-function coachPace(pace) {
-
-
-    if (
-        !isFinite(pace)
-        ||
-        pace <= 0
-    ) {
-
-        return;
-
-    }
-
-
-    const now =
-        Date.now() / 1000;
-
-
-    /*
-       Evitiamo messaggi continui.
-    */
-
-    if (
-        now
-        -
-        lastVoiceTime
-        <
-        VOICE_INTERVAL
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-       TROPPO VELOCE
-    */
-
-    if (
-        pace < TARGET_MIN
-    ) {
-
-        $("coach").textContent =
-            "Rallenta leggermente.";
-
-        $("coach").className =
-            "coach fast";
-
-
-        speak(
-            "Rallenta leggermente."
-        );
-
-
-        lastVoiceTime =
-            now;
-
-    }
-
-
-    /*
-       TROPPO LENTO
-    */
-
-    else if (
-        pace > TARGET_MAX
-    ) {
-
-        $("coach").textContent =
-            "Aumenta il ritmo.";
-
-        $("coach").className =
-            "coach slow";
-
-
-        speak(
-            "Aumenta il ritmo."
-        );
-
-
-        lastVoiceTime =
-            now;
-
-    }
-
-
-    /*
-       NEL TARGET
-    */
-
-    else {
-
-        $("coach").textContent =
-            "Ritmo perfetto.";
-
-        $("coach").className =
-            "coach good";
-
-    }
-
-}
-
-
-/* =====================================================
-   VOCE
-===================================================== */
-
-function speak(text) {
-
-
-    if (
-        !(
-            "speechSynthesis"
-            in window
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-       Interrompiamo eventuale
-       messaggio precedente.
-    */
 
     window.speechSynthesis.cancel();
 
@@ -1838,42 +1687,1028 @@ function speak(text) {
     utterance.lang =
         "it-IT";
 
+
     utterance.rate =
         0.95;
 
-    utterance.pitch =
-        1;
 
-    utterance.volume =
-        1;
-
-
-    window.speechSynthesis
-        .speak(utterance);
-
+    window.speechSynthesis.speak(
+        utterance
+    );
 }
 
 
 /* =====================================================
-   PAUSA / RIPRESA
+   CURRENT SPEED / PACE
+===================================================== */
+
+function getCurrentPace() {
+
+    if (
+        !lastPosition ||
+        !lastPosition.speed ||
+        lastPosition.speed <= 0
+    ) {
+
+        return null;
+    }
+
+
+    const speed =
+        lastPosition.speed;
+
+
+    if (
+        speed < 0.5
+    ) {
+
+        return null;
+    }
+
+
+    return 1000 / speed;
+}
+
+
+/* =====================================================
+   COACH
+===================================================== */
+
+function coachCheck() {
+
+    if (
+        elapsed < 60
+    ) {
+
+        return;
+    }
+
+
+    const block =
+        currentPlan &&
+        currentPlan.blocks
+            ? currentPlan.blocks[
+                currentBlockIndex
+            ]
+            : null;
+
+
+    if (!block) {
+        return;
+    }
+
+
+    if (
+        !block.targetPace ||
+        block.targetPace <= 0
+    ) {
+
+        return;
+    }
+
+
+    const currentPace =
+        getCurrentPace();
+
+
+    if (!currentPace) {
+        return;
+    }
+
+
+    const target =
+        block.targetPace;
+
+
+    const tolerance =
+        15;
+
+
+    let state =
+        "good";
+
+
+    if (
+        currentPace <
+        target - tolerance
+    ) {
+
+        state =
+            "fast";
+
+        $("coach").textContent =
+            "Ritmo troppo veloce";
+    }
+
+
+    else if (
+        currentPace >
+        target + tolerance
+    ) {
+
+        state =
+            "slow";
+
+        $("coach").textContent =
+            "Ritmo troppo lento";
+    }
+
+
+    else {
+
+        $("coach").textContent =
+            "Ritmo corretto ✓";
+    }
+
+
+    if (
+        state !== lastCoachState
+    ) {
+
+        if (
+            state === "fast"
+        ) {
+
+            speak(
+                "Rallenta leggermente."
+            );
+        }
+
+
+        if (
+            state === "slow"
+        ) {
+
+            speak(
+                "Aumenta il ritmo."
+            );
+        }
+
+
+        if (
+            state === "good"
+        ) {
+
+            speak(
+                "Ritmo corretto."
+            );
+        }
+
+
+        lastCoachState =
+            state;
+    }
+}
+
+
+/* =====================================================
+   FREE RUN
+===================================================== */
+
+function startFreeRun() {
+
+    currentPlan = {
+
+        id: "free",
+
+        name: "Corsa libera",
+
+        goal: "free",
+
+        blocks: [
+
+            {
+                type: "run",
+
+                duration: 0,
+
+                distance: 0,
+
+                targetPace: 0,
+
+                repeatNumber: 0,
+
+                repeatTotal: 0
+            }
+
+        ]
+    };
+
+
+    startRun();
+}
+
+
+/* =====================================================
+   START RUN
+===================================================== */
+
+function startRun() {
+
+    show("run");
+
+
+    running = true;
+    paused = false;
+
+
+    elapsed = 0;
+    totalDistance = 0;
+
+
+    lastPosition = null;
+    lastPositionTime = null;
+
+
+    currentBlockIndex = 0;
+
+    blockElapsed = 0;
+    blockDistance = 0;
+
+
+    lastVoiceTime = 0;
+    lastCoachState = "";
+
+
+    startTime =
+        Date.now();
+
+
+    $("coach").textContent =
+        "Acquisizione GPS…";
+
+
+    $("gps").textContent =
+        "GPS…";
+
+
+    $("gpsStatus").textContent =
+        "● GPS in attesa";
+
+
+    $("pauseButton").textContent =
+        "Ⅱ PAUSA";
+
+
+    $("progressInner").style.width =
+        "0%";
+
+
+    updatePhaseDisplay();
+
+
+    timer =
+        setInterval(
+            function() {
+
+                if (
+                    running &&
+                    !paused
+                ) {
+
+                    elapsed =
+                        (
+                            Date.now()
+                            -
+                            startTime
+                        ) / 1000;
+
+
+                    blockElapsed =
+                        elapsed -
+                        getBlockStartTime();
+
+
+                    updateDisplay();
+
+                    updateBlockProgress();
+
+                    checkBlockProgress();
+
+                    coachCheck();
+                }
+
+            },
+            250
+        );
+
+
+    if (
+        !navigator.geolocation
+    ) {
+
+        $("coach").textContent =
+            "Questo browser non supporta il GPS.";
+
+        return;
+    }
+
+
+    watchId =
+        navigator.geolocation.watchPosition(
+
+            positionReceived,
+
+            gpsError,
+
+            {
+
+                enableHighAccuracy:
+                    true,
+
+                maximumAge:
+                    1000,
+
+                timeout:
+                    10000
+            }
+        );
+}
+
+
+/* =====================================================
+   GPS
+===================================================== */
+
+function positionReceived(
+    position
+) {
+
+    if (
+        !running ||
+        paused
+    ) {
+
+        return;
+    }
+
+
+    const lat =
+        position.coords.latitude;
+
+
+    const lon =
+        position.coords.longitude;
+
+
+    const now =
+        Date.now();
+
+
+    const accuracy =
+        position.coords.accuracy;
+
+
+    if (
+        accuracy &&
+        accuracy > 50
+    ) {
+
+        $("gps").textContent =
+            "GPS ~";
+
+        return;
+    }
+
+
+    if (lastPosition) {
+
+        const meters =
+            calculateDistance(
+                lastPosition.lat,
+                lastPosition.lon,
+                lat,
+                lon
+            );
+
+
+        const seconds =
+            (
+                now -
+                lastPositionTime
+            ) / 1000;
+
+
+        const calculatedSpeed =
+            seconds > 0
+                ? meters / seconds
+                : 0;
+
+
+        /*
+           Filtri GPS.
+        */
+
+        if (
+            meters > 2 &&
+            meters < 100 &&
+            seconds > 0 &&
+            calculatedSpeed < 12
+        ) {
+
+            totalDistance +=
+                meters / 1000;
+
+
+            blockDistance +=
+                meters / 1000;
+        }
+    }
+
+
+    lastPosition = {
+
+        lat: lat,
+
+        lon: lon,
+
+        speed:
+            position.coords.speed || 0
+    };
+
+
+    lastPositionTime =
+        now;
+
+
+    $("gps").textContent =
+        "GPS ✓";
+
+
+    $("gpsStatus").textContent =
+        "● GPS attivo";
+
+
+    if (
+        $("coach").textContent ===
+        "Acquisizione GPS…"
+    ) {
+
+        $("coach").textContent =
+            "Registrazione attiva";
+    }
+
+
+    updateDisplay();
+}
+
+
+function gpsError(error) {
+
+    $("gps").textContent =
+        "GPS ✕";
+
+
+    $("gpsStatus").textContent =
+        "● GPS non disponibile";
+
+
+    $("coach").textContent =
+        "Consenti l'accesso alla posizione.";
+}
+
+
+/* =====================================================
+   DISPLAY
+===================================================== */
+
+function updateDisplay() {
+
+    if (
+        elapsed <= 0
+    ) {
+
+        return;
+    }
+
+
+    const kmPerSecond =
+        totalDistance /
+        elapsed;
+
+
+    const kmh =
+        kmPerSecond *
+        3600;
+
+
+    const paceSeconds =
+        kmPerSecond > 0
+            ? 1 / kmPerSecond
+            : 0;
+
+
+    $("distance").textContent =
+        totalDistance.toFixed(2);
+
+
+    $("time").textContent =
+        formatTime(elapsed);
+
+
+    $("speed").textContent =
+        kmh.toFixed(1);
+
+
+    $("avgPace").textContent =
+        formatPace(
+            paceSeconds * 60
+        );
+
+
+    $("pace").textContent =
+        formatPace(
+            paceSeconds * 60
+        );
+}
+
+
+/* =====================================================
+   BLOCK TIMING
+===================================================== */
+
+function getBlockStartTime() {
+
+    if (
+        !currentPlan
+    ) {
+
+        return 0;
+    }
+
+
+    let total =
+        0;
+
+
+    for (
+        let i = 0;
+        i < currentBlockIndex;
+        i++
+    ) {
+
+        const block =
+            currentPlan.blocks[i];
+
+
+        if (
+            block.duration > 0
+        ) {
+
+            total +=
+                block.duration *
+                60;
+        }
+    }
+
+
+    return total;
+}
+
+
+/* =====================================================
+   BLOCK PROGRESS
+===================================================== */
+
+function checkBlockProgress() {
+
+    if (
+        !currentPlan
+    ) {
+
+        return;
+    }
+
+
+    if (
+        currentPlan.goal ===
+        "free"
+    ) {
+
+        return;
+    }
+
+
+    const block =
+        currentPlan.blocks[
+            currentBlockIndex
+        ];
+
+
+    if (!block) {
+
+        finishRun();
+
+        return;
+    }
+
+
+    let completed =
+        false;
+
+
+    if (
+        block.duration > 0 &&
+        blockElapsed >=
+        block.duration * 60
+    ) {
+
+        completed =
+            true;
+    }
+
+
+    if (
+        block.distance > 0 &&
+        blockDistance >=
+        block.distance
+    ) {
+
+        completed =
+            true;
+    }
+
+
+    if (
+        completed
+    ) {
+
+        currentBlockIndex++;
+
+        blockElapsed = 0;
+        blockDistance = 0;
+
+        lastCoachState = "";
+
+
+        if (
+            currentBlockIndex >=
+            currentPlan.blocks.length
+        ) {
+
+            speak(
+                "Allenamento completato."
+            );
+
+
+            setTimeout(
+                finishRun,
+                1000
+            );
+
+
+            return;
+        }
+
+
+        updatePhaseDisplay();
+
+
+        speak(
+            getBlockAnnouncement()
+        );
+    }
+}
+
+
+function updateBlockProgress() {
+
+    if (
+        !currentPlan
+    ) {
+
+        return;
+    }
+
+
+    const block =
+        currentPlan.blocks[
+            currentBlockIndex
+        ];
+
+
+    if (!block) {
+        return;
+    }
+
+
+    let progress =
+        0;
+
+
+    if (
+        block.duration > 0
+    ) {
+
+        progress =
+            (
+                blockElapsed /
+                (
+                    block.duration *
+                    60
+                )
+            ) * 100;
+    }
+
+
+    else if (
+        block.distance > 0
+    ) {
+
+        progress =
+            (
+                blockDistance /
+                block.distance
+            ) * 100;
+    }
+
+
+    progress =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                progress
+            )
+        );
+
+
+    $("progressInner").style.width =
+        progress + "%";
+
+
+    if (
+        block.duration > 0
+    ) {
+
+        $("blockTime").textContent =
+            formatTime(
+                blockElapsed
+            )
+            +
+            " / "
+            +
+            formatTime(
+                block.duration * 60
+            );
+    }
+
+
+    else if (
+        block.distance > 0
+    ) {
+
+        $("blockTime").textContent =
+            blockDistance.toFixed(2)
+            +
+            " / "
+            +
+            block.distance.toFixed(2)
+            +
+            " km";
+    }
+
+
+    else {
+
+        $("blockTime").textContent =
+            "";
+    }
+}
+
+
+/* =====================================================
+   PHASE DISPLAY
+===================================================== */
+
+function updatePhaseDisplay() {
+
+    if (
+        !currentPlan
+    ) {
+
+        return;
+    }
+
+
+    const block =
+        currentPlan.blocks[
+            currentBlockIndex
+        ];
+
+
+    if (!block) {
+        return;
+    }
+
+
+    let title =
+        "CORSA";
+
+
+    switch (
+        block.type
+    ) {
+
+        case "warmup":
+            title =
+                "RISCALDAMENTO";
+            break;
+
+        case "run":
+            title =
+                "CORSA";
+            break;
+
+        case "interval":
+            title =
+                "RIPETUTA";
+            break;
+
+        case "recovery":
+            title =
+                "RECUPERO";
+            break;
+
+        case "cooldown":
+            title =
+                "DEFATICAMENTO";
+            break;
+    }
+
+
+    $("phase").textContent =
+        title;
+
+
+    if (
+        block.repeatTotal > 0
+    ) {
+
+        $("phaseCounter").textContent =
+            block.repeatNumber
+            +
+            " / "
+            +
+            block.repeatTotal;
+    }
+
+    else {
+
+        $("phaseCounter").textContent =
+            "";
+    }
+
+
+    let details =
+        "";
+
+
+    if (
+        block.distance > 0
+    ) {
+
+        details +=
+            block.distance.toFixed(2)
+            +
+            " km";
+    }
+
+
+    if (
+        block.duration > 0
+    ) {
+
+        if (
+            details !== ""
+        ) {
+
+            details +=
+                " · ";
+        }
+
+
+        details +=
+            block.duration
+            +
+            " min";
+    }
+
+
+    if (
+        block.targetPace > 0
+    ) {
+
+        if (
+            details !== ""
+        ) {
+
+            details +=
+                " · ";
+        }
+
+
+        details +=
+            "Target "
+            +
+            formatPace(
+                block.targetPace
+            )
+            +
+            "/km";
+    }
+
+
+    $("phaseDetails").textContent =
+        details;
+}
+
+
+/* =====================================================
+   ANNOUNCEMENT
+===================================================== */
+
+function getBlockAnnouncement() {
+
+    const block =
+        currentPlan.blocks[
+            currentBlockIndex
+        ];
+
+
+    if (!block) {
+
+        return "Fine allenamento.";
+    }
+
+
+    switch (
+        block.type
+    ) {
+
+        case "warmup":
+            return "Inizia il riscaldamento.";
+
+        case "interval":
+
+            return (
+                "Inizia la ripetuta "
+                +
+                block.repeatNumber
+                +
+                " di "
+                +
+                block.repeatTotal
+                +
+                "."
+            );
+
+        case "recovery":
+
+            if (
+                block.repeatTotal > 0
+            ) {
+
+                return (
+                    "Inizia il recupero "
+                    +
+                    block.repeatNumber
+                    +
+                    " di "
+                    +
+                    block.repeatTotal
+                    +
+                    "."
+                );
+            }
+
+            return "Inizia il recupero.";
+
+        case "cooldown":
+            return "Inizia il defaticamento.";
+
+        case "run":
+            return "Inizia la corsa.";
+
+        default:
+            return "Inizia il prossimo blocco.";
+    }
+}
+
+
+/* =====================================================
+   PAUSE
 ===================================================== */
 
 function togglePause() {
-
-
-    if (!running) {
-
-        return;
-
-    }
-
 
     paused =
         !paused;
 
 
-    if (paused) {
-
+    if (
+        paused
+    ) {
 
         $("pauseButton").textContent =
             "▶ RIPRENDI";
@@ -1882,20 +2717,18 @@ function togglePause() {
         $("coach").textContent =
             "Corsa in pausa";
 
-        $("coach").className =
-            "coach";
 
+        if (
+            "speechSynthesis"
+            in window
+        ) {
+
+            window.speechSynthesis.cancel();
+        }
 
     }
 
-
     else {
-
-
-        /*
-           Manteniamo il tempo
-           già trascorso.
-        */
 
         startTime =
             Date.now()
@@ -1903,20 +2736,12 @@ function togglePause() {
             elapsed * 1000;
 
 
-        /*
-           Il GPS riparte da
-           un punto nuovo.
-        */
-
         lastPosition =
             null;
 
+
         lastPositionTime =
             null;
-
-
-        paceSamples =
-            [];
 
 
         $("pauseButton").textContent =
@@ -1925,27 +2750,21 @@ function togglePause() {
 
         $("coach").textContent =
             "Corsa ripresa";
-
-        $("coach").className =
-            "coach";
-
-
     }
-
 }
 
 
 /* =====================================================
-   FINE CORSA
+   FINISH
 ===================================================== */
 
 function finishRun() {
 
-
-    if (!running) {
+    if (
+        !running
+    ) {
 
         return;
-
     }
 
 
@@ -1953,7 +2772,9 @@ function finishRun() {
         false;
 
 
-    clearInterval(timer);
+    clearInterval(
+        timer
+    );
 
 
     if (
@@ -1961,134 +2782,152 @@ function finishRun() {
     ) {
 
         navigator.geolocation
-            .clearWatch(watchId);
+            .clearWatch(
+                watchId
+            );
+
 
         watchId =
             null;
-
     }
-
-
-    /*
-       Aggiorniamo un'ultima volta
-       il tempo.
-    */
-
-    if (!paused) {
-
-        elapsed =
-            (
-                Date.now()
-                -
-                startTime
-            ) / 1000;
-
-    }
-
-
-    /*
-       RITMO FINALE
-    */
-
-    let pace = 0;
 
 
     if (
-        totalDistance > 0
+        "speechSynthesis"
+        in window
     ) {
 
-        pace =
-            elapsed
-            /
-            totalDistance;
-
+        window.speechSynthesis.cancel();
     }
 
 
-    /*
-       VELOCITÀ FINALE
-    */
-
-    let speed = 0;
-
-
-    if (
+    const kmPerSecond =
         elapsed > 0
-    ) {
-
-        speed =
-            (
-                totalDistance
-                /
-                elapsed
-            )
-            *
-            3600;
-
-    }
+            ? totalDistance /
+              elapsed
+            : 0;
 
 
-    /*
-       RISULTATO
-    */
+    const pace =
+        kmPerSecond > 0
+            ? 1 / kmPerSecond
+            : 0;
 
-    $("summaryDistance")
-        .textContent =
+
+    $("summaryDistance").textContent =
         totalDistance.toFixed(2);
 
 
-    $("summaryTime")
-        .textContent =
-        formatTime(elapsed);
+    $("summaryTime").textContent =
+        formatTime(
+            elapsed
+        );
 
 
-    $("summaryPace")
-        .textContent =
-        formatPace(pace);
+    $("summaryPace").textContent =
+        formatPace(
+            pace * 60
+        );
 
 
-    $("summarySpeed")
-        .textContent =
-        speed.toFixed(1);
+    $("summarySpeed").textContent =
+        (
+            kmPerSecond * 3600
+        ).toFixed(1);
 
 
-    /*
-       SALVATAGGIO
-    */
+    $("summaryPlan").textContent =
+        currentPlan
+            ? currentPlan.name
+            : "Corsa";
 
-    saveRun();
 
+    saveRunToHistory();
 
     refreshStats();
 
-
     show("summary");
-
 }
 
 
 /* =====================================================
-   SALVATAGGIO CORSA
+   CANCEL
 ===================================================== */
 
-function saveRun() {
+function cancelRun() {
+
+    if (
+        !confirm(
+            "Uscire dalla corsa senza salvare?"
+        )
+    ) {
+
+        return;
+    }
 
 
-    const runs =
+    running =
+        false;
+
+
+    clearInterval(
+        timer
+    );
+
+
+    if (
+        watchId !== null
+    ) {
+
+        navigator.geolocation
+            .clearWatch(
+                watchId
+            );
+
+
+        watchId =
+            null;
+    }
+
+
+    if (
+        "speechSynthesis"
+        in window
+    ) {
+
+        window.speechSynthesis.cancel();
+    }
+
+
+    showHome();
+}
+
+
+/* =====================================================
+   RUN HISTORY
+===================================================== */
+
+function saveRunToHistory() {
+
+    const history =
         JSON.parse(
             localStorage.getItem(
-                "runsData"
+                "runnerHistory"
             )
             ||
             "[]"
         );
 
 
-    runs.push({
+    history.push({
 
         date:
-            new Date()
-                .toISOString(),
+            new Date().toISOString(),
+
+        plan:
+            currentPlan
+                ? currentPlan.name
+                : "Corsa",
 
         distance:
             totalDistance,
@@ -2098,179 +2937,1003 @@ function saveRun() {
 
         pace:
             totalDistance > 0
-            ?
-            elapsed / totalDistance
-            :
-            0,
-
-        speed:
-            elapsed > 0
-            ?
-            (
-                totalDistance
-                /
-                elapsed
-            )
-            *
-            3600
-            :
-            0
-
+                ? elapsed /
+                  totalDistance
+                : 0
     });
 
 
     localStorage.setItem(
-
-        "runsData",
-
-        JSON.stringify(runs)
-
-    );
-
-}
-
-
-/* =====================================================
-   CANCELLA CORSA
-===================================================== */
-
-function cancelRun() {
-
-
-    if (
-        confirm(
-            "Uscire dalla corsa senza salvare?"
+        "runnerHistory",
+        JSON.stringify(
+            history
         )
-    ) {
-
-
-        running =
-            false;
-
-
-        clearInterval(timer);
-
-
-        if (
-            watchId !== null
-        ) {
-
-            navigator.geolocation
-                .clearWatch(watchId);
-
-            watchId =
-                null;
-
-        }
-
-
-        showHome();
-
-    }
-
+    );
 }
 
-
-/* =====================================================
-   STATISTICHE SETTIMANALI
-===================================================== */
 
 function refreshStats() {
 
-
-    const runs =
+    const history =
         JSON.parse(
             localStorage.getItem(
-                "runsData"
+                "runnerHistory"
             )
             ||
             "[]"
         );
 
 
-    const now =
-        new Date();
-
-
-    /*
-       Inizio settimana:
-       lunedì.
-    */
-
-    const day =
-        now.getDay();
-
-
-    const diff =
-        day === 0
-        ?
-        6
-        :
-        day - 1;
-
-
-    const monday =
-        new Date(now);
-
-
-    monday.setHours(
-        0,
-        0,
-        0,
-        0
-    );
-
-
-    monday.setDate(
-        now.getDate()
-        -
-        diff
-    );
-
-
-    let weeklyKm = 0;
-
-    let weeklyRuns = 0;
-
-
-    for (
-        const run
-        of runs
-    ) {
-
-
-        const date =
-            new Date(run.date);
-
-
-        if (
-            date >= monday
-            &&
-            date <= now
-        ) {
-
-            weeklyKm +=
+    const km =
+        history.reduce(
+            (
+                sum,
+                run
+            ) =>
+                sum +
                 Number(
-                    run.distance
-                )
-                ||
-                0;
-
-
-            weeklyRuns++;
-
-        }
-
-    }
+                    run.distance ||
+                    0
+                ),
+            0
+        );
 
 
     $("weekKm").textContent =
-        weeklyKm.toFixed(1);
+        km.toFixed(1);
 
 
     $("weekRuns").textContent =
-        weeklyRuns;
+        history.length;
+}
 
+
+/* =====================================================
+   PLAN STORAGE
+===================================================== */
+
+function getPlans() {
+
+    return JSON.parse(
+        localStorage.getItem(
+            "runnerPlans"
+        )
+        ||
+        "[]"
+    );
+}
+
+
+function savePlans(
+    plans
+) {
+
+    localStorage.setItem(
+        "runnerPlans",
+        JSON.stringify(
+            plans
+        )
+    );
+}
+
+
+/* =====================================================
+   PLAN LIST
+===================================================== */
+
+function openPlans() {
+
+    if (running) {
+        return;
+    }
+
+    show("plans");
+
+    renderPlans();
+}
+
+
+function renderPlans() {
+
+    const container =
+        $("savedPlansList");
+
+
+    const plans =
+        getPlans();
+
+
+    if (
+        plans.length === 0
+    ) {
+
+        container.innerHTML =
+            `
+            <div class="empty">
+                Non hai ancora creato
+                nessun allenamento.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        "";
+
+
+    plans.forEach(
+        function(plan) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "savedPlan";
+
+
+            let totalTime =
+                0;
+
+
+            let totalDistancePlan =
+                0;
+
+
+            plan.blocks.forEach(
+                function(block) {
+
+                    totalTime +=
+                        Number(
+                            block.duration ||
+                            0
+                        );
+
+
+                    totalDistancePlan +=
+                        Number(
+                            block.distance ||
+                            0
+                        );
+                }
+            );
+
+
+            let info =
+                plan.blocks.length
+                +
+                " blocchi";
+
+
+            if (
+                totalTime > 0
+            ) {
+
+                info +=
+                    " · "
+                    +
+                    totalTime
+                    +
+                    " min";
+            }
+
+
+            if (
+                totalDistancePlan > 0
+            ) {
+
+                info +=
+                    " · "
+                    +
+                    totalDistancePlan
+                        .toFixed(1)
+                    +
+                    " km";
+            }
+
+
+            div.innerHTML =
+                `
+                <div class="savedPlanTop">
+
+                    <div>
+
+                        <div
+                        class="savedPlanName">
+
+                            ${escapeHtml(
+                                plan.name
+                            )}
+
+                        </div>
+
+                        <div
+                        class="savedPlanInfo">
+
+                            ${info}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="planActions">
+
+                    <button
+                    class="primary"
+                    onclick="startSavedPlan('${plan.id}')">
+
+                        ▶ INIZIA
+
+                    </button>
+
+
+                    <button
+                    class="secondary"
+                    style="margin-top:0;"
+                    onclick="deletePlan('${plan.id}')">
+
+                        🗑 ELIMINA
+
+                    </button>
+
+                </div>
+                `;
+
+
+            container.appendChild(
+                div
+            );
+        }
+    );
+}
+
+
+/* =====================================================
+   BUILDER
+===================================================== */
+
+function openPlanBuilder() {
+
+    show("builder");
+
+
+    $("planName").value =
+        "";
+
+
+    builderBlocks =
+        [];
+
+
+    renderBuilder();
+}
+
+
+/* =====================================================
+   ADD SIMPLE BLOCK
+===================================================== */
+
+function addSimpleBlock(
+    type
+) {
+
+    let duration =
+        10;
+
+
+    let pace =
+        330;
+
+
+    if (
+        type === "recovery"
+    ) {
+
+        duration =
+            2;
+
+        pace =
+            405;
+    }
+
+
+    if (
+        type === "cooldown"
+    ) {
+
+        duration =
+            5;
+
+        pace =
+            390;
+    }
+
+
+    builderBlocks.push({
+
+        id:
+            Date.now() +
+            Math.random(),
+
+        type:
+            type,
+
+        duration:
+            duration,
+
+        distance:
+            0,
+
+        targetPace:
+            pace,
+
+        repeatNumber:
+            0,
+
+        repeatTotal:
+            0
+    });
+
+
+    renderBuilder();
+}
+
+
+/* =====================================================
+   ADD AUTOMATIC REPEATS
+===================================================== */
+
+function addRepeatBlock() {
+
+    const count =
+        Math.max(
+            1,
+            Number(
+                $("repeatCount").value
+            )
+        );
+
+
+    const distanceMeters =
+        Math.max(
+            1,
+            Number(
+                $("repeatDistance").value
+            )
+        );
+
+
+    const distanceKm =
+        distanceMeters /
+        1000;
+
+
+    const repeatPace =
+        parsePace(
+            $("repeatPace").value
+        );
+
+
+    const recoveryDuration =
+        Math.max(
+            0,
+            Number(
+                $("recoveryDuration").value
+            )
+        );
+
+
+    const recoveryPace =
+        parsePace(
+            $("recoveryPace").value
+        );
+
+
+    for (
+        let i = 1;
+        i <= count;
+        i++
+    ) {
+
+        /*
+           RIPETUTA
+        */
+
+        builderBlocks.push({
+
+            id:
+                Date.now() +
+                Math.random(),
+
+            type:
+                "interval",
+
+            duration:
+                0,
+
+            distance:
+                distanceKm,
+
+            targetPace:
+                repeatPace,
+
+            repeatNumber:
+                i,
+
+            repeatTotal:
+                count
+        });
+
+
+        /*
+           RECUPERO
+        */
+
+        if (
+            recoveryDuration > 0
+        ) {
+
+            builderBlocks.push({
+
+                id:
+                    Date.now() +
+                    Math.random(),
+
+                type:
+                    "recovery",
+
+                duration:
+                    recoveryDuration,
+
+                distance:
+                    0,
+
+                targetPace:
+                    recoveryPace,
+
+                repeatNumber:
+                    i,
+
+                repeatTotal:
+                    count
+            });
+        }
+    }
+
+
+    renderBuilder();
+}
+
+
+/* =====================================================
+   REPEAT PREVIEW
+===================================================== */
+
+function updateRepeatPreview() {
+
+    const count =
+        Number(
+            $("repeatCount").value
+        )
+        || 0;
+
+
+    const distance =
+        Number(
+            $("repeatDistance").value
+        )
+        || 0;
+
+
+    const repeatPace =
+        $("repeatPace").value
+        ||
+        "--:--";
+
+
+    const recovery =
+        Number(
+            $("recoveryDuration").value
+        )
+        || 0;
+
+
+    const recoveryPace =
+        $("recoveryPace").value
+        ||
+        "--:--";
+
+
+    $("repeatPreview").innerHTML =
+        `
+        ${count} × ${distance} m
+        @ ${escapeHtml(repeatPace)}/km
+        <br>
+        Recupero:
+        ${recovery} min
+        @ ${escapeHtml(recoveryPace)}/km
+        `;
+}
+
+
+/* =====================================================
+   BUILDER RENDER
+===================================================== */
+
+function renderBuilder() {
+
+    const container =
+        $("builderBlocks");
+
+
+    container.innerHTML =
+        "";
+
+
+    if (
+        builderBlocks.length === 0
+    ) {
+
+        container.innerHTML =
+            `
+            <div class="empty">
+                Nessun blocco aggiunto.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    builderBlocks.forEach(
+        function(block, index) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "blockCard";
+
+
+            let title =
+                "Corsa";
+
+
+            switch (
+                block.type
+            ) {
+
+                case "warmup":
+                    title =
+                        "Riscaldamento";
+                    break;
+
+                case "interval":
+                    title =
+                        "Ripetuta "
+                        +
+                        block.repeatNumber
+                        +
+                        "/"
+                        +
+                        block.repeatTotal;
+                    break;
+
+                case "recovery":
+
+                    if (
+                        block.repeatTotal > 0
+                    ) {
+
+                        title =
+                            "Recupero "
+                            +
+                            block.repeatNumber
+                            +
+                            "/"
+                            +
+                            block.repeatTotal;
+
+                    } else {
+
+                        title =
+                            "Recupero";
+                    }
+
+                    break;
+
+                case "cooldown":
+                    title =
+                        "Defaticamento";
+                    break;
+            }
+
+
+            let details =
+                "";
+
+
+            if (
+                block.distance > 0
+            ) {
+
+                details +=
+                    block.distance.toFixed(2)
+                    +
+                    " km";
+            }
+
+
+            if (
+                block.duration > 0
+            ) {
+
+                if (
+                    details !== ""
+                ) {
+
+                    details +=
+                        " · ";
+                }
+
+
+                details +=
+                    block.duration
+                    +
+                    " min";
+            }
+
+
+            if (
+                block.targetPace > 0
+            ) {
+
+                if (
+                    details !== ""
+                ) {
+
+                    details +=
+                        " · ";
+                }
+
+
+                details +=
+                    formatPace(
+                        block.targetPace
+                    )
+                    +
+                    "/km";
+            }
+
+
+            div.innerHTML =
+                `
+                <div class="blockHeader">
+
+                    <div class="blockNumber">
+                        ${index + 1}
+                    </div>
+
+                    <div class="blockTitle">
+                        ${title}
+                    </div>
+
+                    <button
+                    class="deleteBlock"
+                    onclick="removeBuilderBlock(${block.id})">
+
+                        ×
+
+                    </button>
+
+                </div>
+
+
+                <div class="small">
+                    ${details}
+                </div>
+                `;
+
+
+            container.appendChild(
+                div
+            );
+        }
+    );
+}
+
+
+/* =====================================================
+   REMOVE BUILDER BLOCK
+===================================================== */
+
+function removeBuilderBlock(
+    id
+) {
+
+    builderBlocks =
+        builderBlocks.filter(
+            block =>
+                block.id !== id
+        );
+
+
+    renderBuilder();
+}
+
+
+/* =====================================================
+   SAVE PLAN
+===================================================== */
+
+function savePlan() {
+
+    const name =
+        $("planName")
+            .value
+            .trim();
+
+
+    if (!name) {
+
+        alert(
+            "Inserisci un nome per l'allenamento."
+        );
+
+        return;
+    }
+
+
+    if (
+        builderBlocks.length === 0
+    ) {
+
+        alert(
+            "Aggiungi almeno un blocco."
+        );
+
+        return;
+    }
+
+
+    const plan = {
+
+        id:
+            Date.now().toString(),
+
+        name:
+            name,
+
+        goal:
+            $("planGoal").value,
+
+        blocks:
+            JSON.parse(
+                JSON.stringify(
+                    builderBlocks
+                )
+            )
+    };
+
+
+    const plans =
+        getPlans();
+
+
+    plans.push(
+        plan
+    );
+
+
+    savePlans(
+        plans
+    );
+
+
+    alert(
+        "Allenamento salvato!"
+    );
+
+
+    openPlans();
+}
+
+
+/* =====================================================
+   START SAVED PLAN
+===================================================== */
+
+function startSavedPlan(
+    id
+) {
+
+    const plans =
+        getPlans();
+
+
+    const plan =
+        plans.find(
+            p =>
+                p.id === id
+        );
+
+
+    if (!plan) {
+
+        alert(
+            "Allenamento non trovato."
+        );
+
+        return;
+    }
+
+
+    currentPlan =
+        JSON.parse(
+            JSON.stringify(
+                plan
+            )
+        );
+
+
+    startRun();
+}
+
+
+/* =====================================================
+   DELETE PLAN
+===================================================== */
+
+function deletePlan(
+    id
+) {
+
+    if (
+        !confirm(
+            "Eliminare questo allenamento?"
+        )
+    ) {
+
+        return;
+    }
+
+
+    let plans =
+        getPlans();
+
+
+    plans =
+        plans.filter(
+            p =>
+                p.id !== id
+        );
+
+
+    savePlans(
+        plans
+    );
+
+
+    renderPlans();
+}
+
+
+/* =====================================================
+   HOME PLAN
+===================================================== */
+
+function updateHomePlan() {
+
+    const plans =
+        getPlans();
+
+
+    const container =
+        $("nextPlanContent");
+
+
+    if (
+        plans.length === 0
+    ) {
+
+        container.innerHTML =
+            `
+            <div class="muted">
+                Nessun allenamento salvato.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    const plan =
+        plans[
+            plans.length - 1
+        ];
+
+
+    let totalTime =
+        0;
+
+
+    let totalDistancePlan =
+        0;
+
+
+    plan.blocks.forEach(
+        function(block) {
+
+            totalTime +=
+                Number(
+                    block.duration ||
+                    0
+                );
+
+
+            totalDistancePlan +=
+                Number(
+                    block.distance ||
+                    0
+                );
+        }
+    );
+
+
+    let info =
+        plan.blocks.length
+        +
+        " blocchi";
+
+
+    if (
+        totalTime > 0
+    ) {
+
+        info +=
+            " · "
+            +
+            totalTime
+            +
+            " min";
+    }
+
+
+    if (
+        totalDistancePlan > 0
+    ) {
+
+        info +=
+            " · "
+            +
+            totalDistancePlan.toFixed(1)
+            +
+            " km";
+    }
+
+
+    container.innerHTML =
+        `
+        <div class="planName">
+            ${escapeHtml(
+                plan.name
+            )}
+        </div>
+
+        <div class="muted">
+            ${info}
+        </div>
+        `;
 }
 
 
@@ -2280,23 +3943,34 @@ function refreshStats() {
 
 function showHome() {
 
+    if (
+        running
+    ) {
+
+        return;
+    }
+
+
     show("home");
 
     refreshStats();
 
+    updateHomePlan();
 }
 
 
 /* =====================================================
-   AVVIO
+   INIT
 ===================================================== */
 
 refreshStats();
 
+updateHomePlan();
+
+updateRepeatPreview();
 
 </script>
 
 </body>
-
 </html>
 ```
