@@ -1,4 +1,4 @@
-const CACHE_NAME = "runner-v6";
+const CACHE_NAME = "runner-v7";
 
 const FILES_TO_CACHE = [
     "./",
@@ -31,13 +31,21 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
     event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                if (cachedResponse) {
-                    return cachedResponse;
+        fetch(event.request)
+            .then(response => {
+                if (
+                    response &&
+                    response.status === 200 &&
+                    event.request.method === "GET"
+                ) {
+                    const copy = response.clone();
+
+                    caches.open(CACHE_NAME)
+                        .then(cache => cache.put(event.request, copy));
                 }
 
-                return fetch(event.request);
+                return response;
             })
+            .catch(() => caches.match(event.request))
     );
 });
