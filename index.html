@@ -784,7 +784,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.3
+        🔧 DIAGNOSTICA GPS v6.4
     </div>
     <div class="grid">
         <div>
@@ -3248,6 +3248,10 @@ function startRunEngine(
     gpsLastMovingSpeed = 0;
     gpsLastReliableTimestamp = 0;
 
+    instantSpeedKmh = null;
+    coachPendingState = "";
+    coachPendingSince = 0;
+
     paceHistory = [];
 
     lastPaceAnnouncement = 0;
@@ -3422,6 +3426,7 @@ function updateMovementState(speedMps, now) {
             if (!movementCandidateSince) movementCandidateSince = now;
             if (now - movementCandidateSince >= 600) {
                 isMoving = true;
+                movementCandidateSince = 0;
             }
         }
     } else if (speed <= 0.45) {
@@ -3546,26 +3551,10 @@ function positionReceived(position) {
         return;
     }
 
-    // Velocità robusta: preferiamo la velocità GPS del dispositivo, ma la
-    // confrontiamo con quella derivata dalle coordinate. Una singola lettura
-    // anomala non deve cambiare istantaneamente lo stato di movimento.
-    let speedForMovement =
-        deviceSpeed !== null ? deviceSpeed : coordinateSpeed;
-
-    if (
-        deviceSpeed !== null &&
-        coordinateSpeed <= maxPhysicalSpeed
-    ) {
-        // Se le due stime sono vicine, la loro mediana è più stabile.
-        // Se sono molto diverse, privilegiamo il dato GPS del dispositivo.
-        if (Math.abs(deviceSpeed - coordinateSpeed) <= 2.0) {
-            speedForMovement = median([
-                deviceSpeed,
-                coordinateSpeed,
-                lastGpsSpeed ?? deviceSpeed
-            ].filter(Number.isFinite));
-        }
-    }
+    // v6.4: velocità principale = distanza tra fix GPS / intervallo.
+    // coords.speed resta disponibile nella diagnostica, ma non viene
+    // più privilegiato perché nel test reale risultava sottostimato.
+    const speedForMovement = coordinateSpeed;
 
     // Memoria breve della velocità per evitare oscillazioni GPS.
     gpsPositionHistory.push({
@@ -3608,8 +3597,7 @@ function positionReceived(position) {
 
         // Quando la velocità GPS è disponibile, evitiamo di accettare uno
         // spostamento incompatibile con essa (con un margine ampio per il GPS).
-        const speedReference =
-            deviceSpeed !== null ? deviceSpeed : robustSpeed;
+        const speedReference = robustSpeed;
 
         const distanceUpperBound =
             Math.max(12, speedReference * dt * 1.8 + accuracyMeters);
@@ -3898,21 +3886,85 @@ function paceToSeconds(value) {
 }
 
 
+/*
+ * v6.4 - Stabilizzatore del ritmo istantaneo.
+ * La sorgente è la velocità derivata dai fix GPS. Il filtro è breve:
+ * reagisce rapidamente, ma evita che il Coach segua ogni piccola oscillazione.
+ */
+let instantSpeedKmh = null;
+let coachPendingState = "";
+let coachPendingSince = 0;
+
+const INSTANT_SPEED_ALPHA_UP = 0.55;
+const INSTANT_SPEED_ALPHA_DOWN = 0.40;
+const INSTANT_SPEED_STOP_KMH = 0.8;
+
+const COACH_CONFIRM_MS = 3500;
+const COACH_HYSTERESIS_SECONDS = 5;
+
+function getStableInstantSpeedKmh() {
+
+    const rawMps =
+        Number.isFinite(gpsDiag.coordinateSpeed)
+            ? gpsDiag.coordinateSpeed
+            : null;
+
+    if (rawMps === null || rawMps < 0) {
+        return Number.isFinite(instantSpeedKmh)
+            ? instantSpeedKmh
+            : 0;
+    }
+
+    const rawKmh = rawMps * 3.6;
+
+    if (rawKmh <= INSTANT_SPEED_STOP_KMH) {
+        instantSpeedKmh =
+            instantSpeedKmh === null
+                ? 0
+                : instantSpeedKmh * 0.45;
+
+        if (instantSpeedKmh < 0.3) {
+            instantSpeedKmh = 0;
+        }
+
+        return instantSpeedKmh;
+    }
+
+    if (instantSpeedKmh === null) {
+        instantSpeedKmh = rawKmh;
+        return instantSpeedKmh;
+    }
+
+    const alpha =
+        rawKmh >= instantSpeedKmh
+            ? INSTANT_SPEED_ALPHA_UP
+            : INSTANT_SPEED_ALPHA_DOWN;
+
+    instantSpeedKmh +=
+        alpha * (rawKmh - instantSpeedKmh);
+
+    return instantSpeedKmh;
+}
+
+function getStableInstantPace() {
+
+    const speedKmh = getStableInstantSpeedKmh();
+
+    if (!(speedKmh > 0.5)) {
+        return null;
+    }
+
+    return 60 / speedKmh;
+}
+
 /* =========================
    PACE ENGINE
    ========================= */
 
 function getFilteredPace() {
 
-    // v6.2: passo ISTANTANEO, derivato dalla velocità GPS corrente.
-    // Non usa più la finestra paceWindow, che resta disponibile per altre logiche.
-    const speedMps = getInstantaneousSpeedMps();
-
-    if (!(speedMps > 0)) {
-        return null;
-    }
-
-    return 1000 / speedMps;
+    // v6.4: ritmo istantaneo stabilizzato.
+    return getStableInstantPace();
 
 }
 
@@ -3958,19 +4010,8 @@ function getAveragePace() {
 
 function getSpeed() {
 
-    // v6.2: velocità ISTANTANEA, non media del tragitto.
-    // Usiamo l'ultimo fix GPS filtrato; fallback sull'ultima velocità affidabile.
-    const latest = gpsPositionHistory.length
-        ? gpsPositionHistory[gpsPositionHistory.length - 1]
-        : null;
-
-    if (latest && Number.isFinite(latest.speed) && latest.speed >= 0) {
-        return latest.speed * 3.6;
-    }
-
-    return gpsLastMovingSpeed > 0
-        ? gpsLastMovingSpeed * 3.6
-        : 0;
+    // v6.4: stessa velocità istantanea stabilizzata usata dal ritmo.
+    return getStableInstantSpeedKmh();
 
 }
 
@@ -4438,37 +4479,39 @@ function processCoach() {
         max + toleranceMax;
 
 
-    let state;
+    let rawState;
 
+    const hysteresis =
+        COACH_HYSTERESIS_SECONDS / 60;
+
+    if (pace < lowerBound - hysteresis) {
+        rawState = "too_fast";
+    }
+    else if (pace > upperBound + hysteresis) {
+        rawState = "too_slow";
+    }
+    else {
+        rawState = "ok";
+    }
+
+    const now = Date.now();
+
+    // Il Coach conferma "accelera/rallenta" solo se la condizione
+    // resta presente per alcuni secondi consecutivi.
+    if (rawState !== coachPendingState) {
+        coachPendingState = rawState;
+        coachPendingSince = now;
+    }
 
     if (
-        pace < lowerBound
+        rawState !== "ok" &&
+        now - coachPendingSince < COACH_CONFIRM_MS
     ) {
-
-        state =
-            "too_fast";
-
+        $("coach").textContent = "Controllo ritmo…";
+        return;
     }
 
-    else if (
-        pace > upperBound
-    ) {
-
-        state =
-            "too_slow";
-
-    }
-
-    else {
-
-        state =
-            "ok";
-
-    }
-
-
-    const now =
-        Date.now();
+    const state = rawState;
 
 
     const interval =
