@@ -1,3 +1,4 @@
+<!-- RUNNER GPS v6.1 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -3000,6 +3001,11 @@ let isMoving = false;
 let movementCandidateSince = 0;
 let stationaryCandidateSince = 0;
 
+// GPS v6.1: stato interno del filtro, senza modificare il resto dell'app.
+let gpsAcceptedPositions = [];
+let gpsLastMovingSpeed = 0;
+let gpsLastReliableTimestamp = 0;
+
 let paceHistory = [];
 
 let lastPaceAnnouncement = 0;
@@ -3186,6 +3192,9 @@ function startRunEngine(
     isMoving = false;
     movementCandidateSince = 0;
     stationaryCandidateSince = 0;
+    gpsAcceptedPositions = [];
+    gpsLastMovingSpeed = 0;
+    gpsLastReliableTimestamp = 0;
 
     paceHistory = [];
 
@@ -3355,19 +3364,19 @@ function updateMovementState(speedMps, now) {
 
     // Isteresi: partenza confermata dopo ~1.2 s di movimento,
     // arresto confermato dopo ~2.5 s. Evita falsi start/stop da drift GPS.
-    if (speed >= 1.15) {
+    if (speed >= 0.85) {
         stationaryCandidateSince = 0;
         if (!isMoving) {
             if (!movementCandidateSince) movementCandidateSince = now;
-            if (now - movementCandidateSince >= 1200) {
+            if (now - movementCandidateSince >= 1400) {
                 isMoving = true;
             }
         }
-    } else if (speed <= 0.65) {
+    } else if (speed <= 0.45) {
         movementCandidateSince = 0;
         if (isMoving) {
             if (!stationaryCandidateSince) stationaryCandidateSince = now;
-            if (now - stationaryCandidateSince >= 2500) {
+            if (now - stationaryCandidateSince >= 2200) {
                 isMoving = false;
             }
         }
@@ -3384,106 +3393,201 @@ function positionReceived(position) {
 
     if (!running || paused) return;
 
-    const coords = position.coords;
-    const accuracy = Number(coords.accuracy);
+    const coords = position.coords || {};
     const lat = Number(coords.latitude);
     const lon = Number(coords.longitude);
+    const accuracy = Number(coords.accuracy);
     const timestamp = Number(position.timestamp) || Date.now();
 
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
-    // Una precisione dichiarata enorme non è utile per il tracciamento.
-    // Manteniamo comunque l'ultimo stato GPS visibile all'utente.
-    const maxAccuracy = Math.max(10, Number(settings.gpsAccuracy) || 30);
-    if (settings.gpsFiltering && Number.isFinite(accuracy) && accuracy > maxAccuracy) {
+    // Manteniamo visibile la qualità del segnale anche quando il fix non è
+    // abbastanza buono per entrare nei calcoli.
+    if (Number.isFinite(accuracy)) {
         $("gps").textContent = `GPS ~${Math.round(accuracy)}m`;
+    }
+
+    const maxAccuracy = Math.max(20, Number(settings.gpsAccuracy) || 30);
+
+    if (
+        settings.gpsFiltering &&
+        Number.isFinite(accuracy) &&
+        accuracy > maxAccuracy
+    ) {
         $("gpsStatus").textContent = "● GPS POCO PRECISO";
+        if (!isMoving) {
+            $("coach").textContent =
+                "GPS in acquisizione · attendo una posizione migliore";
+        }
         return;
     }
 
-    const current = { lat, lon, time: timestamp, accuracy };
+    const reportedSpeed = Number(coords.speed);
+    const deviceSpeed =
+        Number.isFinite(reportedSpeed) && reportedSpeed >= 0
+            ? reportedSpeed
+            : null;
 
+    const current = {
+        lat,
+        lon,
+        time: timestamp,
+        accuracy: Number.isFinite(accuracy) ? accuracy : maxAccuracy,
+        speed: deviceSpeed
+    };
+
+    // Primo fix: non conteggiare nulla. Serve solo a stabilire l'origine.
     if (!lastPosition) {
         lastPosition = { lat, lon };
         lastPositionTime = timestamp;
         gpsPositionHistory = [current];
-        lastGpsSpeed = Number.isFinite(coords.speed) && coords.speed >= 0
-            ? coords.speed
-            : null;
+        gpsAcceptedPositions = [current];
+        lastGpsSpeed = deviceSpeed;
+        gpsLastReliableTimestamp = timestamp;
         isMoving = false;
         movementCandidateSince = 0;
         stationaryCandidateSince = 0;
 
-        $("gps").textContent = `GPS ✓ ${Math.round(accuracy || 0)}m`;
+        $("gps").textContent =
+            `GPS ✓ ${Math.round(current.accuracy)}m`;
         $("gpsStatus").textContent = "● GPS ATTIVO";
         $("coach").textContent =
-            runMode === "free" ? "GPS acquisito · in attesa di movimento" : "GPS acquisito · pronto";
+            runMode === "free"
+                ? "GPS acquisito · in attesa di movimento"
+                : "GPS acquisito · pronto";
         updateDisplay();
         return;
     }
 
-    const seconds = Math.max(0.1, (timestamp - lastPositionTime) / 1000);
-    const meters = calculateDistance(lastPosition.lat, lastPosition.lon, lat, lon);
+    const dt = (timestamp - lastPositionTime) / 1000;
 
-    const reportedSpeed = Number(coords.speed);
-    const gpsSpeed = Number.isFinite(reportedSpeed) && reportedSpeed >= 0
-        ? reportedSpeed
-        : null;
-    const coordinateSpeed = meters / seconds;
-    const recentSpeeds = gpsPositionHistory
-        .slice(-4)
-        .map(p => p.speed)
-        .filter(Number.isFinite);
-    recentSpeeds.push(coordinateSpeed);
-    const robustSpeed = median(recentSpeeds);
+    // Timestamp non valido o duplicato: aggiorniamo solo lo stato visivo.
+    if (!(dt > 0)) return;
 
-    updateMovementState(gpsSpeed !== null ? gpsSpeed : robustSpeed, timestamp);
+    const meters = calculateDistance(
+        lastPosition.lat,
+        lastPosition.lon,
+        lat,
+        lon
+    );
 
-    // Salto GPS impossibile: non aggiungerlo alla distanza, ma aggiorna la
-    // posizione di riferimento solo quando il campione torna plausibile.
-    const impossibleJump =
-        seconds < 5 && meters > 100;
-    const impossibleSpeed = coordinateSpeed > 8.5; // ~30.6 km/h
+    const coordinateSpeed = meters / dt;
 
-    if (settings.gpsFiltering && (impossibleJump || impossibleSpeed)) {
-        $("gps").textContent = `GPS ⚠ ${Math.round(accuracy || 0)}m`;
+    // Un salto non può essere trasformato in distanza reale. Se il GPS
+    // rimane molto tempo senza fix, concediamo più spazio, ma mai oltre una
+    // velocità realistica per una corsa amatoriale.
+    const maxPhysicalSpeed = 8.5; // 30.6 km/h
+    const jumpTooLarge =
+        coordinateSpeed > maxPhysicalSpeed &&
+        (deviceSpeed === null || deviceSpeed > maxPhysicalSpeed);
+
+    if (settings.gpsFiltering && jumpTooLarge) {
         $("gpsStatus").textContent = "● GPS FILTRATO";
         return;
     }
 
-    // Da fermo non trasformiamo il normale rumore GPS in distanza.
-    // Usiamo sia la velocità del telefono sia la velocità delle coordinate.
-    const movementSpeed = gpsSpeed !== null ? gpsSpeed : robustSpeed;
-    const movingNow = updateMovementState(movementSpeed, timestamp);
+    // Velocità robusta: preferiamo la velocità GPS del dispositivo, ma la
+    // confrontiamo con quella derivata dalle coordinate. Una singola lettura
+    // anomala non deve cambiare istantaneamente lo stato di movimento.
+    let speedForMovement =
+        deviceSpeed !== null ? deviceSpeed : coordinateSpeed;
 
-    if (movingNow && meters >= 1.5) {
-        totalDistance += meters / 1000;
-
-        gpsSamples.push({
-            time: timestamp,
-            distance: meters / 1000,
-            seconds,
-            speed: movementSpeed
-        });
-
-        const maxAge = Math.max(10, Number(settings.paceWindow) || 20) * 1000;
-        gpsSamples = gpsSamples.filter(sample => timestamp - sample.time <= maxAge);
+    if (
+        deviceSpeed !== null &&
+        coordinateSpeed <= maxPhysicalSpeed
+    ) {
+        // Se le due stime sono vicine, la loro mediana è più stabile.
+        // Se sono molto diverse, privilegiamo il dato GPS del dispositivo.
+        if (Math.abs(deviceSpeed - coordinateSpeed) <= 2.0) {
+            speedForMovement = median([
+                deviceSpeed,
+                coordinateSpeed,
+                lastGpsSpeed ?? deviceSpeed
+            ].filter(Number.isFinite));
+        }
     }
 
+    // Memoria breve della velocità per evitare oscillazioni GPS.
+    gpsPositionHistory.push({
+        ...current,
+        speed: speedForMovement
+    });
+    if (gpsPositionHistory.length > 7) {
+        gpsPositionHistory.shift();
+    }
+
+    const recentSpeeds = gpsPositionHistory
+        .map(p => p.speed)
+        .filter(v => Number.isFinite(v) && v >= 0 && v <= maxPhysicalSpeed);
+
+    const robustSpeed = recentSpeeds.length
+        ? median(recentSpeeds)
+        : speedForMovement;
+
+    updateMovementState(robustSpeed, timestamp);
+
+    const movingNow = isMoving;
+
+    // Soglia dinamica contro il GPS drift. Con buona precisione bastano ~2m;
+    // con precisione peggiore richiediamo uno spostamento maggiore.
+    const accuracyMeters = Number.isFinite(accuracy) ? accuracy : maxAccuracy;
+    const minimumDistance = Math.max(
+        2,
+        Math.min(accuracyMeters * 0.30, 8)
+    );
+
+    // Per accumulare distanza devono essere coerenti posizione, tempo e
+    // velocità. In particolare non sommiamo piccoli spostamenti da fermo.
+    const plausibleDistance =
+        meters >= minimumDistance &&
+        coordinateSpeed <= maxPhysicalSpeed;
+
+    if (movingNow && plausibleDistance) {
+
+        // Quando la velocità GPS è disponibile, evitiamo di accettare uno
+        // spostamento incompatibile con essa (con un margine ampio per il GPS).
+        const speedReference =
+            deviceSpeed !== null ? deviceSpeed : robustSpeed;
+
+        const distanceUpperBound =
+            Math.max(12, speedReference * dt * 1.8 + accuracyMeters);
+
+        if (meters <= distanceUpperBound) {
+            totalDistance += meters / 1000;
+
+            gpsSamples.push({
+                time: timestamp,
+                distance: meters / 1000,
+                seconds: dt,
+                speed: robustSpeed
+            });
+
+            const maxAge =
+                Math.max(10, Number(settings.paceWindow) || 20) * 1000;
+
+            gpsSamples = gpsSamples.filter(
+                sample => timestamp - sample.time <= maxAge
+            );
+
+            gpsLastMovingSpeed = robustSpeed;
+        }
+    }
+
+    // Il punto viene aggiornato solo dopo i controlli: così un fix anomalo
+    // non trascina con sé anche il campione successivo.
     lastPosition = { lat, lon };
     lastPositionTime = timestamp;
-    lastGpsSpeed = gpsSpeed !== null ? gpsSpeed : robustSpeed;
+    lastGpsSpeed = robustSpeed;
+    gpsLastReliableTimestamp = timestamp;
 
-    gpsPositionHistory.push({
-        lat,
-        lon,
-        time: timestamp,
-        accuracy,
-        speed: lastGpsSpeed
-    });
-    if (gpsPositionHistory.length > 8) gpsPositionHistory.shift();
+    // Conserviamo una piccola storia di posizioni valide per il filtro.
+    gpsAcceptedPositions.push(current);
+    if (gpsAcceptedPositions.length > 8) {
+        gpsAcceptedPositions.shift();
+    }
 
-    $("gps").textContent = `GPS ✓ ${Math.round(accuracy || 0)}m`;
+    $("gps").textContent =
+        `GPS ✓ ${Math.round(accuracyMeters)}m`;
     $("gpsStatus").textContent = movingNow
         ? "● GPS IN MOVIMENTO"
         : "● GPS FERMO";
@@ -3496,7 +3600,6 @@ function positionReceived(position) {
 
     updateDisplay();
 }
-
 
 function calculateDistance(
     lat1,
