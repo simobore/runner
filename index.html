@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
+
+<meta name="theme-color" content="#101010">
+
+<title>RUNNER</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #101010;
+    color: white;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.app {
+    max-width: 500px;
+    margin: auto;
+    padding: 25px 18px 100px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+
+h2 {
+    font-size: 18px;
+    margin-top: 0;
+}
+
+.card {
+    background: #1c1c1c;
+    border-radius: 22px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.muted {
+    color: #999;
+}
+
+.target {
+    font-size: 36px;
+    font-weight: 900;
+    margin: 5px 0 15px;
+}
+
+button {
+    border: none;
+    border-radius: 18px;
+    padding: 17px;
+    width: 100%;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.primary {
+    background: #8cff72;
+    color: #101010;
+}
+
+.secondary {
+    background: #292929;
+    color: white;
+    margin-top: 12px;
+}
+
+.danger {
+    background: #ff5757;
+    color: white;
+    margin-top: 12px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.metric {
+    background: #242424;
+    border-radius: 17px;
+    padding: 17px 8px;
+    text-align: center;
+}
+
+.value {
+    font-size: 28px;
+    font-weight: 850;
+}
+
+.label {
+    font-size: 11px;
+    color: #999;
+    margin-top: 5px;
+}
+
+.big {
+    text-align: center;
+    font-size: 58px;
+    font-weight: 900;
+    margin-top: 35px;
+}
+
+.unit {
+    text-align: center;
+    color: #999;
+}
+
+.phase {
+    text-align: center;
+    font-size: 21px;
+    font-weight: 800;
+    margin-top: 15px;
+}
+
+.coach {
+    text-align: center;
+    color: #ddd;
+    min-height: 25px;
+    margin: 8px 0;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+
+.status {
+    text-align: center;
+    margin: 18px 0;
+    color: #8cff72;
+    font-weight: 700;
+}
+
+.nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    background: #181818;
+
+    border-top: 1px solid #292929;
+
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+
+    padding:
+        10px
+        8px
+        calc(10px + env(safe-area-inset-bottom));
+
+    z-index: 10;
+}
+
+.nav button {
+    background: none;
+    color: #999;
+    padding: 8px;
+    width: auto;
+    font-size: 12px;
+}
+
+.nav button.active {
+    color: #8cff72;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+<!-- HOME -->
+
+<section id="home" class="screen active">
+
+<header>
+
+<div>
+<h1>RUNNER</h1>
+<div class="muted">
+Il tuo allenatore
+</div>
+</div>
+
+<div>🏃</div>
+
+</header>
+
+
+<div class="card">
+
+<div class="muted">
+OBIETTIVO
+</div>
+
+<div class="target">
+5 KM
+</div>
+
+<div class="muted">
+Costruiamo la resistenza,
+un allenamento alla volta.
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Prossimo allenamento
+</h2>
+
+<div class="muted">
+Corsa facile · 30 minuti
+</div>
+
+<p>
+<b>
+Target: 6:20–6:50 min/km
+</b>
+</p>
+
+<button
+class="primary"
+onclick="startRun()">
+
+▶ INIZIA CORSA
+
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Questa settimana
+</h2>
+
+<div class="grid">
+
+<div class="metric">
+
+<div
+id="weekKm"
+class="value">
+0.0
+</div>
+
+<div class="label">
+KM
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="weekRuns"
+class="value">
+0
+</div>
+
+<div class="label">
+USCITE
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- CORSA -->
+
+<section id="run" class="screen">
+
+<header>
+
+<button
+onclick="cancelRun()"
+style="
+width:auto;
+background:none;
+color:white;
+padding:5px 10px;
+">
+
+←
+
+</button>
+
+<h1 style="font-size:20px">
+CORSA
+</h1>
+
+<div
+id="gps"
+style="color:#999">
+
+GPS…
+
+</div>
+
+</header>
+
+
+<div
+class="phase">
+
+CORSA LIBERA
+
+</div>
+
+
+<div
+id="coach"
+class="coach">
+
+Acquisizione GPS…
+
+</div>
+
+
+<div
+id="pace"
+class="big">
+
+--:--
+
+</div>
+
+<div class="unit">
+
+min/km · ritmo medio
+
+</div>
+
+
+<div
+class="grid"
+style="margin-top:25px">
+
+
+<div class="metric">
+
+<div
+id="distance"
+class="value">
+
+0.00
+
+</div>
+
+<div class="label">
+
+KM
+
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="time"
+class="value">
+
+00:00
+
+</div>
+
+<div class="label">
+
+TEMPO
+
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="speed"
+class="value">
+
+0.0
+
+</div>
+
+<div class="label">
+
+KM/H
+
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="avgPace"
+class="value">
+
+--:--
+
+</div>
+
+<div class="label">
+
+RITMO MEDIO
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+id="gpsStatus"
+class="status">
+
+● GPS
+
+</div>
+
+
+<button
+id="pauseButton"
+class="secondary"
+onclick="togglePause()">
+
+Ⅱ PAUSA
+
+</button>
+
+
+<button
+class="danger"
+onclick="finishRun()">
+
+■ TERMINA
+
+</button>
+
+</section>
+
+
+
+<!-- RISULTATO -->
+
+<section
+id="summary"
+class="screen">
+
+<header>
+
+<h1>
+RISULTATO
+</h1>
+
+</header>
+
+
+<div class="card">
+
+<div class="grid">
+
+
+<div class="metric">
+
+<div
+id="summaryDistance"
+class="value">
+
+0.00
+
+</div>
+
+<div class="label">
+KM
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="summaryTime"
+class="value">
+
+00:00
+
+</div>
+
+<div class="label">
+TEMPO
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="summaryPace"
+class="value">
+
+--:--
+
+</div>
+
+<div class="label">
+RITMO
+</div>
+
+</div>
+
+
+<div class="metric">
+
+<div
+id="summarySpeed"
+class="value">
+
+0.0
+
+</div>
+
+<div class="label">
+KM/H
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+<button
+class="primary"
+onclick="showHome()">
+
+← HOME
+
+</button>
+
+</section>
+
+</div>
+
+
+
+<nav class="nav">
+
+<button
+class="active"
+onclick="showHome()">
+
+🏠 Home
+
+</button>
+
+
+<button
+onclick="startRun()">
+
+🏃 Corri
+
+</button>
+
+
+<button
+onclick="alert('Le statistiche avanzate arriveranno nella prossima versione.')">
+
+📊 Stats
+
+</button>
+
+</nav>
+
+
+
+<script>
+
+
+let watchId = null;
+
+let timer = null;
+
+let running = false;
+
+let paused = false;
+
+let startTime = 0;
+
+let elapsed = 0;
+
+let totalDistance = 0;
+
+let lastPosition = null;
+
+let lastPositionTime = null;
+
+
+
+function $(id) {
+
+return document.getElementById(id);
+
+}
+
+
+
+function show(screen) {
+
+document
+.querySelectorAll(".screen")
+.forEach(
+s => s.classList.remove("active")
+);
+
+$(screen).classList.add("active");
+
+}
+
+
+
+function formatTime(seconds) {
+
+seconds = Math.floor(seconds);
+
+let minutes =
+Math.floor(seconds / 60);
+
+let secs =
+seconds % 60;
+
+return (
+String(minutes).padStart(2,"0")
++
+":"
++
+String(secs).padStart(2,"0")
+);
+
+}
+
+
+
+function formatPace(seconds) {
+
+if (
+!isFinite(seconds)
+||
+seconds <= 0
+) {
+
+return "--:--";
+
+}
+
+let minutes =
+Math.floor(seconds / 60);
+
+let secs =
+Math.round(seconds % 60);
+
+if (secs === 60) {
+
+minutes++;
+
+secs = 0;
+
+}
+
+return (
+minutes
++
+":"
++
+String(secs).padStart(2,"0")
+);
+
+}
+
+
+
+function calculateDistance(
+lat1,
+lon1,
+lat2,
+lon2
+) {
+
+const R = 6371000;
+
+const rad =
+Math.PI / 180;
+
+const dLat =
+(lat2-lat1)*rad;
+
+const dLon =
+(lon2-lon1)*rad;
+
+const a =
+Math.sin(dLat/2)**2
++
+Math.cos(lat1*rad)
+*
+Math.cos(lat2*rad)
+*
+Math.sin(dLon/2)**2;
+
+return (
+R *
+2 *
+Math.atan2(
+Math.sqrt(a),
+Math.sqrt(1-a)
+)
+);
+
+}
+
+
+
+function startRun() {
+
+show("run");
+
+running = true;
+
+paused = false;
+
+elapsed = 0;
+
+totalDistance = 0;
+
+lastPosition = null;
+
+lastPositionTime = null;
+
+startTime = Date.now();
+
+
+$("coach").textContent =
+"Acquisizione GPS…";
+
+
+$("gps").textContent =
+"GPS…";
+
+
+$("gpsStatus").textContent =
+"● GPS in attesa";
+
+
+$("pauseButton").textContent =
+"Ⅱ PAUSA";
+
+
+timer =
+setInterval(
+
+function() {
+
+if (
+running &&
+!paused
+) {
+
+elapsed =
+(Date.now()-startTime)/1000;
+
+updateDisplay();
+
+}
+
+},
+
+250
+);
+
+
+if (
+!navigator.geolocation
+) {
+
+$("coach").textContent =
+"Questo browser non supporta il GPS.";
+
+return;
+
+}
+
+
+watchId =
+navigator.geolocation.watchPosition(
+
+positionReceived,
+
+gpsError,
+
+{
+
+enableHighAccuracy:true,
+
+maximumAge:1000,
+
+timeout:10000
+
+}
+
+);
+
+}
+
+
+
+function positionReceived(position) {
+
+if (
+!running ||
+paused
+) {
+
+return;
+
+}
+
+
+const lat =
+position.coords.latitude;
+
+const lon =
+position.coords.longitude;
+
+const now =
+Date.now();
+
+
+if (lastPosition) {
+
+const meters =
+calculateDistance(
+
+lastPosition.lat,
+lastPosition.lon,
+lat,
+lon
+
+);
+
+
+const seconds =
+(now-lastPositionTime)/1000;
+
+
+/*
+
+Filtriamo piccoli movimenti
+GPS casuali.
+
+*/
+
+if (
+meters > 2 &&
+meters < 100 &&
+seconds > 0
+) {
+
+totalDistance +=
+meters / 1000;
+
+}
+
+}
+
+
+lastPosition = {
+
+lat:lat,
+
+lon:lon
+
+};
+
+
+lastPositionTime = now;
+
+
+$("gps").textContent =
+"GPS ✓";
+
+
+$("gpsStatus").textContent =
+"● GPS attivo";
+
+
+$("coach").textContent =
+"Registrazione attiva";
+
+
+updateDisplay();
+
+}
+
+
+
+function gpsError(error) {
+
+$("gps").textContent =
+"GPS ✕";
+
+
+$("gpsStatus").textContent =
+"● GPS non disponibile";
+
+
+$("coach").textContent =
+"Consenti l'accesso alla posizione.";
+
+}
+
+
+
+function updateDisplay() {
+
+const kmPerSecond =
+totalDistance / elapsed;
+
+
+const kmh =
+kmPerSecond * 3600;
+
+
+const paceSeconds =
+kmPerSecond > 0
+?
+1 / kmPerSecond
+:
+0;
+
+
+$("distance").textContent =
+totalDistance.toFixed(2);
+
+
+$("time").textContent =
+formatTime(elapsed);
+
+
+$("speed").textContent =
+kmh.toFixed(1);
+
+
+$("avgPace").textContent =
+formatPace(paceSeconds*60);
+
+
+$("pace").textContent =
+formatPace(paceSeconds*60);
+
+}
+
+
+
+function togglePause() {
+
+paused = !paused;
+
+
+if (paused) {
+
+$("pauseButton").textContent =
+"▶ RIPRENDI";
+
+$("coach").textContent =
+"Corsa in pausa";
+
+}
+
+else {
+
+startTime =
+Date.now()
+-
+elapsed*1000;
+
+lastPosition = null;
+
+$("pauseButton").textContent =
+"Ⅱ PAUSA";
+
+$("coach").textContent =
+"Corsa ripresa";
+
+}
+
+}
+
+
+
+function finishRun() {
+
+if (!running) {
+
+return;
+
+}
+
+
+running = false;
+
+clearInterval(timer);
+
+
+if (watchId !== null) {
+
+navigator.geolocation
+.clearWatch(watchId);
+
+}
+
+
+const kmPerSecond =
+elapsed > 0
+?
+totalDistance / elapsed
+:
+0;
+
+
+const pace =
+kmPerSecond > 0
+?
+1 / kmPerSecond
+:
+0;
+
+
+$("summaryDistance").textContent =
+totalDistance.toFixed(2);
+
+
+$("summaryTime").textContent =
+formatTime(elapsed);
+
+
+$("summaryPace").textContent =
+formatPace(pace*60);
+
+
+$("summarySpeed").textContent =
+(kmPerSecond*3600).toFixed(1);
+
+
+
+let oldKm =
+Number(
+localStorage.getItem("km")
+) || 0;
+
+
+let oldRuns =
+Number(
+localStorage.getItem("runs")
+) || 0;
+
+
+localStorage.setItem(
+"km",
+oldKm + totalDistance
+);
+
+
+localStorage.setItem(
+"runs",
+oldRuns + 1
+);
+
+
+refreshStats();
+
+show("summary");
+
+}
+
+
+
+function cancelRun() {
+
+if (
+confirm(
+"Uscire dalla corsa senza salvare?"
+)
+) {
+
+running = false;
+
+clearInterval(timer);
+
+
+if (watchId !== null) {
+
+navigator.geolocation
+.clearWatch(watchId);
+
+}
+
+
+showHome();
+
+}
+
+}
+
+
+
+function refreshStats() {
+
+const km =
+Number(
+localStorage.getItem("km")
+) || 0;
+
+
+const runs =
+Number(
+localStorage.getItem("runs")
+) || 0;
+
+
+$("weekKm").textContent =
+km.toFixed(1);
+
+
+$("weekRuns").textContent =
+runs;
+
+}
+
+
+
+function showHome() {
+
+show("home");
+
+refreshStats();
+
+}
+
+
+
+refreshStats();
+
+</script>
+
+</body>
+</html>
