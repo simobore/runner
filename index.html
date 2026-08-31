@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.6 -->
+<!-- RUNNER GPS v6.7 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -3090,6 +3090,10 @@ let phaseStartTime = 0;
 
 let phaseStartDistance = 0;
 
+// v6.7: storico strutturato delle singole fasi.
+// Ogni fase conserva i propri tempi, distanza e campioni GPS.
+let runPhaseHistory = [];
+
 let runStartTime = 0;
 
 let elapsed = 0;
@@ -3485,6 +3489,8 @@ function startRunEngine(
 
     currentPhaseCompleted = false;
 
+    runPhaseHistory = [];
+
 
     expandedPhases =
         plan
@@ -3501,6 +3507,10 @@ function startRunEngine(
 
     phaseStartDistance =
         0;
+
+    if (expandedPhases.length) {
+        startPhaseHistoryEntry();
+    }
 
     runStartTime =
         Date.now();
@@ -3888,6 +3898,23 @@ function positionReceived(position) {
         source: adaptiveSource,
         robustSpeed,
         distanceDelta: meters,
+        seconds: dt,
+        phaseIndex: phaseIndex,
+        phaseName: currentPhaseObject()
+            ? currentPhaseObject().name
+            : "Corsa libera",
+        moving: movingNow
+    });
+
+    recordPhaseSample({
+        t: timestamp,
+        seconds: dt,
+        distance: movingNow && plausibleDistance ? meters / 1000 : 0,
+        gpsSpeed: deviceSpeed,
+        coordSpeed: coordinateSpeed,
+        selectedSpeed,
+        source: adaptiveSource,
+        accuracy,
         moving: movingNow
     });
 
@@ -3995,6 +4022,7 @@ function buildLiveSession() {
         gpsLastMovingSpeed,
         adaptiveSpeedMps,
         adaptiveSource,
+        phaseHistory: runPhaseHistory,
         track: runTrack.slice(-2500)
     };
 }
@@ -4063,6 +4091,9 @@ function resumeSavedRun() {
         ? saved.adaptiveSpeedMps
         : null;
     adaptiveSource = saved.adaptiveSource || "—";
+    runPhaseHistory = Array.isArray(saved.phaseHistory)
+        ? saved.phaseHistory
+        : [];
     runTrack = Array.isArray(saved.track) ? saved.track : [];
 
     gpsSamples = [];
@@ -4585,6 +4616,156 @@ function updateDisplay() {
    PHASE ENGINE
    ========================= */
 
+
+function startPhaseHistoryEntry() {
+
+    const phase = currentPhaseObject();
+
+    if (!phase) {
+        return;
+    }
+
+    runPhaseHistory.push({
+        index: phaseIndex,
+        name: phase.name || `Fase ${phaseIndex + 1}`,
+        repeatIndex: phase.repeatIndex || null,
+        repeatTotal: phase.repeatTotal || null,
+        targetType: phase.targetType || null,
+        targetMin: Number.isFinite(Number(phase.targetMin))
+            ? Number(phase.targetMin)
+            : null,
+        targetMax: Number.isFinite(Number(phase.targetMax))
+            ? Number(phase.targetMax)
+            : null,
+        startedAt: new Date().toISOString(),
+        endedAt: null,
+        startDistance: totalDistance,
+        endDistance: null,
+        distance: 0,
+        elapsed: 0,
+        activeTime: 0,
+        samples: []
+    });
+}
+
+function finishPhaseHistoryEntry() {
+
+    const entry =
+        runPhaseHistory[runPhaseHistory.length - 1];
+
+    if (!entry || entry.endedAt) {
+        return;
+    }
+
+    entry.endedAt =
+        new Date().toISOString();
+
+    entry.endDistance =
+        totalDistance;
+
+    entry.distance =
+        Math.max(
+            0,
+            totalDistance - Number(entry.startDistance || 0)
+        );
+
+    const start =
+        Date.parse(entry.startedAt);
+
+    const end =
+        Date.parse(entry.endedAt);
+
+    entry.elapsed =
+        Number.isFinite(start) && Number.isFinite(end)
+            ? Math.max(0, (end - start) / 1000)
+            : 0;
+
+    const samples =
+        Array.isArray(entry.samples)
+            ? entry.samples
+            : [];
+
+    const activeSeconds =
+        samples.reduce(
+            (sum, sample) =>
+                sum +
+                (sample.moving && Number.isFinite(sample.seconds)
+                    ? Math.max(0, sample.seconds)
+                    : 0),
+            0
+        );
+
+    entry.activeTime =
+        activeSeconds > 0
+            ? activeSeconds
+            : entry.elapsed;
+
+    if (entry.distance > 0 && entry.activeTime > 0) {
+        entry.avgPace =
+            entry.activeTime / entry.distance;
+
+        entry.avgSpeed =
+            entry.distance /
+            (entry.activeTime / 3600);
+    } else {
+        entry.avgPace = null;
+        entry.avgSpeed = null;
+    }
+
+    const validSpeeds =
+        samples
+            .map(sample =>
+                Number.isFinite(sample.selectedSpeed)
+                    ? sample.selectedSpeed * 3.6
+                    : null
+            )
+            .filter(Number.isFinite);
+
+    entry.maxSpeed =
+        validSpeeds.length
+            ? Math.max(...validSpeeds)
+            : 0;
+}
+
+function recordPhaseSample(sample) {
+
+    const entry =
+        runPhaseHistory[runPhaseHistory.length - 1];
+
+    if (!entry || !sample) {
+        return;
+    }
+
+    entry.samples.push({
+        t: sample.t,
+        seconds: sample.seconds,
+        distance: sample.distance,
+        gpsSpeed: sample.gpsSpeed,
+        coordSpeed: sample.coordSpeed,
+        selectedSpeed: sample.selectedSpeed,
+        source: sample.source,
+        accuracy: sample.accuracy,
+        moving: sample.moving
+    });
+
+    // Limite ragionevole per non gonfiare indefinitamente localStorage.
+    if (entry.samples.length > 1500) {
+        entry.samples.shift();
+    }
+}
+
+function getPhaseHistoryForActivity(activity) {
+
+    if (
+        activity &&
+        Array.isArray(activity.phases)
+    ) {
+        return activity.phases;
+    }
+
+    return [];
+}
+
 function currentPhaseObject() {
 
     return expandedPhases[
@@ -4779,6 +4960,8 @@ function advancePhase() {
     currentPhaseCompleted =
         true;
 
+    finishPhaseHistoryEntry();
+
 
     const oldPhase =
         currentPhaseObject();
@@ -4814,6 +4997,8 @@ function advancePhase() {
 
 
     updatePhaseUI();
+
+    startPhaseHistoryEntry();
 
 
     const next =
@@ -5362,6 +5547,8 @@ function finishRun() {
     updateActiveClock(Date.now());
     stopGPS();
 
+    finishPhaseHistoryEntry();
+
     const avgPace =
         getAveragePace();
 
@@ -5448,6 +5635,16 @@ function finishRun() {
         gpsTrack:
             runTrack.slice(),
 
+        phases:
+            runPhaseHistory.map(
+                phase => ({
+                    ...phase,
+                    samples: Array.isArray(phase.samples)
+                        ? phase.samples.slice()
+                        : []
+                })
+            ),
+
         gpsDiagnostics: {
             samples: runTrack.length,
             sources: runTrack.reduce(
@@ -5488,6 +5685,7 @@ function finishRun() {
     clearActiveRunSession();
     activeRunId = null;
     runTrack = [];
+    runPhaseHistory = [];
     activeClockLast = null;
 
     if (
@@ -6054,6 +6252,48 @@ function buildActivityChatText(activity) {
         `Velocità media: ${Number(activity.speed || 0).toFixed(2)} km/h`,
         `Velocità massima: ${Number(activity.maxSpeed || 0).toFixed(2)} km/h`,
         "",
+        "FASI DELL'ALLENAMENTO"
+    ];
+
+    const phases =
+        Array.isArray(activity.phases)
+            ? activity.phases
+            : [];
+
+    phases.forEach((phase, index) => {
+        lines.push(
+            `FASE ${index + 1}: ${phase.name || "—"}`
+        );
+        lines.push(
+            `Tempo: ${formatTime(Number(phase.elapsed || 0))}`
+        );
+        lines.push(
+            `Tempo in movimento: ${formatTime(Number(phase.activeTime || 0))}`
+        );
+        lines.push(
+            `Distanza: ${Number(phase.distance || 0).toFixed(3)} km`
+        );
+        lines.push(
+            `Ritmo medio: ${phase.avgPace ? secondsToPace(phase.avgPace) : "--:--"}`
+        );
+        lines.push(
+            `Velocità media: ${
+                Number.isFinite(phase.avgSpeed)
+                    ? Number(phase.avgSpeed).toFixed(2) + " km/h"
+                    : "—"
+            }`
+        );
+        lines.push(
+            `Velocità massima: ${
+                Number.isFinite(phase.maxSpeed)
+                    ? Number(phase.maxSpeed).toFixed(2) + " km/h"
+                    : "—"
+            }`
+        );
+        lines.push("");
+    });
+
+    lines.push(
         "GPS",
         `Campioni: ${track.length}`,
         `Precisione media: ${
@@ -6066,7 +6306,7 @@ function buildActivityChatText(activity) {
         "",
         "TRACCIA / DIAGNOSTICA",
         "timestamp | lat | lon | accuracy | gpsSpeed m/s | coordSpeed m/s | selectedSpeed m/s | source | robustSpeed m/s | distance m | moving"
-    ];
+    );
 
     track.forEach(sample => {
         lines.push([
@@ -6195,6 +6435,80 @@ function openHistoryDetail(id) {
                 <div style="margin-top:6px;">
                     Sorgenti: ${escapeHTML(activitySourceText(activity))}
                 </div>
+            </div>
+
+
+            <div class="history-detail card" style="margin-top:15px;">
+                <div class="muted small">FASI DELL'ALLENAMENTO</div>
+
+                ${
+                    Array.isArray(activity.phases) && activity.phases.length
+                        ? activity.phases.map((phase, index) => `
+                            <div class="list-item" style="margin-top:10px;">
+                                <div class="list-row">
+                                    <div>
+                                        <div style="font-weight:850;">
+                                            Fase ${index + 1} ·
+                                            ${escapeHTML(phase.name || "Attività")}
+                                        </div>
+                                        ${
+                                            phase.repeatTotal
+                                                ? `<div class="muted small">
+                                                    Ripetizione ${phase.repeatIndex}/${phase.repeatTotal}
+                                                   </div>`
+                                                : ""
+                                        }
+                                    </div>
+                                    <div class="tag">
+                                        ${phase.targetType === "pace" ? "RITMO" : "FASE"}
+                                    </div>
+                                </div>
+
+                                <div class="history-stat">
+                                    <div class="metric">
+                                        <div class="value">
+                                            ${formatTime(Number(phase.elapsed || 0))}
+                                        </div>
+                                        <div class="label">TEMPO</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="value">
+                                            ${Number(phase.distance || 0).toFixed(2)}
+                                        </div>
+                                        <div class="label">KM</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="value">
+                                            ${phase.avgPace
+                                                ? secondsToPace(phase.avgPace)
+                                                : "--:--"}
+                                        </div>
+                                        <div class="label">RITMO</div>
+                                    </div>
+                                </div>
+
+                                <div class="muted small" style="margin-top:8px;">
+                                    Tempo in movimento:
+                                    ${formatTime(Number(phase.activeTime || 0))}
+                                    · Velocità media:
+                                    ${
+                                        Number.isFinite(phase.avgSpeed)
+                                            ? Number(phase.avgSpeed).toFixed(2) + " km/h"
+                                            : "—"
+                                    }
+                                    · Max:
+                                    ${
+                                        Number.isFinite(phase.maxSpeed)
+                                            ? Number(phase.maxSpeed).toFixed(2) + " km/h"
+                                            : "—"
+                                    }
+                                </div>
+                            </div>
+                        `).join("")
+                        : `<div class="muted small" style="margin-top:8px;">
+                            Questa attività non contiene la suddivisione per fasi.
+                           </div>`
+                }
             </div>
 
             <button class="primary" onclick="copyActivityForChatGPT('${activity.id}')">
