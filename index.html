@@ -1,6 +1,9 @@
+```html
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
+
 <meta charset="UTF-8">
 
 <meta name="viewport"
@@ -15,213 +18,409 @@
 
 <style>
 
+/* =========================
+   BASE
+========================= */
+
 * {
     box-sizing: border-box;
 }
 
 body {
+
     margin: 0;
+
     background: #101010;
+
     color: white;
+
     font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .app {
+
     max-width: 500px;
+
     margin: auto;
-    padding: 25px 18px 100px;
+
+    padding:
+        25px
+        18px
+        110px;
 }
 
+
+/* =========================
+   HEADER
+========================= */
+
 header {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
     margin-bottom: 25px;
 }
 
 h1 {
+
     margin: 0;
+
     font-size: 28px;
+
     letter-spacing: 1px;
 }
 
 h2 {
+
     font-size: 18px;
+
     margin-top: 0;
 }
 
+
+/* =========================
+   CARD
+========================= */
+
 .card {
+
     background: #1c1c1c;
+
     border-radius: 22px;
+
     padding: 20px;
+
     margin-bottom: 16px;
 }
 
 .muted {
+
     color: #999;
 }
 
+
+/* =========================
+   TARGET
+========================= */
+
 .target {
+
     font-size: 36px;
+
     font-weight: 900;
-    margin: 5px 0 15px;
+
+    margin:
+        5px
+        0
+        15px;
 }
 
+.targetBox {
+
+    text-align: center;
+
+    background: #242424;
+
+    border-radius: 17px;
+
+    padding: 14px;
+
+    margin-top: 15px;
+
+    font-size: 18px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
 button {
+
     border: none;
+
     border-radius: 18px;
+
     padding: 17px;
+
     width: 100%;
+
     font-size: 17px;
+
     font-weight: 800;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
 }
 
 .primary {
+
     background: #8cff72;
+
     color: #101010;
 }
 
 .secondary {
+
     background: #292929;
+
     color: white;
+
     margin-top: 12px;
 }
 
 .danger {
+
     background: #ff5757;
+
     color: white;
+
     margin-top: 12px;
 }
 
+
+/* =========================
+   GRID
+========================= */
+
 .grid {
+
     display: grid;
-    grid-template-columns: 1fr 1fr;
+
+    grid-template-columns:
+        1fr 1fr;
+
     gap: 10px;
 }
 
 .metric {
+
     background: #242424;
+
     border-radius: 17px;
-    padding: 17px 8px;
+
+    padding:
+        17px
+        8px;
+
     text-align: center;
 }
 
 .value {
+
     font-size: 28px;
+
     font-weight: 850;
 }
 
 .label {
+
     font-size: 11px;
+
     color: #999;
+
     margin-top: 5px;
 }
 
+
+/* =========================
+   RUN SCREEN
+========================= */
+
 .big {
+
     text-align: center;
+
     font-size: 58px;
+
     font-weight: 900;
+
     margin-top: 35px;
+
+    letter-spacing: -2px;
 }
 
 .unit {
+
     text-align: center;
+
     color: #999;
 }
 
 .phase {
+
     text-align: center;
+
     font-size: 21px;
+
     font-weight: 800;
+
     margin-top: 15px;
 }
 
 .coach {
+
     text-align: center;
+
     color: #ddd;
+
     min-height: 25px;
-    margin: 8px 0;
+
+    margin:
+        8px
+        0;
 }
 
+
+/* =========================
+   GPS STATUS
+========================= */
+
+.status {
+
+    text-align: center;
+
+    margin:
+        18px
+        0;
+
+    color: #8cff72;
+
+    font-weight: 700;
+}
+
+
+/* =========================
+   SCREENS
+========================= */
+
 .screen {
+
     display: none;
 }
 
 .screen.active {
+
     display: block;
 }
 
-.status {
-    text-align: center;
-    margin: 18px 0;
-    color: #8cff72;
-    font-weight: 700;
-}
 
-.targetBox {
-    text-align: center;
-    background: #242424;
-    border-radius: 17px;
-    padding: 12px;
-    margin-top: 15px;
-}
+/* =========================
+   NAVIGATION
+========================= */
 
 .nav {
+
     position: fixed;
+
     bottom: 0;
+
     left: 0;
+
     right: 0;
 
     background: #181818;
 
-    border-top: 1px solid #292929;
+    border-top:
+        1px solid
+        #292929;
 
     display: flex;
+
     justify-content: center;
+
     gap: 25px;
 
     padding:
         10px
         8px
-        calc(10px + env(safe-area-inset-bottom));
+        calc(
+            10px +
+            env(
+                safe-area-inset-bottom
+            )
+        );
 
     z-index: 10;
 }
 
 .nav button {
+
     background: none;
+
     color: #999;
+
     padding: 8px;
+
     width: auto;
+
     font-size: 12px;
 }
 
 .nav button.active {
+
     color: #8cff72;
 }
 
+
+/* =========================
+   COACH COLORS
+========================= */
+
+.coach.good {
+
+    color: #8cff72;
+}
+
+.coach.fast {
+
+    color: #ffb347;
+}
+
+.coach.slow {
+
+    color: #ff5757;
+}
+
 </style>
+
 </head>
 
 
 <body>
 
+
 <div class="app">
 
 
-<!-- HOME -->
+<!-- =====================================================
+     HOME
+===================================================== -->
 
-<section id="home" class="screen active">
+<section
+    id="home"
+    class="screen active">
+
 
 <header>
 
 <div>
 
-<h1>RUNNER</h1>
+<h1>
+RUNNER
+</h1>
 
 <div class="muted">
 Il tuo allenatore
@@ -229,9 +428,12 @@ Il tuo allenatore
 
 </div>
 
-<div>🏃</div>
+<div>
+🏃
+</div>
 
 </header>
+
 
 
 <div class="card">
@@ -252,6 +454,7 @@ un allenamento alla volta.
 </div>
 
 
+
 <div class="card">
 
 <h2>
@@ -262,19 +465,24 @@ Prossimo allenamento
 Corsa facile · 30 minuti
 </div>
 
+
 <div class="targetBox">
 
+🎯
+
 <b>
-Target: 5:15–5:30 min/km
+5:15–5:30 min/km
 </b>
 
 </div>
 
+
 <br>
 
+
 <button
-class="primary"
-onclick="startRun()">
+    class="primary"
+    onclick="startRun()">
 
 ▶ INIZIA CORSA
 
@@ -283,19 +491,22 @@ onclick="startRun()">
 </div>
 
 
+
 <div class="card">
 
 <h2>
 Questa settimana
 </h2>
 
+
 <div class="grid">
+
 
 <div class="metric">
 
 <div
-id="weekKm"
-class="value">
+    id="weekKm"
+    class="value">
 
 0.0
 
@@ -308,11 +519,12 @@ KM
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="weekRuns"
-class="value">
+    id="weekRuns"
+    class="value">
 
 0
 
@@ -324,85 +536,108 @@ USCITE
 
 </div>
 
+
 </div>
 
 </div>
+
 
 </section>
 
 
 
-<!-- CORSA -->
+<!-- =====================================================
+     RUN
+===================================================== -->
 
-<section id="run" class="screen">
+<section
+    id="run"
+    class="screen">
+
 
 <header>
 
+
 <button
-onclick="cancelRun()"
-style="
-width:auto;
-background:none;
-color:white;
-padding:5px 10px;
-">
+    onclick="cancelRun()"
+    style="
+        width:auto;
+        background:none;
+        color:white;
+        padding:5px 10px;
+    ">
 
 ←
 
 </button>
 
-<h1 style="font-size:20px">
+
+<h1
+    style="font-size:20px">
+
 CORSA
+
 </h1>
 
+
 <div
-id="gps"
-style="color:#999">
+    id="gps"
+    style="color:#999">
 
 GPS…
 
 </div>
 
+
 </header>
 
 
+
 <div class="phase">
+
 CORSA LIBERA
+
 </div>
 
 
+
 <div
-id="coach"
-class="coach">
+    id="coach"
+    class="coach">
 
 Acquisizione GPS…
 
 </div>
 
 
+
 <div
-id="pace"
-class="big">
+    id="pace"
+    class="big">
 
 --:--
 
 </div>
 
+
 <div class="unit">
+
 min/km · ritmo medio
+
 </div>
 
 
+
 <div
-class="grid"
-style="margin-top:25px">
+    class="grid"
+    style="margin-top:25px">
 
 
 <div class="metric">
 
 <div
-id="distance"
-class="value">
+    id="distance"
+    class="value">
 
 0.00
 
@@ -415,11 +650,12 @@ KM
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="time"
-class="value">
+    id="time"
+    class="value">
 
 00:00
 
@@ -432,11 +668,12 @@ TEMPO
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="speed"
-class="value">
+    id="speed"
+    class="value">
 
 0.0
 
@@ -449,11 +686,12 @@ KM/H
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="instantPace"
-class="value">
+    id="instantPace"
+    class="value">
 
 --:--
 
@@ -465,45 +703,53 @@ RITMO ATTUALE
 
 </div>
 
+
 </div>
 
 
+
 <div
-id="gpsStatus"
-class="status">
+    id="gpsStatus"
+    class="status">
 
 ● GPS
 
 </div>
 
 
+
 <button
-id="pauseButton"
-class="secondary"
-onclick="togglePause()">
+    id="pauseButton"
+    class="secondary"
+    onclick="togglePause()">
 
 Ⅱ PAUSA
 
 </button>
 
 
+
 <button
-class="danger"
-onclick="finishRun()">
+    class="danger"
+    onclick="finishRun()">
 
 ■ TERMINA
 
 </button>
 
+
 </section>
 
 
 
-<!-- RISULTATO -->
+<!-- =====================================================
+     SUMMARY
+===================================================== -->
 
 <section
-id="summary"
-class="screen">
+    id="summary"
+    class="screen">
+
 
 <header>
 
@@ -514,7 +760,9 @@ RISULTATO
 </header>
 
 
+
 <div class="card">
+
 
 <div class="grid">
 
@@ -522,8 +770,8 @@ RISULTATO
 <div class="metric">
 
 <div
-id="summaryDistance"
-class="value">
+    id="summaryDistance"
+    class="value">
 
 0.00
 
@@ -536,11 +784,12 @@ KM
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="summaryTime"
-class="value">
+    id="summaryTime"
+    class="value">
 
 00:00
 
@@ -553,11 +802,12 @@ TEMPO
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="summaryPace"
-class="value">
+    id="summaryPace"
+    class="value">
 
 --:--
 
@@ -570,11 +820,12 @@ RITMO
 </div>
 
 
+
 <div class="metric">
 
 <div
-id="summarySpeed"
-class="value">
+    id="summarySpeed"
+    class="value">
 
 0.0
 
@@ -586,50 +837,66 @@ KM/H
 
 </div>
 
+
 </div>
 
 </div>
+
 
 
 <button
-class="primary"
-onclick="showHome()">
+    class="primary"
+    onclick="showHome()">
 
 ← HOME
 
 </button>
 
+
 </section>
+
 
 </div>
 
 
 
+<!-- =====================================================
+     NAV
+===================================================== -->
+
 <nav class="nav">
 
+
 <button
-class="active"
-onclick="showHome()">
+    class="active"
+    onclick="showHome()">
 
 🏠 Home
 
 </button>
 
 
+
 <button
-onclick="startRun()">
+    onclick="startRun()">
 
 🏃 Corri
 
 </button>
 
 
+
 <button
-onclick="alert('Le statistiche avanzate arriveranno nella prossima versione.')">
+    onclick="
+        alert(
+            'Le statistiche avanzate arriveranno nella prossima versione.'
+        )
+    ">
 
 📊 Stats
 
 </button>
+
 
 </nav>
 
@@ -638,9 +905,9 @@ onclick="alert('Le statistiche avanzate arriveranno nella prossima versione.')">
 <script>
 
 
-/* =========================
-   VARIABILI
-========================= */
+/* =====================================================
+   STATO CORSA
+===================================================== */
 
 let watchId = null;
 
@@ -661,767 +928,1375 @@ let lastPosition = null;
 let lastPositionTime = null;
 
 
-/* =========================
-   COACH
-========================= */
+/* =====================================================
+   RITMO ATTUALE
+===================================================== */
+
+let paceSamples = [];
+
+/*
+   Finestra temporale usata
+   per il ritmo attuale.
+*/
+
+const PACE_WINDOW_SECONDS = 30;
+
+
+/* =====================================================
+   TARGET
+===================================================== */
 
 const TARGET_MIN = 5 * 60 + 15;
 
 const TARGET_MAX = 5 * 60 + 30;
+
+
+/* =====================================================
+   COACH VOCALE
+===================================================== */
 
 let lastVoiceTime = 0;
 
 const VOICE_INTERVAL = 60;
 
 
-/* =========================
+/* =====================================================
    UTILITY
-========================= */
+===================================================== */
 
 function $(id) {
 
-return document.getElementById(id);
+    return document.getElementById(id);
 
 }
 
+
+/* =====================================================
+   CAMBIO SCHERMATA
+===================================================== */
 
 function show(screen) {
 
-document
-.querySelectorAll(".screen")
-.forEach(
-s => s.classList.remove("active")
-);
+    document
+        .querySelectorAll(".screen")
+        .forEach(
+            s => s.classList.remove("active")
+        );
 
-$(screen).classList.add("active");
+    $(screen)
+        .classList.add("active");
 
 }
 
+
+/* =====================================================
+   FORMATTA TEMPO
+===================================================== */
 
 function formatTime(seconds) {
 
-seconds = Math.floor(seconds);
+    seconds =
+        Math.floor(seconds);
 
-let minutes =
-Math.floor(seconds / 60);
+    const minutes =
+        Math.floor(seconds / 60);
 
-let secs =
-seconds % 60;
+    const secs =
+        seconds % 60;
 
-return (
-String(minutes).padStart(2,"0")
-+
-":"
-+
-String(secs).padStart(2,"0")
-);
+    return (
+        String(minutes).padStart(2, "0")
+        +
+        ":"
+        +
+        String(secs).padStart(2, "0")
+    );
 
 }
 
+
+/* =====================================================
+   FORMATTA RITMO
+===================================================== */
 
 function formatPace(seconds) {
 
-if (
-!isFinite(seconds)
-||
-seconds <= 0
-) {
+    if (
+        !isFinite(seconds)
+        ||
+        seconds <= 0
+    ) {
 
-return "--:--";
+        return "--:--";
+
+    }
+
+
+    let minutes =
+        Math.floor(seconds / 60);
+
+    let secs =
+        Math.round(seconds % 60);
+
+
+    if (secs >= 60) {
+
+        minutes++;
+
+        secs = 0;
+
+    }
+
+
+    return (
+        minutes
+        +
+        ":"
+        +
+        String(secs).padStart(2, "0")
+    );
 
 }
 
-let minutes =
-Math.floor(seconds / 60);
 
-let secs =
-Math.round(seconds % 60);
-
-if (secs >= 60) {
-
-minutes++;
-
-secs = 0;
-
-}
-
-return (
-minutes
-+
-":"
-+
-String(secs).padStart(2,"0")
-);
-
-}
-
-
-/* =========================
-   DISTANZA GPS
-========================= */
+/* =====================================================
+   DISTANZA HAVERSINE
+===================================================== */
 
 function calculateDistance(
-lat1,
-lon1,
-lat2,
-lon2
+    lat1,
+    lon1,
+    lat2,
+    lon2
 ) {
 
-const R = 6371000;
+    const R = 6371000;
 
-const rad = Math.PI / 180;
+    const rad =
+        Math.PI / 180;
 
-const dLat =
-(lat2-lat1)*rad;
+    const dLat =
+        (lat2 - lat1) * rad;
 
-const dLon =
-(lon2-lon1)*rad;
+    const dLon =
+        (lon2 - lon1) * rad;
 
-const a =
-Math.sin(dLat/2)**2
-+
-Math.cos(lat1*rad)
-*
-Math.cos(lat2*rad)
-*
-Math.sin(dLon/2)**2;
 
-return (
-R *
-2 *
-Math.atan2(
-Math.sqrt(a),
-Math.sqrt(1-a)
-)
-);
+    const a =
+        Math.sin(dLat / 2) ** 2
+        +
+        Math.cos(lat1 * rad)
+        *
+        Math.cos(lat2 * rad)
+        *
+        Math.sin(dLon / 2) ** 2;
+
+
+    return (
+        R
+        *
+        2
+        *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        )
+    );
 
 }
 
 
-/* =========================
+/* =====================================================
    AVVIO CORSA
-========================= */
+===================================================== */
 
 function startRun() {
 
-show("run");
 
-running = true;
+    /*
+       Se esiste già una corsa,
+       la interrompiamo prima
+       di iniziarne una nuova.
+    */
 
-paused = false;
+    if (watchId !== null) {
 
-elapsed = 0;
+        navigator.geolocation
+            .clearWatch(watchId);
 
-totalDistance = 0;
+        watchId = null;
 
-lastPosition = null;
-
-lastPositionTime = null;
-
-startTime = Date.now();
-
-lastVoiceTime = 0;
+    }
 
 
-$("coach").textContent =
-"Acquisizione GPS…";
-
-$("gps").textContent =
-"GPS…";
-
-$("gpsStatus").textContent =
-"● GPS in attesa";
-
-$("pauseButton").textContent =
-"Ⅱ PAUSA";
+    clearInterval(timer);
 
 
-timer = setInterval(
+    running = true;
 
-function() {
+    paused = false;
 
-if (
-running &&
-!paused
-) {
+    elapsed = 0;
 
-elapsed =
-(Date.now()-startTime)/1000;
+    totalDistance = 0;
 
-updateDisplay();
+    lastPosition = null;
+
+    lastPositionTime = null;
+
+    paceSamples = [];
+
+    startTime = Date.now();
+
+    lastVoiceTime = 0;
+
+
+    show("run");
+
+
+    $("coach").textContent =
+        "Acquisizione GPS…";
+
+    $("coach").className =
+        "coach";
+
+
+    $("gps").textContent =
+        "GPS…";
+
+    $("gpsStatus").textContent =
+        "● GPS in attesa";
+
+
+    $("distance").textContent =
+        "0.00";
+
+    $("time").textContent =
+        "00:00";
+
+    $("speed").textContent =
+        "0.0";
+
+    $("pace").textContent =
+        "--:--";
+
+    $("instantPace").textContent =
+        "--:--";
+
+
+    $("pauseButton").textContent =
+        "Ⅱ PAUSA";
+
+
+    /*
+       TIMER
+    */
+
+    timer =
+        setInterval(
+            function() {
+
+                if (
+                    running
+                    &&
+                    !paused
+                ) {
+
+                    elapsed =
+                        (
+                            Date.now()
+                            -
+                            startTime
+                        ) / 1000;
+
+                    updateDisplay();
+
+                }
+
+            },
+            250
+        );
+
+
+    /*
+       CONTROLLO GPS
+    */
+
+    if (
+        !navigator.geolocation
+    ) {
+
+        $("coach").textContent =
+            "Questo browser non supporta il GPS.";
+
+        return;
+
+    }
+
+
+    /*
+       AVVIO WATCH GPS
+    */
+
+    watchId =
+        navigator.geolocation.watchPosition(
+
+            positionReceived,
+
+            gpsError,
+
+            {
+
+                enableHighAccuracy: true,
+
+                maximumAge: 1000,
+
+                timeout: 15000
+
+            }
+
+        );
 
 }
 
-},
 
-250
-
-);
-
-
-if (
-!navigator.geolocation
-) {
-
-$("coach").textContent =
-"Questo browser non supporta il GPS.";
-
-return;
-
-}
-
-
-watchId =
-navigator.geolocation.watchPosition(
-
-positionReceived,
-
-gpsError,
-
-{
-
-enableHighAccuracy:true,
-
-maximumAge:1000,
-
-timeout:15000
-
-}
-
-);
-
-}
-
-
-/* =========================
-   POSITION GPS
-========================= */
+/* =====================================================
+   RICEZIONE GPS
+===================================================== */
 
 function positionReceived(position) {
 
-if (
-!running ||
-paused
-) {
 
-return;
+    if (
+        !running
+        ||
+        paused
+    ) {
+
+        return;
+
+    }
+
+
+    const lat =
+        position.coords.latitude;
+
+    const lon =
+        position.coords.longitude;
+
+    const accuracy =
+        position.coords.accuracy;
+
+    const now =
+        Date.now();
+
+
+    /*
+       Se la precisione GPS è
+       veramente pessima, ignoriamo
+       il dato.
+    */
+
+    if (
+        accuracy
+        &&
+        accuracy > 50
+    ) {
+
+        $("gps").textContent =
+            "GPS ~" +
+            Math.round(accuracy) +
+            "m";
+
+        return;
+
+    }
+
+
+    /*
+       Primo punto GPS.
+    */
+
+    if (!lastPosition) {
+
+        lastPosition = {
+
+            lat: lat,
+
+            lon: lon
+
+        };
+
+        lastPositionTime =
+            now;
+
+        $("gps").textContent =
+            "GPS ✓";
+
+        $("gpsStatus").textContent =
+            "● GPS attivo";
+
+        $("coach").textContent =
+            "GPS acquisito";
+
+        return;
+
+    }
+
+
+    /*
+       Distanza dall'ultimo punto.
+    */
+
+    const meters =
+        calculateDistance(
+
+            lastPosition.lat,
+            lastPosition.lon,
+
+            lat,
+            lon
+
+        );
+
+
+    const seconds =
+        (
+            now
+            -
+            lastPositionTime
+        ) / 1000;
+
+
+    /*
+       Aggiorniamo sempre
+       l'ultima posizione.
+    */
+
+    lastPosition = {
+
+        lat: lat,
+
+        lon: lon
+
+    };
+
+    lastPositionTime =
+        now;
+
+
+    /*
+       Filtro GPS.
+
+       Ignoriamo:
+       - meno di 2 metri
+       - più di 50 metri
+       - intervalli anomali
+    */
+
+    if (
+        meters >= 2
+        &&
+        meters <= 50
+        &&
+        seconds > 0
+        &&
+        seconds <= 10
+    ) {
+
+
+        const km =
+            meters / 1000;
+
+
+        /*
+           Aggiungiamo la distanza.
+        */
+
+        totalDistance += km;
+
+
+        /*
+           Salviamo il campione
+           per il ritmo attuale.
+        */
+
+        paceSamples.push({
+
+            distance: km,
+
+            time: seconds
+
+        });
+
+
+        /*
+           Manteniamo solo
+           gli ultimi 30 secondi.
+        */
+
+        let accumulatedTime = 0;
+
+
+        for (
+            let i =
+                paceSamples.length - 1;
+
+            i >= 0;
+
+            i--
+        ) {
+
+            accumulatedTime +=
+                paceSamples[i].time;
+
+
+            if (
+                accumulatedTime
+                >
+                PACE_WINDOW_SECONDS
+            ) {
+
+                paceSamples =
+                    paceSamples.slice(i);
+
+                break;
+
+            }
+
+        }
+
+    }
+
+
+    $("gps").textContent =
+        "GPS ✓";
+
+    $("gpsStatus").textContent =
+        "● GPS attivo";
+
+
+    updateDisplay();
 
 }
 
 
-const lat =
-position.coords.latitude;
-
-const lon =
-position.coords.longitude;
-
-const now =
-Date.now();
-
-
-if (lastPosition) {
-
-const meters =
-calculateDistance(
-
-lastPosition.lat,
-lastPosition.lon,
-lat,
-lon
-
-);
-
-
-const seconds =
-(now-lastPositionTime)/1000;
-
-
-/*
-   Precisione GPS.
-   Ignoriamo:
-   - movimenti inferiori a 2 m
-   - salti superiori a 50 m
-*/
-
-if (
-meters >= 2 &&
-meters <= 50 &&
-seconds > 0
-) {
-
-totalDistance +=
-meters / 1000;
-
-}
-
-}
-
-
-lastPosition = {
-
-lat:lat,
-
-lon:lon
-
-};
-
-lastPositionTime = now;
-
-
-$("gps").textContent =
-"GPS ✓";
-
-$("gpsStatus").textContent =
-"● GPS attivo";
-
-$("coach").textContent =
-"Registrazione attiva";
-
-
-updateDisplay();
-
-}
-
-
-/* =========================
+/* =====================================================
    ERRORE GPS
-========================= */
+===================================================== */
 
 function gpsError(error) {
 
-$("gps").textContent =
-"GPS ✕";
 
-$("gpsStatus").textContent =
-"● GPS non disponibile";
+    $("gps").textContent =
+        "GPS ✕";
 
-$("coach").textContent =
-"Consenti l'accesso alla posizione.";
+
+    $("gpsStatus").textContent =
+        "● GPS non disponibile";
+
+
+    if (
+        error.code === 1
+    ) {
+
+        $("coach").textContent =
+            "Consenti l'accesso alla posizione.";
+
+    }
+
+    else if (
+        error.code === 2
+    ) {
+
+        $("coach").textContent =
+            "Posizione GPS non disponibile.";
+
+    }
+
+    else if (
+        error.code === 3
+    ) {
+
+        $("coach").textContent =
+            "Ricerca GPS in corso…";
+
+    }
 
 }
 
 
-/* =========================
-   CALCOLO DISPLAY
-========================= */
+/* =====================================================
+   CALCOLO RITMO ATTUALE
+===================================================== */
+
+function calculateInstantPace() {
+
+
+    if (
+        paceSamples.length === 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    let distance = 0;
+
+    let time = 0;
+
+
+    for (
+        const sample
+        of paceSamples
+    ) {
+
+        distance +=
+            sample.distance;
+
+        time +=
+            sample.time;
+
+    }
+
+
+    if (
+        distance <= 0
+        ||
+        time <= 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    /*
+       secondi / km
+    */
+
+    return (
+        time / distance
+    );
+
+}
+
+
+/* =====================================================
+   AGGIORNAMENTO DISPLAY
+===================================================== */
 
 function updateDisplay() {
 
-if (elapsed <= 0) {
 
-return;
+    if (
+        elapsed <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+       RITMO MEDIO
+    */
+
+    let avgPace = 0;
+
+
+    if (
+        totalDistance >= 0.05
+    ) {
+
+        avgPace =
+            elapsed
+            /
+            totalDistance;
+
+    }
+
+
+    /*
+       VELOCITÀ MEDIA
+    */
+
+    let speed = 0;
+
+
+    if (
+        elapsed > 0
+    ) {
+
+        speed =
+            (
+                totalDistance
+                /
+                elapsed
+            )
+            *
+            3600;
+
+    }
+
+
+    /*
+       RITMO ATTUALE
+    */
+
+    const instantPace =
+        calculateInstantPace();
+
+
+    /*
+       DISPLAY
+    */
+
+    $("distance").textContent =
+        totalDistance.toFixed(2);
+
+
+    $("time").textContent =
+        formatTime(elapsed);
+
+
+    $("speed").textContent =
+        speed.toFixed(1);
+
+
+    $("pace").textContent =
+        formatPace(avgPace);
+
+
+    $("instantPace").textContent =
+        formatPace(instantPace);
+
+
+    /*
+       COACH
+    */
+
+    if (
+        totalDistance >= 0.10
+        &&
+        elapsed >= 60
+        &&
+        instantPace > 0
+    ) {
+
+        coachPace(
+            instantPace
+        );
+
+    }
 
 }
 
 
-/*
-   RITMO MEDIO
-
-   totalDistance = km
-   elapsed = secondi
-
-   secondi/km =
-   secondi / km
-*/
-
-let avgPace = 0;
-
-if (totalDistance >= 0.05) {
-
-avgPace =
-elapsed / totalDistance;
-
-}
-
-
-/*
-   VELOCITÀ MEDIA
-*/
-
-let kmh = 0;
-
-if (elapsed > 0) {
-
-kmh =
-(totalDistance / elapsed) * 3600;
-
-}
-
-
-/*
-   RITMO ATTUALE
-
-   Viene calcolato usando
-   l'ultimo spostamento GPS.
-*/
-
-let instantPace = 0;
-
-if (
-lastPosition &&
-lastPositionTime
-) {
-
-/*
-   Il ritmo istantaneo
-   viene aggiornato
-   direttamente dai dati
-   GPS disponibili.
-*/
-
-}
-
-
-/*
-   DISPLAY
-*/
-
-$("distance").textContent =
-totalDistance.toFixed(2);
-
-$("time").textContent =
-formatTime(elapsed);
-
-$("speed").textContent =
-kmh.toFixed(1);
-
-$("pace").textContent =
-formatPace(avgPace);
-
-$("instantPace").textContent =
-formatPace(avgPace);
-
-
-/*
-   COACH VOCALE
-*/
-
-if (
-totalDistance >= 0.10 &&
-elapsed >= 60
-) {
-
-coachPace(avgPace);
-
-}
-
-}
-
-
-/* =========================
-   COACH VOCALE
-========================= */
+/* =====================================================
+   COACH
+===================================================== */
 
 function coachPace(pace) {
 
-if (
-!isFinite(pace) ||
-pace <= 0
-) {
 
-return;
+    if (
+        !isFinite(pace)
+        ||
+        pace <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    const now =
+        Date.now() / 1000;
+
+
+    /*
+       Evitiamo messaggi continui.
+    */
+
+    if (
+        now
+        -
+        lastVoiceTime
+        <
+        VOICE_INTERVAL
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+       TROPPO VELOCE
+    */
+
+    if (
+        pace < TARGET_MIN
+    ) {
+
+        $("coach").textContent =
+            "Rallenta leggermente.";
+
+        $("coach").className =
+            "coach fast";
+
+
+        speak(
+            "Rallenta leggermente."
+        );
+
+
+        lastVoiceTime =
+            now;
+
+    }
+
+
+    /*
+       TROPPO LENTO
+    */
+
+    else if (
+        pace > TARGET_MAX
+    ) {
+
+        $("coach").textContent =
+            "Aumenta il ritmo.";
+
+        $("coach").className =
+            "coach slow";
+
+
+        speak(
+            "Aumenta il ritmo."
+        );
+
+
+        lastVoiceTime =
+            now;
+
+    }
+
+
+    /*
+       NEL TARGET
+    */
+
+    else {
+
+        $("coach").textContent =
+            "Ritmo perfetto.";
+
+        $("coach").className =
+            "coach good";
+
+    }
 
 }
 
 
-const now =
-Date.now() / 1000;
-
-
-/*
-   Non parla più spesso
-   di una volta al minuto.
-*/
-
-if (
-now - lastVoiceTime <
-VOICE_INTERVAL
-) {
-
-return;
-
-}
-
-
-if (
-pace < TARGET_MIN
-) {
-
-speak(
-"Rallenta leggermente."
-);
-
-lastVoiceTime = now;
-
-}
-
-else if (
-pace > TARGET_MAX
-) {
-
-speak(
-"Aumenta il ritmo."
-);
-
-lastVoiceTime = now;
-
-}
-
-}
-
-
-/* =========================
+/* =====================================================
    VOCE
-========================= */
+===================================================== */
 
 function speak(text) {
 
-if (
-!"speechSynthesis" in window
-) {
 
-return;
+    if (
+        !(
+            "speechSynthesis"
+            in window
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+       Interrompiamo eventuale
+       messaggio precedente.
+    */
+
+    window.speechSynthesis.cancel();
+
+
+    const utterance =
+        new SpeechSynthesisUtterance(
+            text
+        );
+
+
+    utterance.lang =
+        "it-IT";
+
+    utterance.rate =
+        0.95;
+
+    utterance.pitch =
+        1;
+
+    utterance.volume =
+        1;
+
+
+    window.speechSynthesis
+        .speak(utterance);
 
 }
 
 
-window.speechSynthesis.cancel();
-
-
-const utterance =
-new SpeechSynthesisUtterance(text);
-
-utterance.lang = "it-IT";
-
-utterance.rate = 0.95;
-
-utterance.pitch = 1;
-
-utterance.volume = 1;
-
-
-window.speechSynthesis
-.speak(utterance);
-
-}
-
-
-/* =========================
-   PAUSA
-========================= */
+/* =====================================================
+   PAUSA / RIPRESA
+===================================================== */
 
 function togglePause() {
 
-paused = !paused;
+
+    if (!running) {
+
+        return;
+
+    }
 
 
-if (paused) {
+    paused =
+        !paused;
 
-$("pauseButton").textContent =
-"▶ RIPRENDI";
 
-$("coach").textContent =
-"Corsa in pausa";
+    if (paused) {
+
+
+        $("pauseButton").textContent =
+            "▶ RIPRENDI";
+
+
+        $("coach").textContent =
+            "Corsa in pausa";
+
+        $("coach").className =
+            "coach";
+
+
+    }
+
+
+    else {
+
+
+        /*
+           Manteniamo il tempo
+           già trascorso.
+        */
+
+        startTime =
+            Date.now()
+            -
+            elapsed * 1000;
+
+
+        /*
+           Il GPS riparte da
+           un punto nuovo.
+        */
+
+        lastPosition =
+            null;
+
+        lastPositionTime =
+            null;
+
+
+        paceSamples =
+            [];
+
+
+        $("pauseButton").textContent =
+            "Ⅱ PAUSA";
+
+
+        $("coach").textContent =
+            "Corsa ripresa";
+
+        $("coach").className =
+            "coach";
+
+
+    }
 
 }
 
-else {
 
-startTime =
-Date.now()
--
-elapsed*1000;
-
-lastPosition = null;
-
-lastPositionTime = null;
-
-$("pauseButton").textContent =
-"Ⅱ PAUSA";
-
-$("coach").textContent =
-"Corsa ripresa";
-
-}
-
-}
-
-
-/* =========================
+/* =====================================================
    FINE CORSA
-========================= */
+===================================================== */
 
 function finishRun() {
 
-if (!running) {
 
-return;
+    if (!running) {
+
+        return;
+
+    }
+
+
+    running =
+        false;
+
+
+    clearInterval(timer);
+
+
+    if (
+        watchId !== null
+    ) {
+
+        navigator.geolocation
+            .clearWatch(watchId);
+
+        watchId =
+            null;
+
+    }
+
+
+    /*
+       Aggiorniamo un'ultima volta
+       il tempo.
+    */
+
+    if (!paused) {
+
+        elapsed =
+            (
+                Date.now()
+                -
+                startTime
+            ) / 1000;
+
+    }
+
+
+    /*
+       RITMO FINALE
+    */
+
+    let pace = 0;
+
+
+    if (
+        totalDistance > 0
+    ) {
+
+        pace =
+            elapsed
+            /
+            totalDistance;
+
+    }
+
+
+    /*
+       VELOCITÀ FINALE
+    */
+
+    let speed = 0;
+
+
+    if (
+        elapsed > 0
+    ) {
+
+        speed =
+            (
+                totalDistance
+                /
+                elapsed
+            )
+            *
+            3600;
+
+    }
+
+
+    /*
+       RISULTATO
+    */
+
+    $("summaryDistance")
+        .textContent =
+        totalDistance.toFixed(2);
+
+
+    $("summaryTime")
+        .textContent =
+        formatTime(elapsed);
+
+
+    $("summaryPace")
+        .textContent =
+        formatPace(pace);
+
+
+    $("summarySpeed")
+        .textContent =
+        speed.toFixed(1);
+
+
+    /*
+       SALVATAGGIO
+    */
+
+    saveRun();
+
+
+    refreshStats();
+
+
+    show("summary");
 
 }
 
 
-running = false;
+/* =====================================================
+   SALVATAGGIO CORSA
+===================================================== */
 
-clearInterval(timer);
-
-
-if (watchId !== null) {
-
-navigator.geolocation
-.clearWatch(watchId);
-
-watchId = null;
-
-}
+function saveRun() {
 
 
-let pace = 0;
-
-if (totalDistance > 0) {
-
-pace =
-elapsed / totalDistance;
-
-}
-
-
-let speed = 0;
-
-if (elapsed > 0) {
-
-speed =
-(totalDistance / elapsed) * 3600;
-
-}
+    const runs =
+        JSON.parse(
+            localStorage.getItem(
+                "runsData"
+            )
+            ||
+            "[]"
+        );
 
 
-$("summaryDistance").textContent =
-totalDistance.toFixed(2);
+    runs.push({
 
-$("summaryTime").textContent =
-formatTime(elapsed);
+        date:
+            new Date()
+                .toISOString(),
 
-$("summaryPace").textContent =
-formatPace(pace);
+        distance:
+            totalDistance,
 
-$("summarySpeed").textContent =
-speed.toFixed(1);
+        time:
+            elapsed,
 
+        pace:
+            totalDistance > 0
+            ?
+            elapsed / totalDistance
+            :
+            0,
 
-/*
-   STATISTICHE
-*/
+        speed:
+            elapsed > 0
+            ?
+            (
+                totalDistance
+                /
+                elapsed
+            )
+            *
+            3600
+            :
+            0
 
-let oldKm =
-Number(
-localStorage.getItem("km")
-) || 0;
-
-let oldRuns =
-Number(
-localStorage.getItem("runs")
-) || 0;
-
-
-localStorage.setItem(
-"km",
-oldKm + totalDistance
-);
-
-
-localStorage.setItem(
-"runs",
-oldRuns + 1
-);
+    });
 
 
-refreshStats();
+    localStorage.setItem(
 
-show("summary");
+        "runsData",
+
+        JSON.stringify(runs)
+
+    );
 
 }
 
 
-/* =========================
-   ANNULLA
-========================= */
+/* =====================================================
+   CANCELLA CORSA
+===================================================== */
 
 function cancelRun() {
 
-if (
-confirm(
-"Uscire dalla corsa senza salvare?"
-)
-) {
 
-running = false;
-
-clearInterval(timer);
+    if (
+        confirm(
+            "Uscire dalla corsa senza salvare?"
+        )
+    ) {
 
 
-if (watchId !== null) {
+        running =
+            false;
 
-navigator.geolocation
-.clearWatch(watchId);
 
-watchId = null;
+        clearInterval(timer);
+
+
+        if (
+            watchId !== null
+        ) {
+
+            navigator.geolocation
+                .clearWatch(watchId);
+
+            watchId =
+                null;
+
+        }
+
+
+        showHome();
+
+    }
 
 }
 
 
-showHome();
-
-}
-
-}
-
-
-/* =========================
-   STATISTICHE
-========================= */
+/* =====================================================
+   STATISTICHE SETTIMANALI
+===================================================== */
 
 function refreshStats() {
 
-const km =
-Number(
-localStorage.getItem("km")
-) || 0;
 
-const runs =
-Number(
-localStorage.getItem("runs")
-) || 0;
+    const runs =
+        JSON.parse(
+            localStorage.getItem(
+                "runsData"
+            )
+            ||
+            "[]"
+        );
 
 
-$("weekKm").textContent =
-km.toFixed(1);
+    const now =
+        new Date();
 
-$("weekRuns").textContent =
-runs;
+
+    /*
+       Inizio settimana:
+       lunedì.
+    */
+
+    const day =
+        now.getDay();
+
+
+    const diff =
+        day === 0
+        ?
+        6
+        :
+        day - 1;
+
+
+    const monday =
+        new Date(now);
+
+
+    monday.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    monday.setDate(
+        now.getDate()
+        -
+        diff
+    );
+
+
+    let weeklyKm = 0;
+
+    let weeklyRuns = 0;
+
+
+    for (
+        const run
+        of runs
+    ) {
+
+
+        const date =
+            new Date(run.date);
+
+
+        if (
+            date >= monday
+            &&
+            date <= now
+        ) {
+
+            weeklyKm +=
+                Number(
+                    run.distance
+                )
+                ||
+                0;
+
+
+            weeklyRuns++;
+
+        }
+
+    }
+
+
+    $("weekKm").textContent =
+        weeklyKm.toFixed(1);
+
+
+    $("weekRuns").textContent =
+        weeklyRuns;
 
 }
 
 
-/* =========================
+/* =====================================================
    HOME
-========================= */
+===================================================== */
 
 function showHome() {
 
-show("home");
+    show("home");
 
-refreshStats();
+    refreshStats();
 
 }
 
 
-/* =========================
-   START
-========================= */
+/* =====================================================
+   AVVIO
+===================================================== */
 
 refreshStats();
+
 
 </script>
 
 </body>
+
 </html>
+```
