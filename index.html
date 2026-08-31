@@ -784,7 +784,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.4
+        🔧 DIAGNOSTICA GPS v6.5 ADAPTIVE GPS
     </div>
     <div class="grid">
         <div>
@@ -798,6 +798,10 @@ audio {
         <div>
             <div class="muted small">USATA</div>
             <div id="diagRobustSpeed">—</div>
+        </div>
+        <div>
+            <div class="muted small">SORGENTE</div>
+            <div id="diagSource">—</div>
         </div>
         <div>
             <div class="muted small">DISTANZA FIX</div>
@@ -3053,10 +3057,145 @@ let gpsDiag = {
     rawSpeed: null,
     coordinateSpeed: null,
     robustSpeed: null,
+    selectedSpeed: null,
+    source: "—",
     meters: null,
     dt: null,
     accuracy: null
 };
+
+/*
+ * v6.5 - Adaptive GPS
+ *
+ * Non scegliamo una sorgente in modo fisso:
+ * - se GPS SPEED e COORD SPEED concordano -> MIX;
+ * - da fermo -> priorità al GPS SPEED vicino a zero;
+ * - con fix molto distanziati -> cautela sulla velocità da coordinate;
+ * - se divergono -> preferiamo il valore più coerente con la velocità
+ *   adattiva precedente;
+ * - se non esiste ancora una storia -> privilegiamo COORD quando il fix
+ *   è ravvicinato e entrambe le fonti indicano movimento.
+ */
+let adaptiveSpeedMps = null;
+let adaptiveSource = "—";
+
+const ADAPTIVE_AGREE_KMH = 2.0;
+const ADAPTIVE_AGREE_RATIO = 0.25;
+const ADAPTIVE_MAX_DT_FOR_COORD = 4.0;
+const ADAPTIVE_STOP_KMH = 1.0;
+const ADAPTIVE_MAX_KMH = 30.6;
+
+function chooseAdaptiveSpeed(
+    deviceSpeedMps,
+    coordinateSpeedMps,
+    dt,
+    accuracy
+) {
+
+    const d =
+        Number.isFinite(deviceSpeedMps) && deviceSpeedMps >= 0
+            ? deviceSpeedMps * 3.6
+            : null;
+
+    const c =
+        Number.isFinite(coordinateSpeedMps) && coordinateSpeedMps >= 0
+            ? coordinateSpeedMps * 3.6
+            : null;
+
+    if (d === null && c === null) {
+        adaptiveSource = "—";
+        return null;
+    }
+
+    if (d === null) {
+        adaptiveSource = "COORD";
+        return coordinateSpeedMps;
+    }
+
+    if (c === null) {
+        adaptiveSource = "GPS";
+        return deviceSpeedMps;
+    }
+
+    // Fermo: 0 GPS + piccolo drift delle coordinate = fermo.
+    const stopCoordinateLimit =
+        Math.max(
+            ADAPTIVE_STOP_KMH + 0.8,
+            Number.isFinite(accuracy)
+                ? (accuracy / Math.max(dt, 1)) * 3.6
+                : 1.8
+        );
+
+    if (
+        d <= ADAPTIVE_STOP_KMH &&
+        c <= stopCoordinateLimit
+    ) {
+        adaptiveSource = "GPS";
+        return 0;
+    }
+
+    const diff = Math.abs(d - c);
+    const ratio = diff / Math.max(d, c, 0.1);
+
+    // Concordanza: mix per stabilizzare.
+    if (
+        diff <= ADAPTIVE_AGREE_KMH ||
+        ratio <= ADAPTIVE_AGREE_RATIO
+    ) {
+        adaptiveSource = "MIX";
+        return (deviceSpeedMps + coordinateSpeedMps) / 2;
+    }
+
+    // Un intervallo molto lungo rende la velocità da coordinate meno
+    // affidabile perché può incorporare drift accumulato.
+    if (dt > ADAPTIVE_MAX_DT_FOR_COORD) {
+
+        // Caso utile per una ripartenza: GPS SPEED ancora a zero,
+        // ma le coordinate indicano chiaramente movimento.
+        if (
+            d <= ADAPTIVE_STOP_KMH &&
+            c > ADAPTIVE_STOP_KMH
+        ) {
+            adaptiveSource = "COORD";
+            return coordinateSpeedMps;
+        }
+
+        adaptiveSource = "GPS";
+        return deviceSpeedMps;
+    }
+
+    // Quando le sorgenti divergono, confrontiamole con la storia.
+    if (Number.isFinite(adaptiveSpeedMps)) {
+
+        const previousKmh = adaptiveSpeedMps * 3.6;
+        const dDelta = Math.abs(d - previousKmh);
+        const cDelta = Math.abs(c - previousKmh);
+
+        if (dDelta < cDelta) {
+            adaptiveSource = "GPS";
+            return deviceSpeedMps;
+        }
+
+        if (cDelta < dDelta) {
+            adaptiveSource = "COORD";
+            return coordinateSpeedMps;
+        }
+    }
+
+    // Prima di avere una storia: se il fix è ravvicinato e entrambe
+    // indicano movimento, le coordinate sono una buona sorgente reattiva.
+    if (
+        d > ADAPTIVE_STOP_KMH &&
+        c > ADAPTIVE_STOP_KMH &&
+        dt <= ADAPTIVE_MAX_DT_FOR_COORD
+    ) {
+        adaptiveSource = "COORD";
+        return coordinateSpeedMps;
+    }
+
+    adaptiveSource = "GPS";
+    return deviceSpeedMps;
+}
 
 let paceHistory = [];
 
@@ -3251,6 +3390,8 @@ function startRunEngine(
     instantSpeedKmh = null;
     coachPendingState = "";
     coachPendingSince = 0;
+    adaptiveSpeedMps = null;
+    adaptiveSource = "—";
 
     paceHistory = [];
 
@@ -3551,10 +3692,26 @@ function positionReceived(position) {
         return;
     }
 
-    // v6.4: velocità principale = distanza tra fix GPS / intervallo.
-    // coords.speed resta disponibile nella diagnostica, ma non viene
-    // più privilegiato perché nel test reale risultava sottostimato.
-    const speedForMovement = coordinateSpeed;
+    // v6.5: selezione adattiva tra GPS SPEED e COORD SPEED.
+    const selectedSpeed =
+        chooseAdaptiveSpeed(
+            deviceSpeed,
+            coordinateSpeed,
+            dt,
+            accuracy
+        );
+
+    if (Number.isFinite(selectedSpeed)) {
+        adaptiveSpeedMps = selectedSpeed;
+    }
+
+    gpsDiag.selectedSpeed = selectedSpeed;
+    gpsDiag.source = adaptiveSource;
+
+    const speedForMovement =
+        Number.isFinite(selectedSpeed)
+            ? selectedSpeed
+            : coordinateSpeed;
 
     // Memoria breve della velocità per evitare oscillazioni GPS.
     gpsPositionHistory.push({
@@ -3905,8 +4062,8 @@ const COACH_HYSTERESIS_SECONDS = 5;
 function getStableInstantSpeedKmh() {
 
     const rawMps =
-        Number.isFinite(gpsDiag.coordinateSpeed)
-            ? gpsDiag.coordinateSpeed
+        Number.isFinite(gpsDiag.selectedSpeed)
+            ? gpsDiag.selectedSpeed
             : null;
 
     if (rawMps === null || rawMps < 0) {
@@ -4036,9 +4193,12 @@ function updateGpsDiagnostics() {
             : "—";
 
     $("diagRobustSpeed").textContent =
-        Number.isFinite(gpsDiag.robustSpeed)
-            ? `${fmt(gpsDiag.robustSpeed * 3.6, 2)} km/h`
+        Number.isFinite(gpsDiag.selectedSpeed)
+            ? `${fmt(gpsDiag.selectedSpeed * 3.6, 2)} km/h`
             : "—";
+
+    $("diagSource").textContent =
+        gpsDiag.source || "—";
 
     $("diagDistance").textContent =
         Number.isFinite(gpsDiag.meters)
