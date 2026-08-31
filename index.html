@@ -561,44 +561,6 @@ select:focus {
     display: block;
 }
 
-.history-detail-panel {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.84);
-    z-index: 500;
-    overflow-y: auto;
-    padding: 20px 16px 100px;
-}
-.history-detail-card {
-    max-width: 520px;
-    margin: 0 auto;
-    background: #1c1c1c;
-    border-radius: 24px;
-    padding: 19px;
-}
-.history-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 9px;
-    margin-top: 12px;
-}
-.history-detail-row {
-    background: #242424;
-    border-radius: 13px;
-    padding: 11px;
-}
-.history-detail-row .label {
-    font-size: 10px;
-    color: #999;
-    text-transform: uppercase;
-}
-.history-detail-row .value {
-    font-size: 18px;
-    margin-top: 4px;
-}
-.active-run-banner { display:none; margin-bottom:15px; }
-.active-run-banner.show { display:block; }
-
 hr {
     border: none;
     border-top: 1px solid #303030;
@@ -639,16 +601,6 @@ audio {
 <!-- ================= HOME ================= -->
 
 <section id="home" class="screen active">
-
-<div id="activeRunBanner" class="card active-run-banner">
-    <div class="muted small">SESSIONE IN CORSO</div>
-    <div id="activeRunBannerText" style="font-size:19px;font-weight:850;margin:7px 0;">
-        Corsa salvata
-    </div>
-    <button class="primary mt" onclick="resumeSavedRun()">
-        ▶ RIPRENDI CORSA
-    </button>
-</div>
 
 <header>
     <div>
@@ -832,7 +784,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.5 ADAPTIVE GPS
+        🔧 DIAGNOSTICA GPS v6.7
     </div>
     <div class="grid">
         <div>
@@ -1213,8 +1165,6 @@ audio {
 <div id="historyList"></div>
 
 </section>
-
-<div id="historyDetailPanel" class="history-detail-panel" style="display:none;"></div>
 
 
 <!-- ================= IMPOSTAZIONI ================= -->
@@ -2942,18 +2892,6 @@ function getNextScheduledWorkout() {
 
 function refreshHome() {
 
-    const banner = $("activeRunBanner");
-    if (banner) {
-        const saved = loadJSON(SESSION_KEY, null);
-        if (saved && saved.running) {
-            banner.classList.add("show");
-            $("activeRunBannerText").textContent =
-                `Corsa in corso · ${(Number(saved.totalDistance) || 0).toFixed(2)} km · ${formatTime(Number(saved.elapsed) || 0)}`;
-        } else {
-            banner.classList.remove("show");
-        }
-    }
-
     refreshWeekStats();
 
 
@@ -3090,24 +3028,16 @@ let phaseStartTime = 0;
 
 let phaseStartDistance = 0;
 
-// v6.7: storico strutturato delle singole fasi.
-// Ogni fase conserva i propri tempi, distanza e campioni GPS.
-let runPhaseHistory = [];
+// v6.7 state
+let activeElapsed = 0;
+let activeClockLast = null;
+let phaseHistory = [];
+let phaseHistoryCurrent = null;
+let phaseHistorySeq = 0;
 
 let runStartTime = 0;
 
 let elapsed = 0;
-
-// v6.6: tempo effettivamente in movimento; le soste non entrano nel ritmo medio.
-let activeElapsed = 0;
-let activeClockLast = null;
-
-// v6.6: sessione persistente e traccia diagnostica.
-let activeRunId = null;
-let runTrack = [];
-let lastSessionCheckpoint = 0;
-const SESSION_KEY = "runner_active_session_v6_6";
-const SESSION_CHECKPOINT_MS = 2000;
 
 let totalDistance = 0;
 
@@ -3155,6 +3085,14 @@ let gpsDiag = {
  */
 let adaptiveSpeedMps = null;
 let adaptiveSource = "—";
+
+let stablePaceSamplesV67 = [];
+let stablePaceV67 = null;
+
+const STOP_SPEED_KMH_V67 = 1.2;
+const PACE_MIN_SPEED_KMH_V67 = 2.0;
+const PACE_MAX_SPEED_KMH_V67 = 20.0;
+const PACE_WINDOW_MS_V67 = 7000;
 
 const ADAPTIVE_AGREE_KMH = 2.0;
 const ADAPTIVE_AGREE_RATIO = 0.25;
@@ -3436,6 +3374,14 @@ function startRunEngine(
     activePlan =
         plan;
 
+    activeElapsed = 0;
+    activeClockLast = null;
+    phaseHistory = [];
+    phaseHistoryCurrent = null;
+    phaseHistorySeq = 0;
+    stablePaceSamplesV67 = [];
+    stablePaceV67 = null;
+
     runMode =
         mode;
 
@@ -3447,11 +3393,6 @@ function startRunEngine(
     paused = false;
 
     elapsed = 0;
-    activeElapsed = 0;
-    activeClockLast = Date.now();
-    activeRunId = uuid();
-    runTrack = [];
-    lastSessionCheckpoint = 0;
 
     totalDistance = 0;
 
@@ -3476,8 +3417,6 @@ function startRunEngine(
     adaptiveSource = "—";
 
     paceHistory = [];
-    stablePaceSec = null;
-    stablePaceSamples = [];
 
     lastPaceAnnouncement = 0;
 
@@ -3488,8 +3427,6 @@ function startRunEngine(
     lastCoachState = "unknown";
 
     currentPhaseCompleted = false;
-
-    runPhaseHistory = [];
 
 
     expandedPhases =
@@ -3508,14 +3445,11 @@ function startRunEngine(
     phaseStartDistance =
         0;
 
-    if (expandedPhases.length) {
-        startPhaseHistoryEntry();
-    }
+    startPhaseHistoryV67();
 
     runStartTime =
         Date.now();
 
-    saveActiveRunSession(true);
 
     $("pauseButton").textContent =
         "Ⅱ PAUSA";
@@ -3648,22 +3582,21 @@ function median(values) {
 
 function updateMovementState(speedMps, now) {
 
-    const speed = Number.isFinite(speedMps)
-        ? Math.max(0, speedMps)
-        : 0;
+    const speed = Number.isFinite(speedMps) ? Math.max(0, speedMps) : 0;
 
-    const speedKmh = speed * 3.6;
+    // Isteresi: partenza confermata dopo ~1.2 s di movimento,
+    // arresto confermato dopo ~2.5 s. Evita falsi start/stop da drift GPS.
+    const kmh = speed * 3.6;
 
-    // v6.6: sotto ~1,2 km/h è direttamente FERMO.
-    if (speedKmh < 1.2) {
+    // v6.7: sotto 1.2 km/h lo stato è immediatamente FERMO.
+    if (kmh < STOP_SPEED_KMH_V67) {
         isMoving = false;
         movementCandidateSince = 0;
         stationaryCandidateSince = 0;
         return false;
     }
 
-    // Partenza confermata rapidamente, ma non da un singolo picco.
-    if (speedKmh >= 2.0) {
+    if (speed >= 0.85) {
         stationaryCandidateSince = 0;
         if (!isMoving) {
             if (!movementCandidateSince) movementCandidateSince = now;
@@ -3874,6 +3807,21 @@ function positionReceived(position) {
         }
     }
 
+    recordPhaseSampleV67({
+        t: timestamp,
+        dt,
+        distance:
+            movingNow && plausibleDistance
+                ? meters / 1000
+                : 0,
+        gpsSpeed: deviceSpeed,
+        coordSpeed: coordinateSpeed,
+        selectedSpeed,
+        source: adaptiveSource,
+        accuracy,
+        moving: movingNow
+    });
+
     // Il punto viene aggiornato solo dopo i controlli: così un fix anomalo
     // non trascina con sé anche il campione successivo.
     lastPosition = { lat, lon };
@@ -3886,43 +3834,6 @@ function positionReceived(position) {
     if (gpsAcceptedPositions.length > 8) {
         gpsAcceptedPositions.shift();
     }
-
-    runTrack.push({
-        t: timestamp,
-        lat,
-        lon,
-        accuracy: Number.isFinite(accuracy) ? accuracy : null,
-        gpsSpeed: deviceSpeed,
-        coordSpeed: coordinateSpeed,
-        selectedSpeed,
-        source: adaptiveSource,
-        robustSpeed,
-        distanceDelta: meters,
-        seconds: dt,
-        phaseIndex: phaseIndex,
-        phaseName: currentPhaseObject()
-            ? currentPhaseObject().name
-            : "Corsa libera",
-        moving: movingNow
-    });
-
-    recordPhaseSample({
-        t: timestamp,
-        seconds: dt,
-        distance: movingNow && plausibleDistance ? meters / 1000 : 0,
-        gpsSpeed: deviceSpeed,
-        coordSpeed: coordinateSpeed,
-        selectedSpeed,
-        source: adaptiveSource,
-        accuracy,
-        moving: movingNow
-    });
-
-    if (runTrack.length > 2500) {
-        runTrack.shift();
-    }
-
-    saveActiveRunSession();
 
     $("gps").textContent =
         `GPS ✓ ${Math.round(accuracyMeters)}m`;
@@ -3979,12 +3890,10 @@ function calculateDistance(
 }
 
 
-/* =========================
-   TIME
-   ========================= */
 
+function updateActiveClockV67(now) {
 
-function updateActiveClock(now = Date.now()) {
+    if (!Number.isFinite(now)) return;
 
     if (activeClockLast === null) {
         activeClockLast = now;
@@ -3993,140 +3902,86 @@ function updateActiveClock(now = Date.now()) {
 
     const dt = now - activeClockLast;
 
-    if (!paused && isMoving && dt > 0 && dt < 10000) {
+    if (isMoving && dt > 0 && dt < 10000) {
         activeElapsed += dt / 1000;
     }
 
     activeClockLast = now;
 }
 
-function buildLiveSession() {
-    return {
-        version: "6.6",
-        id: activeRunId,
-        startedAt: runStartTime ? new Date(runStartTime).toISOString() : new Date().toISOString(),
-        mode: runMode,
-        plan: activePlan ? JSON.parse(JSON.stringify(activePlan)) : null,
-        scheduleId: activeScheduleId,
-        running,
-        paused,
-        elapsed,
-        activeElapsed,
-        totalDistance,
-        phaseIndex,
-        phaseStartDistance,
-        phaseStartTime,
-        lastPosition,
-        lastPositionTime,
-        isMoving,
-        gpsLastMovingSpeed,
-        adaptiveSpeedMps,
-        adaptiveSource,
-        phaseHistory: runPhaseHistory,
-        track: runTrack.slice(-2500)
-    };
-}
+function getStablePaceV67() {
 
-function saveActiveRunSession(force = false) {
+    const speedKmh =
+        Number.isFinite(gpsDiag.selectedSpeed)
+            ? gpsDiag.selectedSpeed * 3.6
+            : 0;
 
-    if (!running || !activeRunId) return;
+    if (speedKmh < STOP_SPEED_KMH_V67) {
+        stablePaceSamplesV67 = [];
+        stablePaceV67 = null;
+        return null;
+    }
+
+    // Non trasformiamo velocità troppo basse in ritmi enormi.
+    // Sotto 2 km/h il valore precedente resta congelato finché non
+    // arriva un valore realmente utilizzabile.
+    if (
+        speedKmh < PACE_MIN_SPEED_KMH_V67 ||
+        speedKmh > PACE_MAX_SPEED_KMH_V67
+    ) {
+        return stablePaceV67;
+    }
 
     const now = Date.now();
 
-    if (!force && now - lastSessionCheckpoint < SESSION_CHECKPOINT_MS) {
-        return;
-    }
+    stablePaceSamplesV67.push({
+        t: now,
+        speed: speedKmh
+    });
 
-    updateActiveClock(now);
-
-    try {
-        localStorage.setItem(
-            SESSION_KEY,
-            JSON.stringify(buildLiveSession())
+    stablePaceSamplesV67 =
+        stablePaceSamplesV67.filter(
+            sample =>
+                now - sample.t <= PACE_WINDOW_MS_V67
         );
-        lastSessionCheckpoint = now;
-    } catch (e) {
-        console.warn("RUNNER: checkpoint non salvato", e);
-    }
-}
 
-function clearActiveRunSession() {
-    localStorage.removeItem(SESSION_KEY);
-}
-
-function resumeSavedRun() {
-
-    const saved = loadJSON(SESSION_KEY, null);
-
-    if (!saved || !saved.running) {
-        clearActiveRunSession();
-        showToast("Nessuna corsa da riprendere.");
-        return;
+    if (stablePaceSamplesV67.length > 12) {
+        stablePaceSamplesV67 =
+            stablePaceSamplesV67.slice(-12);
     }
 
-    stopGPS();
-    clearInterval(timerId);
+    const speeds =
+        stablePaceSamplesV67
+            .map(sample => sample.speed)
+            .sort((a, b) => a - b);
 
-    activeRunId = saved.id || uuid();
-    runMode = saved.mode || "free";
-    activePlan = saved.plan || null;
-    activeScheduleId = saved.scheduleId || null;
-    running = true;
-    paused = !!saved.paused;
+    if (!speeds.length) {
+        return stablePaceV67;
+    }
 
-    elapsed = Number(saved.elapsed) || 0;
-    activeElapsed = Number(saved.activeElapsed) || 0;
-    activeClockLast = Date.now();
+    const mid = Math.floor(speeds.length / 2);
 
-    totalDistance = Number(saved.totalDistance) || 0;
-    phaseIndex = Number(saved.phaseIndex) || 0;
-    phaseStartDistance = Number(saved.phaseStartDistance) || 0;
-    phaseStartTime = Number(saved.phaseStartTime) || Date.now();
+    const medianSpeed =
+        speeds.length % 2
+            ? speeds[mid]
+            : (speeds[mid - 1] + speeds[mid]) / 2;
 
-    lastPosition = saved.lastPosition || null;
-    lastPositionTime = saved.lastPositionTime || null;
-    isMoving = !!saved.isMoving;
-    gpsLastMovingSpeed = Number(saved.gpsLastMovingSpeed) || 0;
-    adaptiveSpeedMps = Number.isFinite(saved.adaptiveSpeedMps)
-        ? saved.adaptiveSpeedMps
-        : null;
-    adaptiveSource = saved.adaptiveSource || "—";
-    runPhaseHistory = Array.isArray(saved.phaseHistory)
-        ? saved.phaseHistory
-        : [];
-    runTrack = Array.isArray(saved.track) ? saved.track : [];
+    const targetPace =
+        60 / medianSpeed;
 
-    gpsSamples = [];
-    gpsPositionHistory = [];
-    gpsAcceptedPositions = [];
-    lastGpsSpeed = null;
-    movementCandidateSince = 0;
-    stationaryCandidateSince = 0;
-    instantSpeedKmh = null;
-    stablePaceSec = null;
-    stablePaceSamples = [];
-    paceHistory = [];
-
-    runStartTime = Date.now() - elapsed * 1000;
-
-    $("pauseButton").textContent = paused ? "▶ RIPRENDI" : "Ⅱ PAUSA";
-
-    if (runMode === "free") {
-        $("phaseName").textContent = "CORSA LIBERA";
-        $("phaseInfo").textContent = "Solo registrazione dati";
-        $("targetPanel").style.display = "none";
+    if (stablePaceV67 === null) {
+        stablePaceV67 = targetPace;
     } else {
-        $("targetPanel").style.display = "block";
-        updatePhaseUI();
+        stablePaceV67 +=
+            0.16 * (targetPace - stablePaceV67);
     }
 
-    showScreen("run");
-    startGPS();
-
-    timerId = setInterval(tickRun, 250);
-    saveActiveRunSession(true);
-    showToast("Corsa recuperata.");
+    return stablePaceV67;
 }
+
+/* =========================
+   TIME
+   ========================= */
 
 function tickRun() {
 
@@ -4148,8 +4003,7 @@ function tickRun() {
             runStartTime
         ) / 1000;
 
-    updateActiveClock(now);
-    saveActiveRunSession();
+    updateActiveClockV67(now);
 
     updateDisplay();
 
@@ -4383,54 +4237,15 @@ function getStableInstantSpeedKmh() {
     return instantSpeedKmh;
 }
 
-let stablePaceSec = null;
-let stablePaceSamples = [];
-
-const STABLE_PACE_WINDOW_MS = 6000;
-const STABLE_PACE_MIN_KMH = 2.0;
-const STABLE_PACE_MAX_KMH = 25.0;
-
 function getStableInstantPace() {
 
     const speedKmh = getStableInstantSpeedKmh();
 
-    if (!(speedKmh >= STABLE_PACE_MIN_KMH)) {
-        stablePaceSamples = [];
-        stablePaceSec = null;
+    if (!(speedKmh > 0.5)) {
         return null;
     }
 
-    if (speedKmh > STABLE_PACE_MAX_KMH) {
-        return stablePaceSec;
-    }
-
-    const now = Date.now();
-
-    stablePaceSamples.push({
-        t: now,
-        pace: 60 / speedKmh
-    });
-
-    stablePaceSamples = stablePaceSamples.filter(
-        sample => now - sample.t <= STABLE_PACE_WINDOW_MS
-    );
-
-    const medianPace = median(
-        stablePaceSamples.map(sample => sample.pace)
-    );
-
-    if (!Number.isFinite(medianPace)) {
-        return stablePaceSec;
-    }
-
-    if (stablePaceSec === null) {
-        stablePaceSec = medianPace;
-    } else {
-        // Molto più stabile della velocità visualizzata.
-        stablePaceSec += 0.20 * (medianPace - stablePaceSec);
-    }
-
-    return stablePaceSec;
+    return 60 / speedKmh;
 }
 
 /* =========================
@@ -4438,10 +4253,7 @@ function getStableInstantPace() {
    ========================= */
 
 function getFilteredPace() {
-
-    // v6.4: ritmo istantaneo stabilizzato.
-    return getStableInstantPace();
-
+    return getStablePaceV67();
 }
 
 
@@ -4465,14 +4277,21 @@ function getInstantaneousSpeedMps() {
 function getAveragePace() {
 
     if (
-        activeElapsed <= 0 ||
+        elapsed <= 0 ||
         totalDistance <= 0
     ) {
+
+        return null;
+
+    }
+
+
+    if (activeElapsed <= 0) {
         return null;
     }
 
-    // secondi / km
     return activeElapsed / totalDistance;
+
 }
 
 
@@ -4568,20 +4387,14 @@ function updateDisplay() {
         formatTime(elapsed);
 
 
-    const displaySpeed = getSpeed();
-
     $("speed").textContent =
-        displaySpeed.toFixed(1);
+        getSpeed().toFixed(1);
 
-    const displayPace =
-        displaySpeed < 1.2
-            ? null
-            : pace;
 
     $("pace").textContent =
-        displayPace
+        pace
         ?
-        secondsToPace(displayPace)
+        secondsToPace(pace)
         :
         "--:--";
 
@@ -4617,16 +4430,17 @@ function updateDisplay() {
    ========================= */
 
 
-function startPhaseHistoryEntry() {
+function startPhaseHistoryV67() {
 
     const phase = currentPhaseObject();
 
-    if (!phase) {
-        return;
-    }
+    if (!phase) return;
 
-    runPhaseHistory.push({
-        index: phaseIndex,
+    phaseHistorySeq++;
+
+    phaseHistoryCurrent = {
+        id: phaseHistorySeq,
+        phaseIndex,
         name: phase.name || `Fase ${phaseIndex + 1}`,
         repeatIndex: phase.repeatIndex || null,
         repeatTotal: phase.repeatTotal || null,
@@ -4637,108 +4451,28 @@ function startPhaseHistoryEntry() {
         targetMax: Number.isFinite(Number(phase.targetMax))
             ? Number(phase.targetMax)
             : null,
-        startedAt: new Date().toISOString(),
-        endedAt: null,
+        startTime: Date.now(),
+        endTime: null,
         startDistance: totalDistance,
         endDistance: null,
         distance: 0,
-        elapsed: 0,
         activeTime: 0,
+        avgPace: null,
+        avgSpeed: null,
+        maxSpeed: 0,
         samples: []
-    });
+    };
+
+    phaseHistory.push(phaseHistoryCurrent);
 }
 
-function finishPhaseHistoryEntry() {
+function recordPhaseSampleV67(sample) {
 
-    const entry =
-        runPhaseHistory[runPhaseHistory.length - 1];
+    if (!phaseHistoryCurrent || !sample) return;
 
-    if (!entry || entry.endedAt) {
-        return;
-    }
-
-    entry.endedAt =
-        new Date().toISOString();
-
-    entry.endDistance =
-        totalDistance;
-
-    entry.distance =
-        Math.max(
-            0,
-            totalDistance - Number(entry.startDistance || 0)
-        );
-
-    const start =
-        Date.parse(entry.startedAt);
-
-    const end =
-        Date.parse(entry.endedAt);
-
-    entry.elapsed =
-        Number.isFinite(start) && Number.isFinite(end)
-            ? Math.max(0, (end - start) / 1000)
-            : 0;
-
-    const samples =
-        Array.isArray(entry.samples)
-            ? entry.samples
-            : [];
-
-    const activeSeconds =
-        samples.reduce(
-            (sum, sample) =>
-                sum +
-                (sample.moving && Number.isFinite(sample.seconds)
-                    ? Math.max(0, sample.seconds)
-                    : 0),
-            0
-        );
-
-    entry.activeTime =
-        activeSeconds > 0
-            ? activeSeconds
-            : entry.elapsed;
-
-    if (entry.distance > 0 && entry.activeTime > 0) {
-        entry.avgPace =
-            entry.activeTime / entry.distance;
-
-        entry.avgSpeed =
-            entry.distance /
-            (entry.activeTime / 3600);
-    } else {
-        entry.avgPace = null;
-        entry.avgSpeed = null;
-    }
-
-    const validSpeeds =
-        samples
-            .map(sample =>
-                Number.isFinite(sample.selectedSpeed)
-                    ? sample.selectedSpeed * 3.6
-                    : null
-            )
-            .filter(Number.isFinite);
-
-    entry.maxSpeed =
-        validSpeeds.length
-            ? Math.max(...validSpeeds)
-            : 0;
-}
-
-function recordPhaseSample(sample) {
-
-    const entry =
-        runPhaseHistory[runPhaseHistory.length - 1];
-
-    if (!entry || !sample) {
-        return;
-    }
-
-    entry.samples.push({
+    phaseHistoryCurrent.samples.push({
         t: sample.t,
-        seconds: sample.seconds,
+        dt: sample.dt,
         distance: sample.distance,
         gpsSpeed: sample.gpsSpeed,
         coordSpeed: sample.coordSpeed,
@@ -4748,22 +4482,73 @@ function recordPhaseSample(sample) {
         moving: sample.moving
     });
 
-    // Limite ragionevole per non gonfiare indefinitamente localStorage.
-    if (entry.samples.length > 1500) {
-        entry.samples.shift();
+    if (phaseHistoryCurrent.samples.length > 1800) {
+        phaseHistoryCurrent.samples.shift();
     }
 }
 
-function getPhaseHistoryForActivity(activity) {
+function finishPhaseHistoryV67() {
+
+    if (!phaseHistoryCurrent) return;
+
+    phaseHistoryCurrent.endTime = Date.now();
+    phaseHistoryCurrent.endDistance = totalDistance;
+
+    phaseHistoryCurrent.distance =
+        Math.max(
+            0,
+            totalDistance - phaseHistoryCurrent.startDistance
+        );
+
+    phaseHistoryCurrent.activeTime =
+        phaseHistoryCurrent.samples.reduce(
+            (sum, sample) =>
+                sum +
+                (
+                    sample.moving
+                        ? Math.max(0, Number(sample.dt) || 0)
+                        : 0
+                ),
+            0
+        );
 
     if (
-        activity &&
-        Array.isArray(activity.phases)
+        phaseHistoryCurrent.distance > 0 &&
+        phaseHistoryCurrent.activeTime > 0
     ) {
-        return activity.phases;
+        phaseHistoryCurrent.avgPace =
+            phaseHistoryCurrent.activeTime /
+            phaseHistoryCurrent.distance;
+
+        phaseHistoryCurrent.avgSpeed =
+            phaseHistoryCurrent.distance /
+            (phaseHistoryCurrent.activeTime / 3600);
     }
 
-    return [];
+    const speeds =
+        phaseHistoryCurrent.samples
+            .map(s =>
+                Number.isFinite(s.selectedSpeed)
+                    ? s.selectedSpeed * 3.6
+                    : null
+            )
+            .filter(Number.isFinite);
+
+    phaseHistoryCurrent.maxSpeed =
+        speeds.length
+            ? Math.max(...speeds)
+            : 0;
+
+    phaseHistoryCurrent = null;
+}
+
+function phasePaceTextV67(seconds) {
+
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+        return "--:--";
+    }
+
+    return secondsToPace(seconds);
 }
 
 function currentPhaseObject() {
@@ -4960,8 +4745,7 @@ function advancePhase() {
     currentPhaseCompleted =
         true;
 
-    finishPhaseHistoryEntry();
-
+    finishPhaseHistoryV67();
 
     const oldPhase =
         currentPhaseObject();
@@ -4998,8 +4782,7 @@ function advancePhase() {
 
     updatePhaseUI();
 
-    startPhaseHistoryEntry();
-
+    startPhaseHistoryV67();
 
     const next =
         currentPhaseObject();
@@ -5544,10 +5327,10 @@ function finishRun() {
 
     timerId = null;
 
-    updateActiveClock(Date.now());
     stopGPS();
 
-    finishPhaseHistoryEntry();
+    updateActiveClock(Date.now());
+    finishPhaseHistoryV67();
 
     const avgPace =
         getAveragePace();
@@ -5616,27 +5399,11 @@ function finishRun() {
         speed:
             getSpeed(),
 
-        scheduleId:
-            activeScheduleId,
-
         activeTime:
             activeElapsed,
 
-        maxSpeed:
-            runTrack.reduce(
-                (max, sample) =>
-                    Math.max(
-                        max,
-                        Number(sample.selectedSpeed || 0) * 3.6
-                    ),
-                0
-            ),
-
-        gpsTrack:
-            runTrack.slice(),
-
         phases:
-            runPhaseHistory.map(
+            phaseHistory.map(
                 phase => ({
                     ...phase,
                     samples: Array.isArray(phase.samples)
@@ -5645,29 +5412,8 @@ function finishRun() {
                 })
             ),
 
-        gpsDiagnostics: {
-            samples: runTrack.length,
-            sources: runTrack.reduce(
-                (acc, sample) => {
-                    const key = sample.source || "—";
-                    acc[key] = (acc[key] || 0) + 1;
-                    return acc;
-                },
-                {}
-            ),
-            avgAccuracy:
-                runTrack.length
-                    ? runTrack.reduce(
-                        (sum, sample) =>
-                            sum + (Number(sample.accuracy) || 0),
-                        0
-                    ) / runTrack.length
-                    : null
-        },
-
-        coach: {
-            finalState: lastCoachState
-        }
+        scheduleId:
+            activeScheduleId
 
     };
 
@@ -5682,11 +5428,6 @@ function finishRun() {
         history
     );
 
-    clearActiveRunSession();
-    activeRunId = null;
-    runTrack = [];
-    runPhaseHistory = [];
-    activeClockLast = null;
 
     if (
         activeScheduleId
@@ -5779,20 +5520,24 @@ function finishRun() {
 function confirmExitRun() {
 
     if (!running) {
+
         showScreen("home");
+
         return;
+
     }
 
-    saveActiveRunSession(true);
 
     if (
         confirm(
-            "Tornare alla Home? La corsa continuerà e potrai riprenderla."
+            "Uscire dalla corsa senza salvarla?"
         )
     ) {
-        showScreen("home");
-        refreshHome();
+
+        cancelRun();
+
     }
+
 }
 
 
@@ -5809,10 +5554,6 @@ function cancelRun() {
     timerId = null;
 
     stopGPS();
-    clearActiveRunSession();
-    activeRunId = null;
-    runTrack = [];
-    activeClockLast = null;
 
     activePlan = null;
 
@@ -6214,321 +5955,6 @@ function clearAllData() {
    HISTORY
    ========================================================= */
 
-
-function activitySourceText(activity) {
-
-    const sources =
-        activity &&
-        activity.gpsDiagnostics &&
-        activity.gpsDiagnostics.sources
-            ? activity.gpsDiagnostics.sources
-            : {};
-
-    return Object.entries(sources)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(" · ") || "—";
-}
-
-function buildActivityChatText(activity) {
-
-    const track =
-        Array.isArray(activity.gpsTrack)
-            ? activity.gpsTrack
-            : [];
-
-    const lines = [
-        "RUNNER — DATI ALLENAMENTO",
-        "",
-        `Data: ${activity.date || "—"}`,
-        `Allenamento: ${activity.planName || "Corsa"}`,
-        `Modalità: ${activity.mode || "—"}`,
-        "",
-        "RIEPILOGO",
-        `Distanza: ${Number(activity.distance || 0).toFixed(2)} km`,
-        `Tempo totale: ${formatTime(activity.time)}`,
-        `Tempo in movimento: ${formatTime(activity.activeTime || activity.time)}`,
-        `Tempo fermo: ${formatTime(Math.max(0, (activity.time || 0) - (activity.activeTime || activity.time)))}`,
-        `Ritmo medio: ${activity.pace ? secondsToPace(activity.pace) : "--:--"} min/km`,
-        `Velocità media: ${Number(activity.speed || 0).toFixed(2)} km/h`,
-        `Velocità massima: ${Number(activity.maxSpeed || 0).toFixed(2)} km/h`,
-        "",
-        "FASI DELL'ALLENAMENTO"
-    ];
-
-    const phases =
-        Array.isArray(activity.phases)
-            ? activity.phases
-            : [];
-
-    phases.forEach((phase, index) => {
-        lines.push(
-            `FASE ${index + 1}: ${phase.name || "—"}`
-        );
-        lines.push(
-            `Tempo: ${formatTime(Number(phase.elapsed || 0))}`
-        );
-        lines.push(
-            `Tempo in movimento: ${formatTime(Number(phase.activeTime || 0))}`
-        );
-        lines.push(
-            `Distanza: ${Number(phase.distance || 0).toFixed(3)} km`
-        );
-        lines.push(
-            `Ritmo medio: ${phase.avgPace ? secondsToPace(phase.avgPace) : "--:--"}`
-        );
-        lines.push(
-            `Velocità media: ${
-                Number.isFinite(phase.avgSpeed)
-                    ? Number(phase.avgSpeed).toFixed(2) + " km/h"
-                    : "—"
-            }`
-        );
-        lines.push(
-            `Velocità massima: ${
-                Number.isFinite(phase.maxSpeed)
-                    ? Number(phase.maxSpeed).toFixed(2) + " km/h"
-                    : "—"
-            }`
-        );
-        lines.push("");
-    });
-
-    lines.push(
-        "GPS",
-        `Campioni: ${track.length}`,
-        `Precisione media: ${
-            activity.gpsDiagnostics &&
-            Number.isFinite(activity.gpsDiagnostics.avgAccuracy)
-                ? activity.gpsDiagnostics.avgAccuracy.toFixed(1) + " m"
-                : "—"
-        }`,
-        `Sorgenti: ${activitySourceText(activity)}`,
-        "",
-        "TRACCIA / DIAGNOSTICA",
-        "timestamp | lat | lon | accuracy | gpsSpeed m/s | coordSpeed m/s | selectedSpeed m/s | source | robustSpeed m/s | distance m | moving"
-    );
-
-    track.forEach(sample => {
-        lines.push([
-            sample.t,
-            Number(sample.lat).toFixed(6),
-            Number(sample.lon).toFixed(6),
-            Number(sample.accuracy || 0).toFixed(1),
-            Number(sample.gpsSpeed || 0).toFixed(3),
-            Number(sample.coordSpeed || 0).toFixed(3),
-            Number(sample.selectedSpeed || 0).toFixed(3),
-            sample.source || "—",
-            Number(sample.robustSpeed || 0).toFixed(3),
-            Number(sample.distanceDelta || 0).toFixed(2),
-            sample.moving ? "YES" : "NO"
-        ].join(" | "));
-    });
-
-    return lines.join("\\n");
-}
-
-async function copyActivityForChatGPT(activityId) {
-
-    const activity =
-        loadJSON(STORAGE.history, [])
-            .find(item => item.id === activityId);
-
-    if (!activity) {
-        showToast("Attività non trovata.");
-        return;
-    }
-
-    const text = buildActivityChatText(activity);
-
-    try {
-        await navigator.clipboard.writeText(text);
-        showToast("Dati copiati per ChatGPT.");
-    } catch (error) {
-        const area = document.createElement("textarea");
-        area.value = text;
-        document.body.appendChild(area);
-        area.select();
-        document.execCommand("copy");
-        area.remove();
-        showToast("Dati copiati per ChatGPT.");
-    }
-}
-
-function openHistoryDetail(id) {
-
-    const activity =
-        loadJSON(STORAGE.history, [])
-            .find(item => item.id === id);
-
-    if (!activity) return;
-
-    const panel = $("historyDetailPanel");
-    const date = new Date(activity.date);
-    const totalTime = Number(activity.time || 0);
-    const activeTime = Number(activity.activeTime || totalTime);
-    const stoppedTime = Math.max(0, totalTime - activeTime);
-
-    panel.innerHTML = `
-        <div class="history-detail-card">
-            <div class="list-row">
-                <div>
-                    <div style="font-size:21px;font-weight:850;">
-                        ${escapeHTML(activity.planName || "Corsa")}
-                    </div>
-                    <div class="muted small" style="margin-top:5px;">
-                        ${date.toLocaleDateString("it-IT")}
-                        ·
-                        ${date.toLocaleTimeString("it-IT", {
-                            hour:"2-digit", minute:"2-digit"
-                        })}
-                    </div>
-                </div>
-                <button class="icon-btn" onclick="closeHistoryDetail()">✕</button>
-            </div>
-
-            <div class="history-detail-grid">
-                <div class="history-detail-row">
-                    <div class="label">Distanza</div>
-                    <div class="value">${Number(activity.distance || 0).toFixed(2)} km</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">Ritmo medio</div>
-                    <div class="value">${activity.pace ? secondsToPace(activity.pace) : "--:--"} min/km</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">Tempo totale</div>
-                    <div class="value">${formatTime(totalTime)}</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">In movimento</div>
-                    <div class="value">${formatTime(activeTime)}</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">Tempo fermo</div>
-                    <div class="value">${formatTime(stoppedTime)}</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">Velocità media</div>
-                    <div class="value">${Number(activity.speed || 0).toFixed(2)} km/h</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">Velocità massima</div>
-                    <div class="value">${Number(activity.maxSpeed || 0).toFixed(2)} km/h</div>
-                </div>
-                <div class="history-detail-row">
-                    <div class="label">Campioni GPS</div>
-                    <div class="value">${Array.isArray(activity.gpsTrack) ? activity.gpsTrack.length : 0}</div>
-                </div>
-            </div>
-
-            <div class="history-detail card" style="margin-top:15px;">
-                <div class="muted small">DIAGNOSTICA GPS</div>
-                <div style="margin-top:8px;">
-                    Precisione media:
-                    ${
-                        activity.gpsDiagnostics &&
-                        Number.isFinite(activity.gpsDiagnostics.avgAccuracy)
-                            ? activity.gpsDiagnostics.avgAccuracy.toFixed(1) + " m"
-                            : "—"
-                    }
-                </div>
-                <div style="margin-top:6px;">
-                    Sorgenti: ${escapeHTML(activitySourceText(activity))}
-                </div>
-            </div>
-
-
-            <div class="history-detail card" style="margin-top:15px;">
-                <div class="muted small">FASI DELL'ALLENAMENTO</div>
-
-                ${
-                    Array.isArray(activity.phases) && activity.phases.length
-                        ? activity.phases.map((phase, index) => `
-                            <div class="list-item" style="margin-top:10px;">
-                                <div class="list-row">
-                                    <div>
-                                        <div style="font-weight:850;">
-                                            Fase ${index + 1} ·
-                                            ${escapeHTML(phase.name || "Attività")}
-                                        </div>
-                                        ${
-                                            phase.repeatTotal
-                                                ? `<div class="muted small">
-                                                    Ripetizione ${phase.repeatIndex}/${phase.repeatTotal}
-                                                   </div>`
-                                                : ""
-                                        }
-                                    </div>
-                                    <div class="tag">
-                                        ${phase.targetType === "pace" ? "RITMO" : "FASE"}
-                                    </div>
-                                </div>
-
-                                <div class="history-stat">
-                                    <div class="metric">
-                                        <div class="value">
-                                            ${formatTime(Number(phase.elapsed || 0))}
-                                        </div>
-                                        <div class="label">TEMPO</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="value">
-                                            ${Number(phase.distance || 0).toFixed(2)}
-                                        </div>
-                                        <div class="label">KM</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="value">
-                                            ${phase.avgPace
-                                                ? secondsToPace(phase.avgPace)
-                                                : "--:--"}
-                                        </div>
-                                        <div class="label">RITMO</div>
-                                    </div>
-                                </div>
-
-                                <div class="muted small" style="margin-top:8px;">
-                                    Tempo in movimento:
-                                    ${formatTime(Number(phase.activeTime || 0))}
-                                    · Velocità media:
-                                    ${
-                                        Number.isFinite(phase.avgSpeed)
-                                            ? Number(phase.avgSpeed).toFixed(2) + " km/h"
-                                            : "—"
-                                    }
-                                    · Max:
-                                    ${
-                                        Number.isFinite(phase.maxSpeed)
-                                            ? Number(phase.maxSpeed).toFixed(2) + " km/h"
-                                            : "—"
-                                    }
-                                </div>
-                            </div>
-                        `).join("")
-                        : `<div class="muted small" style="margin-top:8px;">
-                            Questa attività non contiene la suddivisione per fasi.
-                           </div>`
-                }
-            </div>
-
-            <button class="primary" onclick="copyActivityForChatGPT('${activity.id}')">
-                📋 COPIA DATI PER CHATGPT
-            </button>
-
-            <button class="secondary mt" onclick="closeHistoryDetail()">
-                CHIUDI
-            </button>
-        </div>
-    `;
-
-    panel.style.display = "block";
-}
-
-function closeHistoryDetail() {
-    $("historyDetailPanel").style.display = "none";
-    $("historyDetailPanel").innerHTML = "";
-}
-
 function renderHistory() {
 
     const history =
@@ -6577,9 +6003,23 @@ function renderHistory() {
                 "list-item";
 
             div.style.cursor = "pointer";
-            div.onclick = function () {
-                openHistoryDetail(activity.id);
-            };
+
+            div.addEventListener(
+                "click",
+                function(event) {
+
+                    if (
+                        event.target.closest("button")
+                    ) {
+                        return;
+                    }
+
+                    toggleHistoryDetailV67(
+                        activity.id,
+                        div
+                    );
+                }
+            );
 
 
             const pace =
@@ -6635,7 +6075,6 @@ function renderHistory() {
                     <button
                         class="icon-btn"
                         onclick="
-                            event.stopPropagation();
                             deleteHistory(
                                 '${activity.id}'
                             )">
@@ -6698,6 +6137,303 @@ function renderHistory() {
 
 }
 
+
+
+function toggleHistoryDetailV67(id, container) {
+
+    const existing =
+        container.querySelector(
+            ".v67-history-expanded"
+        );
+
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        );
+
+    const activity =
+        history.find(
+            item => item.id === id
+        );
+
+    if (!activity) return;
+
+    const phases =
+        Array.isArray(activity.phases)
+            ? activity.phases
+            : [];
+
+    const detail =
+        document.createElement("div");
+
+    detail.className =
+        "history-detail v67-history-expanded";
+
+    detail.innerHTML = `
+        <div style="font-weight:850;margin-top:12px;">
+            DETTAGLIO ATTIVITÀ
+        </div>
+
+        <div class="grid" style="margin-top:10px;">
+            <div class="metric">
+                <div class="value">
+                    ${Number(activity.distance || 0).toFixed(2)}
+                </div>
+                <div class="label">KM TOTALI</div>
+            </div>
+
+            <div class="metric">
+                <div class="value">
+                    ${formatTime(
+                        Number(
+                            activity.activeTime ||
+                            activity.time ||
+                            0
+                        )
+                    )}
+                </div>
+                <div class="label">IN MOVIMENTO</div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            FASI
+        </div>
+
+        ${
+            phases.length
+                ? phases.map((phase, index) => `
+                    <div class="card" style="margin-top:10px;">
+
+                        <div style="font-weight:850;">
+                            Fase ${index + 1} ·
+                            ${escapeHTML(
+                                phase.name || "Attività"
+                            )}
+                        </div>
+
+                        ${
+                            phase.repeatTotal
+                                ? `<div class="muted small">
+                                    Ripetizione
+                                    ${phase.repeatIndex}/${phase.repeatTotal}
+                                   </div>`
+                                : ""
+                        }
+
+                        <div class="history-stat">
+
+                            <div class="metric">
+                                <div class="value">
+                                    ${formatTime(
+                                        Number(phase.elapsed || 0)
+                                    )}
+                                </div>
+                                <div class="label">TEMPO</div>
+                            </div>
+
+                            <div class="metric">
+                                <div class="value">
+                                    ${Number(
+                                        phase.distance || 0
+                                    ).toFixed(2)}
+                                </div>
+                                <div class="label">KM</div>
+                            </div>
+
+                            <div class="metric">
+                                <div class="value">
+                                    ${phasePaceTextV67(
+                                        phase.avgPace
+                                    )}
+                                </div>
+                                <div class="label">RITMO</div>
+                            </div>
+
+                        </div>
+
+                        <div class="muted small" style="margin-top:8px;">
+                            Movimento:
+                            ${formatTime(
+                                Number(
+                                    phase.activeTime || 0
+                                )
+                            )}
+                            · Velocità media:
+                            ${
+                                Number.isFinite(phase.avgSpeed)
+                                    ? Number(phase.avgSpeed).toFixed(2) + " km/h"
+                                    : "—"
+                            }
+                            · Max:
+                            ${
+                                Number.isFinite(phase.maxSpeed)
+                                    ? Number(phase.maxSpeed).toFixed(2) + " km/h"
+                                    : "—"
+                            }
+                        </div>
+
+                    </div>
+                `).join("")
+                : `<div class="muted small">
+                    Questa attività non contiene una suddivisione per fasi.
+                   </div>`
+        }
+
+        <button
+            class="primary mt"
+            onclick="copyHistoryForChatGPTV67('${id}')">
+            📋 COPIA DATI PER CHATGPT
+        </button>
+    `;
+
+    container.appendChild(detail);
+}
+
+function buildHistoryChatGPTV67(activity) {
+
+    const phases =
+        Array.isArray(activity?.phases)
+            ? activity.phases
+            : [];
+
+    const lines = [
+        "RUNNER — ANALISI ALLENAMENTO",
+        "",
+        `Data: ${activity?.date || "—"}`,
+        `Allenamento: ${activity?.planName || "Corsa"}`,
+        `Distanza totale: ${Number(activity?.distance || 0).toFixed(3)} km`,
+        `Tempo totale: ${formatTime(activity?.time || 0)}`,
+        `Tempo in movimento: ${formatTime(activity?.activeTime || activity?.time || 0)}`,
+        `Ritmo medio: ${
+            activity?.pace
+                ? secondsToPace(activity.pace)
+                : "--:--"
+        }`,
+        `Velocità: ${Number(activity?.speed || 0).toFixed(2)} km/h`,
+        "",
+        "=== FASI ==="
+    ];
+
+    phases.forEach((phase, index) => {
+
+        lines.push("");
+        lines.push(
+            `FASE ${index + 1}: ${phase.name || "—"}`
+        );
+
+        if (phase.repeatTotal) {
+            lines.push(
+                `Ripetizione: ${phase.repeatIndex}/${phase.repeatTotal}`
+            );
+        }
+
+        lines.push(
+            `Tempo: ${formatTime(Number(phase.elapsed || 0))}`
+        );
+
+        lines.push(
+            `Tempo in movimento: ${formatTime(Number(phase.activeTime || 0))}`
+        );
+
+        lines.push(
+            `Distanza: ${Number(phase.distance || 0).toFixed(3)} km`
+        );
+
+        lines.push(
+            `Ritmo medio: ${phasePaceTextV67(phase.avgPace)}`
+        );
+
+        lines.push(
+            `Velocità media: ${
+                Number.isFinite(phase.avgSpeed)
+                    ? Number(phase.avgSpeed).toFixed(2) + " km/h"
+                    : "—"
+            }`
+        );
+
+        lines.push(
+            `Velocità massima: ${
+                Number.isFinite(phase.maxSpeed)
+                    ? Number(phase.maxSpeed).toFixed(2) + " km/h"
+                    : "—"
+            }`
+        );
+
+        lines.push(
+            `Campioni GPS: ${
+                Array.isArray(phase.samples)
+                    ? phase.samples.length
+                    : 0
+            }`
+        );
+    });
+
+    lines.push("");
+    lines.push("=== DATI GPS ===");
+    lines.push(
+        JSON.stringify(
+            activity.gpsDiagnostics || {},
+            null,
+            2
+        )
+    );
+
+    return lines.join("\n");
+}
+
+async function copyHistoryForChatGPTV67(id) {
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        );
+
+    const activity =
+        history.find(
+            item => item.id === id
+        );
+
+    if (!activity) return;
+
+    const text =
+        buildHistoryChatGPTV67(activity);
+
+    try {
+
+        await navigator.clipboard.writeText(text);
+
+        showToast(
+            "Dati copiati per ChatGPT"
+        );
+
+    } catch (error) {
+
+        const area =
+            document.createElement("textarea");
+
+        area.value = text;
+
+        document.body.appendChild(area);
+
+        area.select();
+
+        document.execCommand("copy");
+
+        area.remove();
+
+        showToast(
+            "Dati copiati per ChatGPT"
+        );
+    }
+}
 
 function deleteHistory(id) {
 
@@ -6855,27 +6591,9 @@ if ("serviceWorker" in navigator) {
 // Il timer è basato su Date.now(), quindi non accumula errori se il browser
 // rallenta setInterval. Al ritorno in primo piano aggiorniamo subito il display.
 document.addEventListener("visibilitychange", function () {
-    if (running) {
-        saveActiveRunSession(true);
-    }
-
     if (!document.hidden && running && !paused) {
         elapsed = Math.max(0, (Date.now() - runStartTime) / 1000);
-        updateActiveClock(Date.now());
         updateDisplay();
-        refreshHome();
-    }
-});
-
-window.addEventListener("pagehide", function () {
-    if (running) {
-        saveActiveRunSession(true);
-    }
-});
-
-window.addEventListener("beforeunload", function () {
-    if (running) {
-        saveActiveRunSession(true);
     }
 });
 </script> 
@@ -6884,3 +6602,45 @@ window.addEventListener("beforeunload", function () {
       
 </body>
 </html>
+
+<script>
+(function(){
+
+    function persistRunnerV67() {
+        try {
+            if (
+                typeof saveActiveRun === "function"
+            ) {
+                saveActiveRun();
+            }
+        } catch (e) {
+            console.warn(
+                "RUNNER v6.7: salvataggio background",
+                e
+            );
+        }
+    }
+
+    document.addEventListener(
+        "visibilitychange",
+        function() {
+            if (
+                document.visibilityState === "hidden"
+            ) {
+                persistRunnerV67();
+            }
+        }
+    );
+
+    window.addEventListener(
+        "pagehide",
+        persistRunnerV67
+    );
+
+    window.addEventListener(
+        "beforeunload",
+        persistRunnerV67
+    );
+
+})();
+</script>
