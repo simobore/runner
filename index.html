@@ -162,6 +162,14 @@ button {
     font-weight: 700;
 }
 
+.targetBox {
+    text-align: center;
+    background: #242424;
+    border-radius: 17px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
 .nav {
     position: fixed;
     bottom: 0;
@@ -204,6 +212,7 @@ button {
 
 <div class="app">
 
+
 <!-- HOME -->
 
 <section id="home" class="screen active">
@@ -211,10 +220,13 @@ button {
 <header>
 
 <div>
+
 <h1>RUNNER</h1>
+
 <div class="muted">
 Il tuo allenatore
 </div>
+
 </div>
 
 <div>🏃</div>
@@ -250,11 +262,15 @@ Prossimo allenamento
 Corsa facile · 30 minuti
 </div>
 
-<p>
+<div class="targetBox">
+
 <b>
-Target: 6:20–6:50 min/km
+Target: 5:15–5:30 min/km
 </b>
-</p>
+
+</div>
+
+<br>
 
 <button
 class="primary"
@@ -280,7 +296,9 @@ Questa settimana
 <div
 id="weekKm"
 class="value">
+
 0.0
+
 </div>
 
 <div class="label">
@@ -295,7 +313,9 @@ KM
 <div
 id="weekRuns"
 class="value">
+
 0
+
 </div>
 
 <div class="label">
@@ -346,11 +366,8 @@ GPS…
 </header>
 
 
-<div
-class="phase">
-
+<div class="phase">
 CORSA LIBERA
-
 </div>
 
 
@@ -372,9 +389,7 @@ class="big">
 </div>
 
 <div class="unit">
-
 min/km · ritmo medio
-
 </div>
 
 
@@ -394,9 +409,7 @@ class="value">
 </div>
 
 <div class="label">
-
 KM
-
 </div>
 
 </div>
@@ -413,9 +426,7 @@ class="value">
 </div>
 
 <div class="label">
-
 TEMPO
-
 </div>
 
 </div>
@@ -432,9 +443,7 @@ class="value">
 </div>
 
 <div class="label">
-
 KM/H
-
 </div>
 
 </div>
@@ -443,7 +452,7 @@ KM/H
 <div class="metric">
 
 <div
-id="avgPace"
+id="instantPace"
 class="value">
 
 --:--
@@ -451,9 +460,7 @@ class="value">
 </div>
 
 <div class="label">
-
-RITMO MEDIO
-
+RITMO ATTUALE
 </div>
 
 </div>
@@ -579,7 +586,6 @@ KM/H
 
 </div>
 
-
 </div>
 
 </div>
@@ -632,6 +638,10 @@ onclick="alert('Le statistiche avanzate arriveranno nella prossima versione.')">
 <script>
 
 
+/* =========================
+   VARIABILI
+========================= */
+
 let watchId = null;
 
 let timer = null;
@@ -651,13 +661,28 @@ let lastPosition = null;
 let lastPositionTime = null;
 
 
+/* =========================
+   COACH
+========================= */
+
+const TARGET_MIN = 5 * 60 + 15;
+
+const TARGET_MAX = 5 * 60 + 30;
+
+let lastVoiceTime = 0;
+
+const VOICE_INTERVAL = 60;
+
+
+/* =========================
+   UTILITY
+========================= */
 
 function $(id) {
 
 return document.getElementById(id);
 
 }
-
 
 
 function show(screen) {
@@ -671,7 +696,6 @@ s => s.classList.remove("active")
 $(screen).classList.add("active");
 
 }
-
 
 
 function formatTime(seconds) {
@@ -695,7 +719,6 @@ String(secs).padStart(2,"0")
 }
 
 
-
 function formatPace(seconds) {
 
 if (
@@ -714,7 +737,7 @@ Math.floor(seconds / 60);
 let secs =
 Math.round(seconds % 60);
 
-if (secs === 60) {
+if (secs >= 60) {
 
 minutes++;
 
@@ -733,6 +756,9 @@ String(secs).padStart(2,"0")
 }
 
 
+/* =========================
+   DISTANZA GPS
+========================= */
 
 function calculateDistance(
 lat1,
@@ -743,8 +769,7 @@ lon2
 
 const R = 6371000;
 
-const rad =
-Math.PI / 180;
+const rad = Math.PI / 180;
 
 const dLat =
 (lat2-lat1)*rad;
@@ -773,6 +798,9 @@ Math.sqrt(1-a)
 }
 
 
+/* =========================
+   AVVIO CORSA
+========================= */
 
 function startRun() {
 
@@ -792,25 +820,23 @@ lastPositionTime = null;
 
 startTime = Date.now();
 
+lastVoiceTime = 0;
+
 
 $("coach").textContent =
 "Acquisizione GPS…";
 
-
 $("gps").textContent =
 "GPS…";
 
-
 $("gpsStatus").textContent =
 "● GPS in attesa";
-
 
 $("pauseButton").textContent =
 "Ⅱ PAUSA";
 
 
-timer =
-setInterval(
+timer = setInterval(
 
 function() {
 
@@ -829,6 +855,7 @@ updateDisplay();
 },
 
 250
+
 );
 
 
@@ -857,7 +884,7 @@ enableHighAccuracy:true,
 
 maximumAge:1000,
 
-timeout:10000
+timeout:15000
 
 }
 
@@ -866,6 +893,9 @@ timeout:10000
 }
 
 
+/* =========================
+   POSITION GPS
+========================= */
 
 function positionReceived(position) {
 
@@ -907,15 +937,15 @@ const seconds =
 
 
 /*
-
-Filtriamo piccoli movimenti
-GPS casuali.
-
+   Precisione GPS.
+   Ignoriamo:
+   - movimenti inferiori a 2 m
+   - salti superiori a 50 m
 */
 
 if (
-meters > 2 &&
-meters < 100 &&
+meters >= 2 &&
+meters <= 50 &&
 seconds > 0
 ) {
 
@@ -935,17 +965,14 @@ lon:lon
 
 };
 
-
 lastPositionTime = now;
 
 
 $("gps").textContent =
 "GPS ✓";
 
-
 $("gpsStatus").textContent =
 "● GPS attivo";
-
 
 $("coach").textContent =
 "Registrazione attiva";
@@ -956,16 +983,17 @@ updateDisplay();
 }
 
 
+/* =========================
+   ERRORE GPS
+========================= */
 
 function gpsError(error) {
 
 $("gps").textContent =
 "GPS ✕";
 
-
 $("gpsStatus").textContent =
 "● GPS non disponibile";
-
 
 $("coach").textContent =
 "Consenti l'accesso alla posizione.";
@@ -973,47 +1001,214 @@ $("coach").textContent =
 }
 
 
+/* =========================
+   CALCOLO DISPLAY
+========================= */
 
 function updateDisplay() {
 
-const kmPerSecond =
-totalDistance / elapsed;
+if (elapsed <= 0) {
 
-
-const kmh =
-kmPerSecond * 3600;
-
-
-const paceSeconds =
-kmPerSecond > 0
-?
-1 / kmPerSecond
-:
-0;
-
-
-$("distance").textContent =
-totalDistance.toFixed(2);
-
-
-$("time").textContent =
-formatTime(elapsed);
-
-
-$("speed").textContent =
-kmh.toFixed(1);
-
-
-$("avgPace").textContent =
-formatPace(paceSeconds*60);
-
-
-$("pace").textContent =
-formatPace(paceSeconds*60);
+return;
 
 }
 
 
+/*
+   RITMO MEDIO
+
+   totalDistance = km
+   elapsed = secondi
+
+   secondi/km =
+   secondi / km
+*/
+
+let avgPace = 0;
+
+if (totalDistance >= 0.05) {
+
+avgPace =
+elapsed / totalDistance;
+
+}
+
+
+/*
+   VELOCITÀ MEDIA
+*/
+
+let kmh = 0;
+
+if (elapsed > 0) {
+
+kmh =
+(totalDistance / elapsed) * 3600;
+
+}
+
+
+/*
+   RITMO ATTUALE
+
+   Viene calcolato usando
+   l'ultimo spostamento GPS.
+*/
+
+let instantPace = 0;
+
+if (
+lastPosition &&
+lastPositionTime
+) {
+
+/*
+   Il ritmo istantaneo
+   viene aggiornato
+   direttamente dai dati
+   GPS disponibili.
+*/
+
+}
+
+
+/*
+   DISPLAY
+*/
+
+$("distance").textContent =
+totalDistance.toFixed(2);
+
+$("time").textContent =
+formatTime(elapsed);
+
+$("speed").textContent =
+kmh.toFixed(1);
+
+$("pace").textContent =
+formatPace(avgPace);
+
+$("instantPace").textContent =
+formatPace(avgPace);
+
+
+/*
+   COACH VOCALE
+*/
+
+if (
+totalDistance >= 0.10 &&
+elapsed >= 60
+) {
+
+coachPace(avgPace);
+
+}
+
+}
+
+
+/* =========================
+   COACH VOCALE
+========================= */
+
+function coachPace(pace) {
+
+if (
+!isFinite(pace) ||
+pace <= 0
+) {
+
+return;
+
+}
+
+
+const now =
+Date.now() / 1000;
+
+
+/*
+   Non parla più spesso
+   di una volta al minuto.
+*/
+
+if (
+now - lastVoiceTime <
+VOICE_INTERVAL
+) {
+
+return;
+
+}
+
+
+if (
+pace < TARGET_MIN
+) {
+
+speak(
+"Rallenta leggermente."
+);
+
+lastVoiceTime = now;
+
+}
+
+else if (
+pace > TARGET_MAX
+) {
+
+speak(
+"Aumenta il ritmo."
+);
+
+lastVoiceTime = now;
+
+}
+
+}
+
+
+/* =========================
+   VOCE
+========================= */
+
+function speak(text) {
+
+if (
+!"speechSynthesis" in window
+) {
+
+return;
+
+}
+
+
+window.speechSynthesis.cancel();
+
+
+const utterance =
+new SpeechSynthesisUtterance(text);
+
+utterance.lang = "it-IT";
+
+utterance.rate = 0.95;
+
+utterance.pitch = 1;
+
+utterance.volume = 1;
+
+
+window.speechSynthesis
+.speak(utterance);
+
+}
+
+
+/* =========================
+   PAUSA
+========================= */
 
 function togglePause() {
 
@@ -1039,6 +1234,8 @@ elapsed*1000;
 
 lastPosition = null;
 
+lastPositionTime = null;
+
 $("pauseButton").textContent =
 "Ⅱ PAUSA";
 
@@ -1050,6 +1247,9 @@ $("coach").textContent =
 }
 
 
+/* =========================
+   FINE CORSA
+========================= */
 
 function finishRun() {
 
@@ -1070,47 +1270,52 @@ if (watchId !== null) {
 navigator.geolocation
 .clearWatch(watchId);
 
+watchId = null;
+
 }
 
 
-const kmPerSecond =
-elapsed > 0
-?
-totalDistance / elapsed
-:
-0;
+let pace = 0;
+
+if (totalDistance > 0) {
+
+pace =
+elapsed / totalDistance;
+
+}
 
 
-const pace =
-kmPerSecond > 0
-?
-1 / kmPerSecond
-:
-0;
+let speed = 0;
+
+if (elapsed > 0) {
+
+speed =
+(totalDistance / elapsed) * 3600;
+
+}
 
 
 $("summaryDistance").textContent =
 totalDistance.toFixed(2);
 
-
 $("summaryTime").textContent =
 formatTime(elapsed);
 
-
 $("summaryPace").textContent =
-formatPace(pace*60);
-
+formatPace(pace);
 
 $("summarySpeed").textContent =
-(kmPerSecond*3600).toFixed(1);
+speed.toFixed(1);
 
 
+/*
+   STATISTICHE
+*/
 
 let oldKm =
 Number(
 localStorage.getItem("km")
 ) || 0;
-
 
 let oldRuns =
 Number(
@@ -1137,6 +1342,9 @@ show("summary");
 }
 
 
+/* =========================
+   ANNULLA
+========================= */
 
 function cancelRun() {
 
@@ -1156,6 +1364,8 @@ if (watchId !== null) {
 navigator.geolocation
 .clearWatch(watchId);
 
+watchId = null;
+
 }
 
 
@@ -1166,6 +1376,9 @@ showHome();
 }
 
 
+/* =========================
+   STATISTICHE
+========================= */
 
 function refreshStats() {
 
@@ -1173,7 +1386,6 @@ const km =
 Number(
 localStorage.getItem("km")
 ) || 0;
-
 
 const runs =
 Number(
@@ -1184,13 +1396,15 @@ localStorage.getItem("runs")
 $("weekKm").textContent =
 km.toFixed(1);
 
-
 $("weekRuns").textContent =
 runs;
 
 }
 
 
+/* =========================
+   HOME
+========================= */
 
 function showHome() {
 
@@ -1201,6 +1415,9 @@ refreshStats();
 }
 
 
+/* =========================
+   START
+========================= */
 
 refreshStats();
 
