@@ -10,7 +10,8 @@
                user-scalable=no">
 
 <meta name="theme-color" content="#101010">
-
+<link rel="manifest" href="./manifest.json">
+      
 <title>RUNNER</title>
 
 <style>
@@ -5638,5 +5639,23 @@ init();
 
 </script>
 
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+
+        navigator.serviceWorker.register("./sw.js")
+            .then(function () {
+                console.log("RUNNER: Service Worker attivo");
+            })
+            .catch(function (error) {
+                console.error(
+                    "RUNNER: errore Service Worker",
+                    error
+                );
+            });
+
+    });
+}
+</script>      
 </body>
 </html>
