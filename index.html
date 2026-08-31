@@ -1,4 +1,3 @@
-<!-- RUNNER GPS v7 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -114,11 +113,6 @@ h3 {
     margin-bottom: 15px;
 }
 
-.target-big {
-    font-size: 42px;
-    font-weight: 900;
-    margin: 3px 0 8px;
-}
 
 .primary {
     background: #8cff72;
@@ -601,853 +595,5029 @@ audio {
 
 <body>
 
-            </div>
+<div class="app">
 
+<!-- ================= HOME ================= -->
 
-            <div class="section-title">
-                Tipo di obiettivo
-            </div>
+<section id="home" class="screen active">
 
+<header>
+    <div>
+        <h1>RUNNER</h1>
+        <div class="muted">Il tuo allenatore</div>
+    </div>
+    <div style="font-size:28px;">🏃</div>
+</header>
 
-            <div class="card">
+<div class="card">
 
-                <div class="form-group">
+    <div class="muted small">
+        PROSSIMO ALLENAMENTO
+    </div>
 
-                    <label>
-                        Cosa vuoi raggiungere?
-                    </label>
+    <div id="nextWorkoutHome"
+         style="font-size:21px;font-weight:850;margin:7px 0;">
+        Nessun allenamento programmato
+    </div>
 
-                    <select id="goalType">
+    <div id="nextWorkoutInfo"
+         class="muted">
+        Vai nei Piani per creare e programmare il tuo allenamento.
+    </div>
 
-                        <option value="distance">
-                            Distanza
-                        </option>
+    <button
+        id="nextWorkoutButton"
+        class="primary mt"
+        onclick="startNextScheduledWorkout()">
+        ▶ INIZIA ALLENAMENTO
+    </button>
 
-                        <option value="time">
-                            Tempo
-                        </option>
+</div>
 
-                        <option value="pace">
-                            Ritmo
-                        </option>
+<div class="card">
 
-                        <option value="race">
-                            Gara
-                        </option>
+    <h2>Corsa libera</h2>
 
-                    </select>
+    <div class="muted">
+        Corri senza piano e senza indicazioni del coach.
+        RUNNER registra semplicemente i dati.
+    </div>
 
-                </div>
+    <button
+        class="primary mt"
+        onclick="startFreeRun()">
+        🏃 INIZIA CORSA LIBERA
+    </button>
 
-            </div>
+</div>
 
+<div class="card">
 
-            <div class="section-title">
-                Parametri
-            </div>
+    <h2>Questa settimana</h2>
 
+    <div class="grid">
 
-            <div class="card">
+        <div class="metric">
+            <div id="weekKm" class="value">0.0</div>
+            <div class="label">KM</div>
+        </div>
 
-                <div
-                    id="goalDistanceGroup"
-                    class="form-group">
+        <div class="metric">
+            <div id="weekRuns" class="value">0</div>
+            <div class="label">USCITE</div>
+        </div>
 
-                    <label>
-                        Distanza obiettivo · km
-                    </label>
+    </div>
 
-                    <input
-                        id="goalDistance"
-                        type="number"
-                        min="0.1"
-                        step="0.1"
-                        placeholder="5">
+</div>
 
-                </div>
+</section>
 
 
-                <div
-                    id="goalTimeGroup"
-                    class="form-group">
+<!-- ================= CORSA ================= -->
 
-                    <label>
-                        Tempo obiettivo
-                    </label>
+<section id="run" class="screen">
 
-                    <input
-                        id="goalTargetTime"
-                        type="time"
-                        step="1">
+<header>
 
-                </div>
+    <button
+        class="back-btn"
+        onclick="confirmExitRun()">
+        ←
+    </button>
 
+    <h1 style="font-size:20px;">CORSA</h1>
 
-                <div
-                    id="goalPaceGroup"
-                    class="form-group">
+    <div
+        id="gps"
+        class="gps-pill">
+        GPS…
+    </div>
 
-                    <label>
-                        Ritmo obiettivo · min/km
-                    </label>
+</header>
 
-                    <input
-                        id="goalTargetPace"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="5:30">
+<div id="phaseName" class="phase">
+    CORSA LIBERA
+</div>
 
-                </div>
+<div id="phaseInfo" class="phase-sub">
+    Registrazione dati
+</div>
 
+<div id="coach" class="coach">
+    Acquisizione GPS…
+</div>
 
-                <div
-                    id="goalDateGroup"
-                    class="form-group">
+<div id="pace" class="big">
+    --:--
+</div>
 
-                    <label>
-                        Data obiettivo
-                    </label>
+<div class="unit">
+    min/km · ritmo GPS filtrato
+</div>
 
-                    <input
-                        id="goalDate"
-                        type="date">
+<div class="grid" style="margin-top:25px;">
 
-                </div>
+    <div class="metric">
+        <div id="distance" class="value">0.00</div>
+        <div class="label">KM</div>
+    </div>
 
+    <div class="metric">
+        <div id="time" class="value">00:00</div>
+        <div class="label">TEMPO</div>
+    </div>
 
-                <div class="form-group">
+    <div class="metric">
+        <div id="speed" class="value">0.0</div>
+        <div class="label">KM/H</div>
+    </div>
 
-                    <label>
-                        Note
-                    </label>
+    <div class="metric">
+        <div id="avgPace" class="value">--:--</div>
+        <div class="label">RITMO MEDIO</div>
+    </div>
 
-                    <input
-                        id="goalNotes"
-                        type="text"
-                        placeholder="Es. Prima gara 5K">
+</div>
 
-                </div>
+<div class="grid" style="margin-top:10px;">
 
-            </div>
+    <div class="metric">
+        <div id="currentPhase" class="value">1/1</div>
+        <div class="label">FASE</div>
+    </div>
 
+    <div class="metric">
+        <div id="phaseElapsed" class="value">00:00</div>
+        <div class="label">TEMPO FASE</div>
+    </div>
 
-            <div
-                id="goalPreview"
-                class="card">
+</div>
 
-            </div>
+<div
+    id="targetPanel"
+    class="card"
+    style="margin-top:15px;text-align:center;">
 
+    <div class="muted small">
+        TARGET FASE
+    </div>
 
-            <button
-                class="primary"
-                onclick="runnerSaveGoal()">
+    <div
+        id="targetPace"
+        style="font-size:24px;font-weight:850;margin-top:5px;">
+        —
+    </div>
 
-                💾 SALVA OBIETTIVO
+</div>
 
-            </button>
+<div
+    id="gpsStatus"
+    class="status">
+    ● GPS IN ATTESA
+</div>
 
+<div class="run-controls">
 
-            <button
-                class="secondary mt"
-                onclick="runnerDeleteGoal()">
+    <button
+        id="pauseButton"
+        class="secondary"
+        onclick="togglePause()">
+        Ⅱ PAUSA
+    </button>
 
-                🗑 ELIMINA OBIETTIVO
+    <button
+        class="danger mt"
+        onclick="finishRun()">
+        ■ TERMINA
+    </button>
 
-            </button>
+</div>
 
-        `;
+</section>
 
 
-        const nav =
-            document.querySelector(
-                ".nav"
-            );
+<!-- ================= SUMMARY ================= -->
 
+<section id="summary" class="screen">
 
-        document
-            .querySelector(".app")
-            .insertBefore(
-                screen,
-                nav
-            );
+<header>
+    <h1>RISULTATO</h1>
+</header>
 
+<div class="card">
 
-        const navButton =
-            document.createElement(
-                "button"
-            );
+    <div class="grid">
 
+        <div class="metric">
+            <div id="summaryDistance" class="value">0.00</div>
+            <div class="label">KM</div>
+        </div>
 
-        navButton.dataset.screen =
-            "goalScreen";
+        <div class="metric">
+            <div id="summaryTime" class="value">00:00</div>
+            <div class="label">TEMPO</div>
+        </div>
 
+        <div class="metric">
+            <div id="summaryPace" class="value">--:--</div>
+            <div class="label">RITMO</div>
+        </div>
 
-        navButton.innerHTML =
-            "🎯<br>Obiettivo";
+        <div class="metric">
+            <div id="summarySpeed" class="value">0.0</div>
+            <div class="label">KM/H</div>
+        </div>
 
+    </div>
 
-        navButton.onclick =
-            function () {
+</div>
 
-                showScreen(
-                    "goalScreen"
-                );
+<div
+    id="summaryPlan"
+    class="card"
+    style="display:none;">
+</div>
 
-            };
+<button
+    class="primary"
+    onclick="showScreen('home')">
+    ← HOME
+</button>
 
+</section>
 
-        nav.appendChild(
-            navButton
-        );
 
+<!-- ================= PIANI ================= -->
 
-        document
-            .getElementById(
-                "goalType"
-            )
-            .addEventListener(
-                "change",
-                runnerUpdateGoalUI
-            );
+<section id="plans" class="screen">
 
+<header>
+    <h1>PIANI</h1>
+</header>
 
-        [
-            "goalDistance",
-            "goalTargetTime",
-            "goalTargetPace",
-            "goalDate",
-            "goalNotes"
-        ]
+<div class="card">
+
+    <div class="muted">
+        Qui trovi tutti gli allenamenti che hai creato e salvato.
+    </div>
+
+</div>
+
+<div id="plansList"></div>
+
+<button
+    class="primary"
+    onclick="openCreator()">
+    ＋ AGGIUNGI ALLENAMENTO
+</button>
+
+</section>
+
+
+<!-- ================= CALENDARIO ================= -->
+
+<section id="calendarScreen" class="screen">
+
+<header>
+    <h1>CALENDARIO</h1>
+</header>
+
+<div class="calendar-header">
+
+    <div
+        id="calendarMonth"
+        class="calendar-title">
+        —
+    </div>
+
+    <div class="calendar-nav">
+
+        <button onclick="changeMonth(-1)">
+            ‹
+        </button>
+
+        <button onclick="goToday()">
+            Oggi
+        </button>
+
+        <button onclick="changeMonth(1)">
+            ›
+        </button>
+
+    </div>
+
+</div>
+
+<div class="calendar">
+
+    <div class="weekdays">
+
+        <div class="weekday">L</div>
+        <div class="weekday">M</div>
+        <div class="weekday">M</div>
+        <div class="weekday">G</div>
+        <div class="weekday">V</div>
+        <div class="weekday">S</div>
+        <div class="weekday">D</div>
+
+    </div>
+
+    <div
+        id="calendarGrid"
+        class="calendar-grid">
+    </div>
+
+</div>
+
+<div class="section-title">
+    Allenamenti programmati
+</div>
+
+<div id="scheduleList"></div>
+
+<button
+    class="primary"
+    onclick="openScheduleCreator()">
+    ＋ PROGRAMMA ALLENAMENTO
+</button>
+
+</section>
+
+
+<!-- ================= CREATOR ================= -->
+
+<section id="creator" class="screen">
+
+<header>
+
+    <button
+        class="back-btn"
+        onclick="showScreen('plans')">
+        ←
+    </button>
+
+    <h1 style="font-size:20px;">
+        CREA ALLENAMENTO
+    </h1>
+
+    <div></div>
+
+</header>
+
+<div class="card">
+
+    <div class="form-group">
+
+        <label>
+            Nome allenamento
+        </label>
+
+        <input
+            id="planName"
+            type="text"
+            placeholder="Es. Ripetute 5 × 800 m">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Descrizione
+        </label>
+
+        <input
+            id="planDescription"
+            type="text"
+            placeholder="Descrizione facoltativa">
+
+    </div>
+
+</div>
+
+<div class="section-title">
+    Fasi dell'allenamento
+</div>
+
+<div id="phaseEditors"></div>
+
+<button
+    class="secondary"
+    onclick="addPhase()">
+    ＋ AGGIUNGI FASE
+</button>
+
+<div class="card" style="margin-top:15px;">
+
+    <div class="info-box">
+        Ogni fase può avere durata a tempo oppure a distanza.
+        Puoi impostare riscaldamento, corsa, recupero, ripetute
+        e defaticamento liberamente.
+    </div>
+
+</div>
+
+<button
+    class="primary"
+    onclick="savePlan()">
+    💾 SALVA ALLENAMENTO
+</button>
+
+</section>
+
+
+<!-- ================= SCHEDULAZIONE ================= -->
+
+<section id="scheduleCreator" class="screen">
+
+<header>
+
+    <button
+        class="back-btn"
+        onclick="showScreen('calendarScreen')">
+        ←
+    </button>
+
+    <h1 style="font-size:20px;">
+        PROGRAMMA
+    </h1>
+
+    <div></div>
+
+</header>
+
+<div class="card">
+
+    <div class="form-group">
+
+        <label>
+            Allenamento
+        </label>
+
+        <select id="schedulePlan"></select>
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Data
+        </label>
+
+        <input
+            id="scheduleDate"
+            type="date">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Ora
+        </label>
+
+        <input
+            id="scheduleTime"
+            type="time"
+            value="18:00">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Nota
+        </label>
+
+        <input
+            id="scheduleNote"
+            type="text"
+            placeholder="Facoltativa">
+
+    </div>
+
+</div>
+
+<button
+    class="primary"
+    onclick="saveSchedule()">
+    📅 PROGRAMMA
+</button>
+
+</section>
+
+
+<!-- ================= STORICO ================= -->
+
+<section id="history" class="screen">
+
+<header>
+    <h1>STORICO</h1>
+</header>
+
+<div id="historyList"></div>
+
+</section>
+
+
+<!-- ================= IMPOSTAZIONI ================= -->
+
+<section id="settings" class="screen">
+
+<header>
+    <h1>IMPOSTAZIONI</h1>
+</header>
+
+<div class="section-title">
+    Audio e voce
+</div>
+
+<div class="card">
+
+    <div class="checkbox-row">
+
+        <span>
+            Coach vocale
+        </span>
+
+        <input
+            id="audioEnabled"
+            type="checkbox"
+            onchange="saveSettings()">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Voce
+        </label>
+
+        <select
+            id="voiceSelect"
+            onchange="saveSettings()">
+            <option value="">
+                Voce predefinita
+            </option>
+        </select>
+
+    </div>
+
+    <button
+        class="secondary"
+        onclick="testVoice()">
+        🔊 PROVA VOCE
+    </button>
+
+    <hr>
+
+    <div class="form-group">
+
+        <label>
+            Frequenza controllo ritmo
+        </label>
+
+        <select
+            id="paceInterval"
+            onchange="saveSettings()">
+
+            <option value="10">Ogni 10 secondi</option>
+            <option value="15">Ogni 15 secondi</option>
+            <option value="20">Ogni 20 secondi</option>
+            <option value="30">Ogni 30 secondi</option>
+            <option value="45">Ogni 45 secondi</option>
+            <option value="60">Ogni 60 secondi</option>
+
+        </select>
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Frequenza notifica distanza
+        </label>
+
+        <select
+            id="distanceInterval"
+            onchange="saveSettings()">
+
+            <option value="0">Disattivata</option>
+            <option value="0.5">Ogni 500 m</option>
+            <option value="1">Ogni 1 km</option>
+            <option value="2">Ogni 2 km</option>
+            <option value="5">Ogni 5 km</option>
+
+        </select>
+
+    </div>
+
+    <div class="checkbox-row">
+
+        <span>
+            Annuncio raggiungimento target
+        </span>
+
+        <input
+            id="targetAnnouncements"
+            type="checkbox"
+            onchange="saveSettings()">
+
+    </div>
+
+</div>
+
+<div class="section-title">
+    Controllo ritmo
+</div>
+
+<div class="card">
+
+    <div class="info-box">
+        Il controllo è a ciclo chiuso: RUNNER osserva il ritmo
+        GPS filtrato, confronta il valore con il target della fase
+        e modifica il messaggio in base a ciò che succede realmente.
+    </div>
+
+    <div class="form-group" style="margin-top:15px;">
+
+        <label>
+            Tolleranza minima dal target (sec/km)
+        </label>
+
+        <input
+            id="paceToleranceMin"
+            type="number"
+            min="0"
+            step="1"
+            onchange="saveSettings()">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Tolleranza massima dal target (sec/km)
+        </label>
+
+        <input
+            id="paceToleranceMax"
+            type="number"
+            min="0"
+            step="1"
+            onchange="saveSettings()">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Finestra GPS utilizzata per il ritmo
+        </label>
+
+        <select
+            id="paceWindow"
+            onchange="saveSettings()">
+
+            <option value="10">10 secondi</option>
+            <option value="15">15 secondi</option>
+            <option value="20">20 secondi</option>
+            <option value="30">30 secondi</option>
+            <option value="45">45 secondi</option>
+
+        </select>
+
+    </div>
+
+</div>
+
+<div class="section-title">
+    GPS
+</div>
+
+<div class="card">
+
+    <div class="form-group">
+
+        <label>
+            Precisione minima accettata
+        </label>
+
+        <select
+            id="gpsAccuracy"
+            onchange="saveSettings()">
+
+            <option value="10">10 m</option>
+            <option value="20">20 m</option>
+            <option value="30">30 m</option>
+            <option value="50">50 m</option>
+            <option value="100">100 m</option>
+
+        </select>
+
+    </div>
+
+    <div class="checkbox-row">
+
+        <span>
+            Ignora salti GPS anomali
+        </span>
+
+        <input
+            id="gpsFiltering"
+            type="checkbox"
+            onchange="saveSettings()">
+
+    </div>
+
+</div>
+
+<div class="section-title">
+    App
+</div>
+
+<div class="card">
+
+    <button
+        class="secondary"
+        onclick="resetSettings()">
+        Ripristina impostazioni
+    </button>
+
+    <button
+        class="danger mt"
+        onclick="clearAllData()">
+        Cancella tutti i dati
+    </button>
+
+</div>
+
+</section>
+
+</div>
+
+
+<!-- ================= NAV ================= -->
+
+<nav class="nav">
+
+<button
+    data-screen="home"
+    class="active"
+    onclick="showScreen('home')">
+    🏠<br>Home
+</button>
+
+<button
+    data-screen="plans"
+    onclick="showScreen('plans')">
+    📋<br>Piani
+</button>
+
+<button
+    data-screen="calendarScreen"
+    onclick="showScreen('calendarScreen')">
+    📅<br>Calendario
+</button>
+
+<button
+    data-screen="history"
+    onclick="showScreen('history')">
+    📊<br>Storico
+</button>
+
+<button
+    data-screen="settings"
+    onclick="showScreen('settings')">
+    ⚙️<br>Impostazioni
+</button>
+
+</nav>
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+/* =========================================================
+   RUNNER
+   ========================================================= */
+
+
+/* =========================
+   STORAGE
+   ========================= */
+
+const STORAGE = {
+
+    plans: "runner_plans_v2",
+    schedules: "runner_schedules_v2",
+    history: "runner_history_v2",
+    settings: "runner_settings_v2"
+
+};
+
+
+const defaultSettings = {
+
+    audioEnabled: true,
+
+    voiceName: "",
+
+    paceInterval: 20,
+
+    distanceInterval: 1,
+
+    targetAnnouncements: true,
+
+    paceToleranceMin: 10,
+
+    paceToleranceMax: 10,
+
+    paceWindow: 20,
+
+    gpsAccuracy: 30,
+
+    gpsFiltering: true
+
+};
+
+
+let settings = loadJSON(
+    STORAGE.settings,
+    defaultSettings
+);
+
+
+/* =========================
+   GENERIC HELPERS
+   ========================= */
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+
+function loadJSON(key, fallback) {
+
+    try {
+
+        const value =
+            localStorage.getItem(key);
+
+        if (!value) {
+            return fallback;
+        }
+
+        return JSON.parse(value);
+
+    } catch (e) {
+
+        return fallback;
+
+    }
+
+}
+
+
+function saveJSON(key, value) {
+
+    localStorage.setItem(
+        key,
+        JSON.stringify(value)
+    );
+
+}
+
+
+function uuid() {
+
+    return (
+        Date.now().toString(36)
+        +
+        Math.random()
+            .toString(36)
+            .substring(2, 8)
+    );
+
+}
+
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+function showToast(message) {
+
+    const toast = $("toast");
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(
+        () => toast.classList.remove("show"),
+        2500
+    );
+
+}
+
+
+/* =========================
+   NAVIGATION
+   ========================= */
+
+function showScreen(screen) {
+
+    document
+        .querySelectorAll(".screen")
         .forEach(
-            id => {
-
-                document
-                    .getElementById(id)
-                    .addEventListener(
-                        "input",
-                        runnerPreviewGoal
-                    );
-
-            }
+            s => s.classList.remove("active")
         );
 
+    $(screen).classList.add("active");
 
-        runnerLoadGoalUI();
+    document
+        .querySelectorAll(".nav button")
+        .forEach(button => {
 
-    }
+            button.classList.toggle(
+                "active",
+                button.dataset.screen === screen
+            );
 
-
-    function runnerLoadGoalUI() {
-document
-            .getElementById(
-                "goalType"
-            )
-            .value =
-            goal.type;
-
-
-        document
-            .getElementById(
-                "goalDistance"
-            )
-            .value =
-            goal.distance || "";
+        });
 
 
-        document
-            .getElementById(
-                "goalTargetTime"
-            )
-            .value =
-            goal.targetTime || "";
+    if (screen === "home") {
 
-
-        document
-            .getElementById(
-                "goalTargetPace"
-            )
-            .value =
-            goal.targetPace || "";
-
-
-        document
-            .getElementById(
-                "goalDate"
-            )
-            .value =
-            goal.date || "";
-
-
-        document
-            .getElementById(
-                "goalNotes"
-            )
-            .value =
-            goal.notes || "";
-
-
-        runnerUpdateGoalUI();
+        refreshHome();
 
     }
 
+    if (screen === "plans") {
 
-    function runnerUpdateGoalUI() {
-
-        const type =
-            document
-                .getElementById(
-                    "goalType"
-                )
-                .value;
-
-
-        const distance =
-            document
-                .getElementById(
-                    "goalDistanceGroup"
-                );
-
-
-        const time =
-            document
-                .getElementById(
-                    "goalTimeGroup"
-                );
-
-
-        const pace =
-            document
-                .getElementById(
-                    "goalPaceGroup"
-                );
-
-
-        const date =
-            document
-                .getElementById(
-                    "goalDateGroup"
-                );
-
-
-        distance.style.display =
-            (
-                type === "distance"
-                ||
-                type === "race"
-            )
-            ?
-            "block"
-            :
-            "none";
-
-
-        time.style.display =
-            (
-                type === "time"
-                ||
-                type === "race"
-            )
-            ?
-            "block"
-            :
-            "none";
-
-
-        pace.style.display =
-            (
-                type === "pace"
-                ||
-                type === "race"
-            )
-            ?
-            "block"
-            :
-            "none";
-
-
-        date.style.display =
-            (
-                type === "race"
-            )
-            ?
-            "block"
-            :
-            "none";
-
-
-        runnerPreviewGoal();
+        renderPlans();
 
     }
 
+    if (screen === "calendarScreen") {
 
-    function runnerPreviewGoal() {
-const preview =
-            document
-                .getElementById(
-                    "goalPreview"
-                );
+        renderCalendar();
+        renderScheduleList();
+
+    }
+
+    if (screen === "history") {
+
+        renderHistory();
+
+    }
+
+    if (screen === "settings") {
+
+        loadSettingsUI();
+
+    }
+
+}
 
 
-        preview.innerHTML = `
+/* =========================================================
+   PLANS
+   ========================================================= */
 
-            <div class="muted small">
-                ANTEPRIMA OBIETTIVO
-            </div>
+let creatorPhases = [];
 
-            <div
-                style="
-                    font-size:32px;
-                    font-weight:900;
-                    margin:6px 0;">
-                ${escapeHTML(
-                    goalMainText(goal)
-                )}
-            </div>
 
-            <div class="muted">
+function defaultPhase() {
 
-                ${escapeHTML(
-                    goalDescription(goal)
-                )}
+    return {
 
-            </div>
+        id: uuid(),
 
-            ${
-                goal.notes
-                ?
-                `
-                <div
-                    class="muted small"
-                    style="margin-top:8px;">
-                    ${escapeHTML(
-                        goal.notes
-                    )}
+        name: "Corsa",
+
+        type: "run",
+
+        durationType: "time",
+
+        duration: 10,
+
+        distance: 1,
+
+        targetType: "pace",
+
+        targetMin: 320,
+
+        targetMax: 340,
+
+        repeat: 1
+
+    };
+
+}
+
+
+function openCreator() {
+
+    creatorPhases = [
+        defaultPhase()
+    ];
+
+    $("planName").value = "";
+    $("planDescription").value = "";
+
+    renderPhaseEditors();
+
+    showScreen("creator");
+
+}
+
+
+function addPhase() {
+
+    creatorPhases.push(
+        defaultPhase()
+    );
+
+    renderPhaseEditors();
+
+}
+
+
+function removePhase(index) {
+
+    if (creatorPhases.length <= 1) {
+
+        showToast(
+            "L'allenamento deve avere almeno una fase."
+        );
+
+        return;
+
+    }
+
+    creatorPhases.splice(
+        index,
+        1
+    );
+
+    renderPhaseEditors();
+
+}
+
+
+function updatePhase(index, field, value) {
+
+    creatorPhases[index][field] =
+        value;
+
+}
+
+
+function renderPhaseEditors() {
+
+    const container =
+        $("phaseEditors");
+
+    container.innerHTML = "";
+
+    creatorPhases.forEach(
+        (phase, index) => {
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "phase-editor";
+
+            div.innerHTML = `
+
+                <div class="phase-editor-header">
+
+                    <div class="phase-number">
+                        FASE ${index + 1}
+                    </div>
+
+                    <button
+                        class="remove-phase"
+                        onclick="removePhase(${index})">
+                        Elimina
+                    </button>
+
                 </div>
-                `
-                :
-                ""
-            }
 
+                <div class="form-group">
+
+                    <label>
+                        Nome fase
+                    </label>
+
+                    <input
+                        value="${escapeHTML(phase.name)}"
+                        onchange="
+                            updatePhase(
+                                ${index},
+                                'name',
+                                this.value
+                            )">
+
+                </div>
+
+                <div class="phase-grid">
+
+                    <div class="form-group">
+
+                        <label>
+                            Tipo
+                        </label>
+
+                        <select
+                            onchange="
+                                updatePhase(
+                                    ${index},
+                                    'type',
+                                    this.value
+                                )">
+
+                            <option
+                                value="warmup"
+                                ${phase.type === "warmup" ? "selected" : ""}>
+                                Riscaldamento
+                            </option>
+
+                            <option
+                                value="run"
+                                ${phase.type === "run" ? "selected" : ""}>
+                                Corsa
+                            </option>
+
+                            <option
+                                value="recovery"
+                                ${phase.type === "recovery" ? "selected" : ""}>
+                                Recupero
+                            </option>
+
+                            <option
+                                value="interval"
+                                ${phase.type === "interval" ? "selected" : ""}>
+                                Ripetuta
+                            </option>
+
+                            <option
+                                value="cooldown"
+                                ${phase.type === "cooldown" ? "selected" : ""}>
+                                Defaticamento
+                            </option>
+
+                            <option
+                                value="free"
+                                ${phase.type === "free" ? "selected" : ""}>
+                                Libera
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>
+                            Durata
+                        </label>
+
+                        <select
+                            onchange="
+                                updatePhase(
+                                    ${index},
+                                    'durationType',
+                                    this.value
+                                );
+                                renderPhaseEditors();
+                            ">
+
+                            <option
+                                value="time"
+                                ${phase.durationType === "time" ? "selected" : ""}>
+                                Tempo
+                            </option>
+
+                            <option
+                                value="distance"
+                                ${phase.durationType === "distance" ? "selected" : ""}>
+                                Distanza
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                ${
+                    phase.durationType === "time"
+                    ?
+                    `
+                    <div class="form-group">
+
+                        <label>
+                            Durata (minuti)
+                        </label>
+
+                        <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value="${phase.duration}"
+                            onchange="
+                                updatePhase(
+                                    ${index},
+                                    'duration',
+                                    Number(this.value)
+                                )">
+
+                    </div>
+                    `
+                    :
+                    `
+                    <div class="form-group">
+
+                        <label>
+                            Distanza (km)
+                        </label>
+
+                        <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value="${phase.distance}"
+                            onchange="
+                                updatePhase(
+                                    ${index},
+                                    'distance',
+                                    Number(this.value)
+                                )">
+
+                    </div>
+                    `
+                }
+
+                <div class="phase-grid">
+
+                    <div class="form-group">
+
+                        <label>
+                            Target
+                        </label>
+
+                        <select
+                            onchange="
+                                updatePhase(
+                                    ${index},
+                                    'targetType',
+                                    this.value
+                                );
+                                renderPhaseEditors();
+                            ">
+
+                            <option
+                                value="pace"
+                                ${phase.targetType === "pace" ? "selected" : ""}>
+                                Ritmo
+                            </option>
+
+                            <option
+                                value="none"
+                                ${phase.targetType === "none" ? "selected" : ""}>
+                                Nessuno
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>
+                            Ripetizioni
+                        </label>
+
+                        <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value="${phase.repeat}"
+                            onchange="
+                                updatePhase(
+                                    ${index},
+                                    'repeat',
+                                    Math.max(
+                                        1,
+                                        Number(this.value)
+                                    )
+                                )">
+
+                    </div>
+
+                </div>
+
+                ${
+                    phase.targetType === "pace"
+                    ?
+                    `
+                    <div class="phase-grid">
+
+                        <div class="form-group">
+
+                            <label>
+                                Ritmo più veloce
+                                (min/km)
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="5:15"
+                                value="${secondsToPace(phase.targetMin)}"
+                                onchange="
+                                    updatePhase(
+                                        ${index},
+                                        'targetMin',
+                                        paceToSeconds(this.value)
+                                    )">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>
+                                Ritmo più lento
+                                (min/km)
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="5:30"
+                                value="${secondsToPace(phase.targetMax)}"
+                                onchange="
+                                    updatePhase(
+                                        ${index},
+                                        'targetMax',
+                                        paceToSeconds(this.value)
+                                    )">
+
+                        </div>
+
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+            `;
+
+            container.appendChild(div);
+
+        }
+    );
+
+}
+
+
+function savePlan() {
+
+    const name =
+        $("planName").value.trim();
+
+    if (!name) {
+
+        showToast(
+            "Inserisci il nome dell'allenamento."
+        );
+
+        return;
+
+    }
+
+    const description =
+        $("planDescription")
+            .value
+            .trim();
+
+
+    const plan = {
+
+        id: uuid(),
+
+        name,
+
+        description,
+
+        createdAt:
+            new Date().toISOString(),
+
+        phases:
+            JSON.parse(
+                JSON.stringify(
+                    creatorPhases
+                )
+            )
+
+    };
+
+
+    const plans =
+        loadJSON(
+            STORAGE.plans,
+            []
+        );
+
+    plans.push(plan);
+
+    saveJSON(
+        STORAGE.plans,
+        plans
+    );
+
+    showToast(
+        "Allenamento salvato."
+    );
+
+    renderPlans();
+
+    showScreen("plans");
+
+}
+
+
+function getPlans() {
+
+    return loadJSON(
+        STORAGE.plans,
+        []
+    );
+
+}
+
+
+function renderPlans() {
+
+    const plans =
+        getPlans();
+
+    const container =
+        $("plansList");
+
+    container.innerHTML = "";
+
+    if (!plans.length) {
+
+        container.innerHTML = `
+            <div class="card empty">
+                Nessun allenamento salvato.<br>
+                Crea il tuo primo piano.
+            </div>
         `;
 
+        return;
+
     }
 
 
-    window.runnerSaveGoal =
-        function () {
-if (
-                goal.type === "distance"
-                ||
-                goal.type === "race"
-            ) {
+    plans.forEach(plan => {
 
-                if (
-                    goal.distance <= 0
-                ) {
+        const totalPhases =
+            plan.phases.length;
 
-                    showToast(
-                        "Inserisci una distanza valida."
-                    );
-
-                    return;
-
-                }
-
-            }
-
-
-            if (
-                goal.type === "time"
-                ||
-                goal.type === "race"
-            ) {
-
-                if (
-                    !goal.targetTime
-                ) {
-
-                    showToast(
-                        "Inserisci il tempo obiettivo."
-                    );
-
-                    return;
-
-                }
-
-            }
-
-
-            if (
-                goal.type === "pace"
-                ||
-                goal.type === "race"
-            ) {
-
-                if (
-                    !goal.targetPace
-                ) {
-
-                    showToast(
-                        "Inserisci il ritmo obiettivo."
-                    );
-
-                    return;
-
-                }
-
-            }
-
-
-            saveGoal(
-                goal
+        const totalRepeats =
+            plan.phases.reduce(
+                (sum, phase) =>
+                    sum + Number(phase.repeat || 1),
+                0
             );
 
 
-            runnerUpdateHome();
+        const div =
+            document.createElement("div");
 
+        div.className =
+            "list-item";
 
-            showToast(
-                "Obiettivo salvato."
-            );
-
-        };
-
-
-    window.runnerDeleteGoal =
-        function () {
-
-            if (
-                !confirm(
-                    "Eliminare l'obiettivo?"
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            localStorage.removeItem(
-                GOAL_STORAGE_KEY
-            );
-
-
-            runnerLoadGoalUI();
-
-
-            runnerUpdateHome();
-
-
-            showToast(
-                "Obiettivo eliminato."
-            );
-
-        };
-
-
-    function runnerUpdateHome() {
-const hero =
-            document.querySelector(
-                ".hero"
-            );
-
-
-        if (!hero) {
-            return;
-        }
-
-
-        const target =
-            hero.querySelector(
-                ".target-big"
-            );
-
-
-        if (target) {
-
-            target.textContent =
-                goalMainText(
-                    goal
-                );
-
-        }
-
-
-        const description =
-            hero.querySelector(
-                ".muted:last-child"
-            );
-
-
-        if (description) {
-
-            const text =
-                goal.type === "distance"
-                ?
-                "Obiettivo personale di distanza."
-                :
-                goal.type === "time"
-                ?
-                "Obiettivo personale di tempo."
-                :
-                goal.type === "pace"
-                ?
-                "Obiettivo personale di ritmo."
-                :
-                "Obiettivo gara personalizzato.";
-
-
-            description.textContent =
-                text;
-
-        }
-if (!goalCard) {
-
-            goalCard =
-                document.createElement(
-                    "div"
-                );
-
-            goalCard.id =
-                "homeGoalDetails";
-
-            goalCard.className =
-                "card";
-
-
-            const heroElement =
-                document.querySelector(
-                    ".hero"
-                );
-
-
-            heroElement
-                .insertAdjacentElement(
-                    "afterend",
-                    goalCard
-                );
-
-        }
-
-
-        goalCard.innerHTML = `
+        div.innerHTML = `
 
             <div class="list-row">
 
                 <div>
 
-                    <div class="muted small">
-                        OBIETTIVO ATTUALE
-                    </div>
-
                     <div
                         style="
                             font-size:18px;
-                            font-weight:850;
-                            margin-top:5px;">
-                        ${escapeHTML(
-                            goalMainText(goal)
-                        )}
+                            font-weight:850;">
+                        ${escapeHTML(plan.name)}
+                    </div>
+
+                    <div
+                        class="muted small"
+                        style="margin-top:4px;">
+                        ${totalPhases} fasi ·
+                        ${totalRepeats} blocchi
                     </div>
 
                 </div>
 
                 <button
                     class="icon-btn"
-                    onclick="
-                        showScreen(
-                            'goalScreen'
-                        )">
-                    MODIFICA
+                    onclick="deletePlan('${plan.id}')">
+                    🗑
                 </button>
 
             </div>
 
-            <div
-                class="muted small"
-                style="margin-top:8px;">
+            ${
+                plan.description
+                ?
+                `
+                <div
+                    class="muted"
+                    style="margin-top:9px;">
+                    ${escapeHTML(plan.description)}
+                </div>
+                `
+                :
+                ""
+            }
 
-                ${escapeHTML(
-                    goalDescription(goal)
-                )}
+            <div
+                class="schedule-actions">
+
+                <button
+                    onclick="startPlan('${plan.id}')">
+                    ▶ Inizia
+                </button>
+
+                <button
+                    onclick="schedulePlan('${plan.id}')">
+                    📅 Programma
+                </button>
 
             </div>
 
         `;
 
+        container.appendChild(div);
+
+    });
+
+}
+
+
+function deletePlan(id) {
+
+    if (!confirm(
+        "Eliminare questo allenamento?"
+    )) {
+
+        return;
+
+    }
+
+    const plans =
+        getPlans()
+        .filter(
+            plan => plan.id !== id
+        );
+
+    saveJSON(
+        STORAGE.plans,
+        plans
+    );
+
+    const schedules =
+        getSchedules()
+        .filter(
+            item => item.planId !== id
+        );
+
+    saveJSON(
+        STORAGE.schedules,
+        schedules
+    );
+
+    renderPlans();
+
+    renderCalendar();
+
+    renderScheduleList();
+
+}
+
+
+/* =========================================================
+   SCHEDULING
+   ========================================================= */
+
+let calendarDate =
+    new Date();
+
+
+let selectedCalendarDate =
+    new Date();
+
+
+function dateKey(date) {
+
+    const y =
+        date.getFullYear();
+
+    const m =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+    const d =
+        String(
+            date.getDate()
+        ).padStart(2, "0");
+
+    return `${y}-${m}-${d}`;
+
+}
+
+
+function formatDateItalian(dateString) {
+
+    const date =
+        new Date(
+            dateString + "T12:00:00"
+        );
+
+    return date.toLocaleDateString(
+        "it-IT",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+function getSchedules() {
+
+    return loadJSON(
+        STORAGE.schedules,
+        []
+    );
+
+}
+
+
+function openScheduleCreator() {
+
+    const plans =
+        getPlans();
+
+    if (!plans.length) {
+
+        showToast(
+            "Prima devi creare almeno un allenamento."
+        );
+
+        openCreator();
+
+        return;
+
+    }
+
+    fillSchedulePlans();
+
+    $("scheduleDate").value =
+        dateKey(
+            selectedCalendarDate
+        );
+
+    $("scheduleTime").value =
+        "18:00";
+
+    $("scheduleNote").value =
+        "";
+
+    showScreen(
+        "scheduleCreator"
+    );
+
+}
+
+
+function schedulePlan(planId) {
+
+    fillSchedulePlans();
+
+    $("schedulePlan").value =
+        planId;
+
+    $("scheduleDate").value =
+        dateKey(
+            selectedCalendarDate
+        );
+
+    $("scheduleTime").value =
+        "18:00";
+
+    $("scheduleNote").value =
+        "";
+
+    showScreen(
+        "scheduleCreator"
+    );
+
+}
+
+
+function fillSchedulePlans() {
+
+    const select =
+        $("schedulePlan");
+
+    const plans =
+        getPlans();
+
+    select.innerHTML = "";
+
+    plans.forEach(plan => {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            plan.id;
+
+        option.textContent =
+            plan.name;
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+function saveSchedule() {
+
+    const planId =
+        $("schedulePlan").value;
+
+    const date =
+        $("scheduleDate").value;
+
+    const time =
+        $("scheduleTime").value;
+
+    const note =
+        $("scheduleNote").value.trim();
+
+
+    if (!planId || !date) {
+
+        showToast(
+            "Seleziona allenamento e data."
+        );
+
+        return;
+
     }
 
 
-    const originalInit =
-        window.init;
+    const schedules =
+        getSchedules();
 
 
-    window.init =
-        function () {
+    schedules.push({
 
-            if (
-                typeof originalInit ===
-                "function"
-            ) {
+        id: uuid(),
 
-                originalInit();
+        planId,
 
+        date,
+
+        time,
+
+        note,
+
+        completed: false,
+
+        createdAt:
+            new Date().toISOString()
+
+    });
+
+
+    saveJSON(
+        STORAGE.schedules,
+        schedules
+    );
+
+
+    showToast(
+        "Allenamento programmato."
+    );
+
+
+    showScreen(
+        "calendarScreen"
+    );
+
+}
+
+
+function renderCalendar() {
+
+    const year =
+        calendarDate.getFullYear();
+
+    const month =
+        calendarDate.getMonth();
+
+
+    const monthName =
+        calendarDate.toLocaleDateString(
+            "it-IT",
+            {
+                month: "long",
+                year: "numeric"
             }
+        );
 
 
-            createGoalScreen();
-            runnerUpdateHome();
+    $("calendarMonth")
+        .textContent =
+        monthName
+            .charAt(0)
+            .toUpperCase()
+        +
+        monthName.slice(1);
+
+
+    const grid =
+        $("calendarGrid");
+
+    grid.innerHTML = "";
+
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        );
+
+
+    let start =
+        firstDay.getDay();
+
+    start =
+        start === 0
+        ? 6
+        : start - 1;
+
+
+    const days =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    const schedules =
+        getSchedules();
+
+
+    for (
+        let i = 0;
+        i < start;
+        i++
+    ) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.className =
+            "day empty-day";
+
+        grid.appendChild(empty);
+
+    }
+
+
+    for (
+        let day = 1;
+        day <= days;
+        day++
+    ) {
+
+        const date =
+            new Date(
+                year,
+                month,
+                day
+            );
+
+        const key =
+            dateKey(date);
+
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "day";
+
+
+        if (
+            key === dateKey(
+                new Date()
+            )
+        ) {
+
+            div.classList.add(
+                "today"
+            );
+
+        }
+
+
+        if (
+            key === dateKey(
+                selectedCalendarDate
+            )
+        ) {
+
+            div.classList.add(
+                "selected"
+            );
+
+        }
+
+
+        div.onclick = function() {
+
+            selectedCalendarDate =
+                date;
+
+            renderCalendar();
+
+            renderScheduleList();
 
         };
 
 
-    /*
-       Poiché init() è già stato chiamato
-       dal codice originale prima che questo
-       modulo venga caricato, eseguiamo anche
-       qui l'inizializzazione immediata.
-    */
+        const number =
+            document.createElement("div");
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
+        number.className =
+            "day-number";
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
+        number.textContent =
+            day;
 
-                createGoalScreen();
-                runnerUpdateHome();
+        div.appendChild(number);
 
-            }
+
+        schedules
+            .filter(
+                item =>
+                    item.date === key
+            )
+            .forEach(item => {
+
+                const plan =
+                    getPlans()
+                        .find(
+                            p =>
+                                p.id === item.planId
+                        );
+
+
+                if (!plan) {
+                    return;
+                }
+
+
+                const event =
+                    document.createElement("div");
+
+                event.className =
+                    "event-dot";
+
+                event.textContent =
+                    plan.name;
+
+                div.appendChild(event);
+
+            });
+
+
+        grid.appendChild(div);
+
+    }
+
+}
+
+
+function renderScheduleList() {
+
+    const container =
+        $("scheduleList");
+
+    const schedules =
+        getSchedules();
+
+    const key =
+        dateKey(
+            selectedCalendarDate
         );
+
+
+    const selected =
+        schedules
+            .filter(
+                item =>
+                    item.date === key
+            )
+            .sort(
+                (a, b) =>
+                    a.time.localeCompare(
+                        b.time
+                    )
+            );
+
+
+    container.innerHTML = "";
+
+
+    if (!selected.length) {
+
+        container.innerHTML = `
+            <div class="empty">
+                Nessun allenamento per
+                ${formatDateItalian(key)}.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    selected.forEach(item => {
+
+        const plan =
+            getPlans()
+                .find(
+                    p =>
+                        p.id === item.planId
+                );
+
+
+        if (!plan) {
+            return;
+        }
+
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "schedule-card";
+
+        div.innerHTML = `
+
+            <div class="schedule-date">
+                ${escapeHTML(item.time || "--:--")}
+            </div>
+
+            <div class="schedule-name">
+                ${escapeHTML(plan.name)}
+            </div>
+
+            <div class="muted small">
+                ${
+                    escapeHTML(
+                        item.note || 
+                        plan.description || 
+                        "Allenamento programmato"
+                    )
+                }
+            </div>
+
+            <div class="schedule-actions">
+
+                <button
+                    onclick="
+                        startScheduledWorkout(
+                            '${item.id}'
+                        )">
+                    ▶ INIZIA
+                </button>
+
+                <button
+                    onclick="
+                        deleteSchedule(
+                            '${item.id}'
+                        )">
+                    🗑 ELIMINA
+                </button>
+
+            </div>
+
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+function deleteSchedule(id) {
+
+    const schedules =
+        getSchedules()
+            .filter(
+                item =>
+                    item.id !== id
+            );
+
+    saveJSON(
+        STORAGE.schedules,
+        schedules
+    );
+
+    renderCalendar();
+    renderScheduleList();
+    refreshHome();
+
+}
+
+
+function changeMonth(delta) {
+
+    calendarDate =
+        new Date(
+            calendarDate.getFullYear(),
+            calendarDate.getMonth() + delta,
+            1
+        );
+
+    renderCalendar();
+
+}
+
+
+function goToday() {
+
+    calendarDate =
+        new Date();
+
+    selectedCalendarDate =
+        new Date();
+
+    renderCalendar();
+    renderScheduleList();
+
+}
+
+
+/* =========================================================
+   HOME / NEXT WORKOUT
+   ========================================================= */
+
+function getNextScheduledWorkout() {
+
+    const now =
+        new Date();
+
+
+    const schedules =
+        getSchedules()
+            .filter(
+                item =>
+                    !item.completed
+            )
+            .map(item => {
+
+                const dateTime =
+                    new Date(
+                        `${item.date}T${item.time || "00:00"}`
+                    );
+
+                return {
+                    ...item,
+                    dateTime
+                };
+
+            })
+            .filter(
+                item =>
+                    item.dateTime >= now
+            )
+            .sort(
+                (a, b) =>
+                    a.dateTime - b.dateTime
+            );
+
+
+    return schedules[0] || null;
+
+}
+
+
+function refreshHome() {
+
+    refreshWeekStats();
+
+
+    const next =
+        getNextScheduledWorkout();
+
+
+    const title =
+        $("nextWorkoutHome");
+
+    const info =
+        $("nextWorkoutInfo");
+
+    const button =
+        $("nextWorkoutButton");
+
+
+    if (!next) {
+
+        title.textContent =
+            "Nessun allenamento programmato";
+
+        info.textContent =
+            "Vai nei Piani per creare e programmare il tuo allenamento.";
+
+        button.textContent =
+            "📅 VAI AL CALENDARIO";
+
+        button.onclick =
+            function() {
+
+                showScreen(
+                    "calendarScreen"
+                );
+
+            };
+
+        return;
+
+    }
+
+
+    const plan =
+        getPlans()
+            .find(
+                p =>
+                    p.id === next.planId
+            );
+
+
+    if (!plan) {
+
+        return;
+
+    }
+
+
+    const date =
+        new Date(
+            `${next.date}T${next.time || "00:00"}`
+        );
+
+
+    title.textContent =
+        plan.name;
+
+
+    info.textContent =
+        `${formatDateItalian(next.date)}
+         · ${next.time || "--:--"}`;
+
+
+    button.textContent =
+        "▶ INIZIA ALLENAMENTO";
+
+
+    button.onclick =
+        function() {
+
+            startScheduledWorkout(
+                next.id
+            );
+
+        };
+
+}
+
+
+function startNextScheduledWorkout() {
+
+    const next =
+        getNextScheduledWorkout();
+
+    if (!next) {
+
+        showScreen(
+            "calendarScreen"
+        );
+
+        return;
+
+    }
+
+    startScheduledWorkout(
+        next.id
+    );
+
+}
+
+
+/* =========================================================
+   RUN ENGINE
+   ========================================================= */
+
+let watchId = null;
+
+let timerId = null;
+
+let running = false;
+
+let paused = false;
+
+let runMode = "free";
+
+let activePlan = null;
+
+let activeScheduleId = null;
+
+let expandedPhases = [];
+
+let phaseIndex = 0;
+
+let phaseStartTime = 0;
+
+let phaseStartDistance = 0;
+
+let runStartTime = 0;
+
+let elapsed = 0;
+
+let totalDistance = 0;
+
+let lastPosition = null;
+
+let lastPositionTime = null;
+
+let gpsSamples = [];
+
+// GPS v6: stato di filtraggio e movimento.
+let gpsPositionHistory = [];
+let lastGpsSpeed = null;
+let isMoving = false;
+let movementCandidateSince = 0;
+let stationaryCandidateSince = 0;
+
+let paceHistory = [];
+
+let lastPaceAnnouncement = 0;
+
+let lastDistanceAnnouncement = 0;
+
+let lastTargetAnnouncement = 0;
+
+let lastCoachState = "unknown";
+
+let currentPhaseCompleted = false;
+
+
+function startFreeRun() {
+
+    startRunEngine(
+        null,
+        "free",
+        null
+    );
+
+}
+
+
+function startPlan(planId) {
+
+    const plan =
+        getPlans()
+            .find(
+                p =>
+                    p.id === planId
+            );
+
+
+    if (!plan) {
+
+        showToast(
+            "Allenamento non trovato."
+        );
+
+        return;
+
+    }
+
+
+    startRunEngine(
+        plan,
+        "plan",
+        null
+    );
+
+}
+
+
+function startScheduledWorkout(scheduleId) {
+
+    const schedules =
+        getSchedules();
+
+
+    const schedule =
+        schedules.find(
+            item =>
+                item.id === scheduleId
+        );
+
+
+    if (!schedule) {
+
+        showToast(
+            "Allenamento programmato non trovato."
+        );
+
+        return;
+
+    }
+
+
+    const plan =
+        getPlans()
+            .find(
+                p =>
+                    p.id === schedule.planId
+            );
+
+
+    if (!plan) {
+
+        showToast(
+            "Il piano associato non esiste più."
+        );
+
+        return;
+
+    }
+
+
+    activeScheduleId =
+        scheduleId;
+
+
+    startRunEngine(
+        plan,
+        "plan",
+        scheduleId
+    );
+
+}
+
+
+function expandPlanPhases(plan) {
+
+    const result = [];
+
+
+    plan.phases.forEach(phase => {
+
+        const repeat =
+            Math.max(
+                1,
+                Number(
+                    phase.repeat || 1
+                )
+            );
+
+
+        for (
+            let i = 0;
+            i < repeat;
+            i++
+        ) {
+
+            result.push({
+                ...phase,
+                repeatIndex: i + 1,
+                repeatTotal: repeat
+            });
+
+        }
+
+    });
+
+
+    return result;
+
+}
+
+
+function startRunEngine(
+    plan,
+    mode,
+    scheduleId
+) {
+
+    stopGPS();
+
+    clearInterval(timerId);
+
+
+    activePlan =
+        plan;
+
+    runMode =
+        mode;
+
+    activeScheduleId =
+        scheduleId;
+
+    running = true;
+
+    paused = false;
+
+    elapsed = 0;
+
+    totalDistance = 0;
+
+    lastPosition = null;
+
+    lastPositionTime = null;
+
+    gpsSamples = [];
+    gpsPositionHistory = [];
+    lastGpsSpeed = null;
+    isMoving = false;
+    movementCandidateSince = 0;
+    stationaryCandidateSince = 0;
+
+    paceHistory = [];
+
+    lastPaceAnnouncement = 0;
+
+    lastDistanceAnnouncement = 0;
+
+    lastTargetAnnouncement = 0;
+
+    lastCoachState = "unknown";
+
+    currentPhaseCompleted = false;
+
+
+    expandedPhases =
+        plan
+        ?
+        expandPlanPhases(plan)
+        :
+        [];
+
+
+    phaseIndex = 0;
+
+    phaseStartTime =
+        Date.now();
+
+    phaseStartDistance =
+        0;
+
+    runStartTime =
+        Date.now();
+
+
+    $("pauseButton").textContent =
+        "Ⅱ PAUSA";
+
+
+    $("coach").textContent =
+        mode === "free"
+        ?
+        "Corsa libera · acquisizione GPS…"
+        :
+        "Preparazione allenamento…";
+
+
+    if (mode === "free") {
+
+        $("phaseName").textContent =
+            "CORSA LIBERA";
+
+        $("phaseInfo").textContent =
+            "Solo registrazione dati";
+
+        $("targetPanel").style.display =
+            "none";
 
     }
 
     else {
 
-        createGoalScreen();
-        runnerUpdateHome();
+        $("targetPanel").style.display =
+            "block";
+
+        updatePhaseUI();
 
     }
 
-})();
 
-/* ===== RUNNER GPS v7 =====
-   Robust position filtering, movement detection and pace stabilization.
-*/
-(function(){
-  if (window.__runnerGPSv7Installed) return;
-  window.__runnerGPSv7Installed = true;
+    updateDisplay();
 
-  const S = {
-    samples: [],
-    accepted: [],
-    moving: false,
-    moveHits: 0,
-    stopHits: 0,
-    lastAccepted: null,
-    distance: 0,
-    pace: null
-  };
+    showScreen("run");
 
-  const MAX_ACCURACY = 25;
-  const MAX_JUMP_SPEED = 8.5; // m/s, generous for running
-  const STOP_SPEED = 0.7;
-  const START_SPEED = 1.0;
+    startGPS();
 
-  function hav(a,b){
-    const R=6371000, p1=a.lat*Math.PI/180, p2=b.lat*Math.PI/180;
-    const dp=(b.lat-a.lat)*Math.PI/180, dl=(b.lon-a.lon)*Math.PI/180;
-    const x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
-    return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-  }
 
-  function reset(){
-    S.samples=[]; S.accepted=[]; S.moving=false; S.moveHits=0; S.stopHits=0;
-    S.lastAccepted=null; S.distance=0; S.pace=null;
-  }
+    timerId =
+        setInterval(
+            tickRun,
+            250
+        );
 
-  function process(pos){
-    const c=pos.coords, t=pos.timestamp || Date.now();
-    const s={
-      lat:c.latitude, lon:c.longitude, acc:Number.isFinite(c.accuracy)?c.accuracy:999,
-      speed:Number.isFinite(c.speed)&&c.speed>=0?c.speed:null,
-      heading:Number.isFinite(c.heading)&&c.heading>=0?c.heading:null, t
+}
+
+
+/* =========================
+   GPS
+   ========================= */
+
+function startGPS() {
+
+    if (!navigator.geolocation) {
+
+        $("gps").textContent = "GPS ✕";
+        $("gpsStatus").textContent = "● GPS NON SUPPORTATO";
+        $("coach").textContent =
+            "Questo browser non supporta la geolocalizzazione.";
+        return;
+    }
+
+    $("gps").textContent = "GPS…";
+    $("gpsStatus").textContent = "● GPS IN ATTESA";
+
+    try {
+        watchId = navigator.geolocation.watchPosition(
+            positionReceived,
+            gpsError,
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 10000
+            }
+        );
+    } catch (error) {
+        gpsError({ code: 2 });
+    }
+}
+
+
+function stopGPS() {
+
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+}
+
+
+function gpsError(error) {
+
+    $("gps").textContent = "GPS ✕";
+
+    if (error && error.code === 1) {
+        $("gpsStatus").textContent = "● GPS NEGATO";
+        $("coach").textContent =
+            "Consenti l'accesso alla posizione per registrare la corsa.";
+    } else if (error && error.code === 3) {
+        $("gpsStatus").textContent = "● GPS IN ATTESA";
+        $("coach").textContent =
+            "GPS lento: continuo ad aspettare una posizione precisa.";
+    } else {
+        $("gpsStatus").textContent = "● GPS NON DISPONIBILE";
+        $("coach").textContent =
+            "Segnale GPS debole. Sto aspettando una posizione migliore.";
+    }
+}
+
+
+function gpsDistance(a, b) {
+    return calculateDistance(a.lat, a.lon, b.lat, b.lon);
+}
+
+
+function median(values) {
+    if (!values.length) return null;
+    const sorted = values.slice().sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+    return sorted.length % 2
+        ? sorted[middle]
+        : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+
+function updateMovementState(speedMps, now) {
+
+    const speed = Number.isFinite(speedMps) ? Math.max(0, speedMps) : 0;
+
+    // Isteresi: partenza confermata dopo ~1.2 s di movimento,
+    // arresto confermato dopo ~2.5 s. Evita falsi start/stop da drift GPS.
+    if (speed >= 1.15) {
+        stationaryCandidateSince = 0;
+        if (!isMoving) {
+            if (!movementCandidateSince) movementCandidateSince = now;
+            if (now - movementCandidateSince >= 1200) {
+                isMoving = true;
+            }
+        }
+    } else if (speed <= 0.65) {
+        movementCandidateSince = 0;
+        if (isMoving) {
+            if (!stationaryCandidateSince) stationaryCandidateSince = now;
+            if (now - stationaryCandidateSince >= 2500) {
+                isMoving = false;
+            }
+        }
+    } else {
+        movementCandidateSince = 0;
+        stationaryCandidateSince = 0;
+    }
+
+    return isMoving;
+}
+
+
+function positionReceived(position) {
+
+    if (!running || paused) return;
+
+    const coords = position.coords;
+    const accuracy = Number(coords.accuracy);
+    const lat = Number(coords.latitude);
+    const lon = Number(coords.longitude);
+    const timestamp = Number(position.timestamp) || Date.now();
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    // Una precisione dichiarata enorme non è utile per il tracciamento.
+    // Manteniamo comunque l'ultimo stato GPS visibile all'utente.
+    const maxAccuracy = Math.max(10, Number(settings.gpsAccuracy) || 30);
+    if (settings.gpsFiltering && Number.isFinite(accuracy) && accuracy > maxAccuracy) {
+        $("gps").textContent = `GPS ~${Math.round(accuracy)}m`;
+        $("gpsStatus").textContent = "● GPS POCO PRECISO";
+        return;
+    }
+
+    const current = { lat, lon, time: timestamp, accuracy };
+
+    if (!lastPosition) {
+        lastPosition = { lat, lon };
+        lastPositionTime = timestamp;
+        gpsPositionHistory = [current];
+        lastGpsSpeed = Number.isFinite(coords.speed) && coords.speed >= 0
+            ? coords.speed
+            : null;
+        isMoving = false;
+        movementCandidateSince = 0;
+        stationaryCandidateSince = 0;
+
+        $("gps").textContent = `GPS ✓ ${Math.round(accuracy || 0)}m`;
+        $("gpsStatus").textContent = "● GPS ATTIVO";
+        $("coach").textContent =
+            runMode === "free" ? "GPS acquisito · in attesa di movimento" : "GPS acquisito · pronto";
+        updateDisplay();
+        return;
+    }
+
+    const seconds = Math.max(0.1, (timestamp - lastPositionTime) / 1000);
+    const meters = calculateDistance(lastPosition.lat, lastPosition.lon, lat, lon);
+
+    const reportedSpeed = Number(coords.speed);
+    const gpsSpeed = Number.isFinite(reportedSpeed) && reportedSpeed >= 0
+        ? reportedSpeed
+        : null;
+    const coordinateSpeed = meters / seconds;
+    const recentSpeeds = gpsPositionHistory
+        .slice(-4)
+        .map(p => p.speed)
+        .filter(Number.isFinite);
+    recentSpeeds.push(coordinateSpeed);
+    const robustSpeed = median(recentSpeeds);
+
+    updateMovementState(gpsSpeed !== null ? gpsSpeed : robustSpeed, timestamp);
+
+    // Salto GPS impossibile: non aggiungerlo alla distanza, ma aggiorna la
+    // posizione di riferimento solo quando il campione torna plausibile.
+    const impossibleJump =
+        seconds < 5 && meters > 100;
+    const impossibleSpeed = coordinateSpeed > 8.5; // ~30.6 km/h
+
+    if (settings.gpsFiltering && (impossibleJump || impossibleSpeed)) {
+        $("gps").textContent = `GPS ⚠ ${Math.round(accuracy || 0)}m`;
+        $("gpsStatus").textContent = "● GPS FILTRATO";
+        return;
+    }
+
+    // Da fermo non trasformiamo il normale rumore GPS in distanza.
+    // Usiamo sia la velocità del telefono sia la velocità delle coordinate.
+    const movementSpeed = gpsSpeed !== null ? gpsSpeed : robustSpeed;
+    const movingNow = updateMovementState(movementSpeed, timestamp);
+
+    if (movingNow && meters >= 1.5) {
+        totalDistance += meters / 1000;
+
+        gpsSamples.push({
+            time: timestamp,
+            distance: meters / 1000,
+            seconds,
+            speed: movementSpeed
+        });
+
+        const maxAge = Math.max(10, Number(settings.paceWindow) || 20) * 1000;
+        gpsSamples = gpsSamples.filter(sample => timestamp - sample.time <= maxAge);
+    }
+
+    lastPosition = { lat, lon };
+    lastPositionTime = timestamp;
+    lastGpsSpeed = gpsSpeed !== null ? gpsSpeed : robustSpeed;
+
+    gpsPositionHistory.push({
+        lat,
+        lon,
+        time: timestamp,
+        accuracy,
+        speed: lastGpsSpeed
+    });
+    if (gpsPositionHistory.length > 8) gpsPositionHistory.shift();
+
+    $("gps").textContent = `GPS ✓ ${Math.round(accuracy || 0)}m`;
+    $("gpsStatus").textContent = movingNow
+        ? "● GPS IN MOVIMENTO"
+        : "● GPS FERMO";
+
+    if (runMode === "free") {
+        $("coach").textContent = movingNow
+            ? "Registrazione attiva"
+            : "Fermo · GPS stabilizzato";
+    }
+
+    updateDisplay();
+}
+
+
+function calculateDistance(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+) {
+
+    const R =
+        6371000;
+
+    const rad =
+        Math.PI / 180;
+
+    const dLat =
+        (lat2 - lat1) * rad;
+
+    const dLon =
+        (lon2 - lon1) * rad;
+
+    const a =
+        Math.sin(dLat / 2) ** 2
+        +
+        Math.cos(lat1 * rad)
+        *
+        Math.cos(lat2 * rad)
+        *
+        Math.sin(dLon / 2) ** 2;
+
+    return (
+        R *
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        )
+    );
+
+}
+
+
+/* =========================
+   TIME
+   ========================= */
+
+function tickRun() {
+
+    if (
+        !running ||
+        paused
+    ) {
+
+        return;
+
+    }
+
+
+    elapsed =
+        (
+            Date.now() -
+            runStartTime
+        ) / 1000;
+
+
+    updateDisplay();
+
+
+    if (
+        runMode === "plan"
+    ) {
+
+        processPhase();
+
+        processCoach();
+
+    }
+
+    else {
+
+        processFreeRunAnnouncements();
+
+    }
+
+}
+
+
+function formatTime(seconds) {
+
+    seconds =
+        Math.max(
+            0,
+            Math.floor(seconds)
+        );
+
+
+    const hours =
+        Math.floor(
+            seconds / 3600
+        );
+
+
+    const minutes =
+        Math.floor(
+            (seconds % 3600) / 60
+        );
+
+
+    const secs =
+        seconds % 60;
+
+
+    if (hours > 0) {
+
+        return (
+            String(hours).padStart(2, "0")
+            +
+            ":"
+            +
+            String(minutes).padStart(2, "0")
+            +
+            ":"
+            +
+            String(secs).padStart(2, "0")
+        );
+
+    }
+
+
+    return (
+        String(minutes).padStart(2, "0")
+        +
+        ":"
+        +
+        String(secs).padStart(2, "0")
+    );
+
+}
+
+
+function secondsToPace(seconds) {
+
+    if (
+        !isFinite(seconds) ||
+        seconds <= 0
+    ) {
+
+        return "--:--";
+
+    }
+
+
+    const minutes =
+        Math.floor(
+            seconds / 60
+        );
+
+
+    let secs =
+        Math.round(
+            seconds % 60
+        );
+
+
+    let min =
+        minutes;
+
+
+    if (secs >= 60) {
+
+        min++;
+        secs = 0;
+
+    }
+
+
+    return (
+        min
+        +
+        ":"
+        +
+        String(secs)
+            .padStart(2, "0")
+    );
+
+}
+
+
+function paceToSeconds(value) {
+
+    if (
+        typeof value !== "string"
+    ) {
+
+        return Number(value) || 0;
+
+    }
+
+
+    const parts =
+        value.trim().split(":");
+
+
+    if (
+        parts.length !== 2
+    ) {
+
+        return Number(value) || 0;
+
+    }
+
+
+    const minutes =
+        Number(parts[0]);
+
+    const seconds =
+        Number(parts[1]);
+
+
+    if (
+        !isFinite(minutes) ||
+        !isFinite(seconds)
+    ) {
+
+        return 0;
+
+    }
+
+
+    return (
+        minutes * 60 +
+        seconds
+    );
+
+}
+
+
+/* =========================
+   PACE ENGINE
+   ========================= */
+
+function getFilteredPace() {
+
+    if (
+        gpsSamples.length < 2
+    ) {
+
+        return null;
+
+    }
+
+
+    let totalMeters = 0;
+    let totalSeconds = 0;
+
+
+    gpsSamples.forEach(
+        sample => {
+
+            totalMeters +=
+                sample.distance * 1000;
+
+            totalSeconds +=
+                sample.seconds;
+
+        }
+    );
+
+
+    if (
+        totalMeters < 10 ||
+        totalSeconds <= 0
+    ) {
+
+        return null;
+
+    }
+
+
+    const metersPerSecond =
+        totalMeters /
+        totalSeconds;
+
+
+    if (
+        metersPerSecond <= 0
+    ) {
+
+        return null;
+
+    }
+
+
+    return (
+        1000 /
+        metersPerSecond
+    );
+
+}
+
+
+function getAveragePace() {
+
+    if (
+        elapsed <= 0 ||
+        totalDistance <= 0
+    ) {
+
+        return null;
+
+    }
+
+
+    return (
+        elapsed /
+        (totalDistance * 1000)
+        *
+        1000
+    );
+
+}
+
+
+function getSpeed() {
+
+    if (
+        elapsed <= 0 ||
+        totalDistance <= 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    return (
+        totalDistance /
+        elapsed
+        *
+        3600
+    );
+
+}
+
+
+/* =========================
+   DISPLAY
+   ========================= */
+
+function updateDisplay() {
+
+    const pace =
+        getFilteredPace();
+
+
+    const avgPace =
+        getAveragePace();
+
+
+    $("distance").textContent =
+        totalDistance.toFixed(2);
+
+
+    $("time").textContent =
+        formatTime(elapsed);
+
+
+    $("speed").textContent =
+        getSpeed().toFixed(1);
+
+
+    $("pace").textContent =
+        pace
+        ?
+        secondsToPace(pace)
+        :
+        "--:--";
+
+
+    $("avgPace").textContent =
+        avgPace
+        ?
+        secondsToPace(avgPace)
+        :
+        "--:--";
+
+
+    if (
+        phaseStartTime
+    ) {
+
+        $("phaseElapsed")
+            .textContent =
+            formatTime(
+                (
+                    Date.now() -
+                    phaseStartTime
+                ) / 1000
+            );
+
+    }
+
+}
+
+
+/* =========================
+   PHASE ENGINE
+   ========================= */
+
+function currentPhaseObject() {
+
+    return expandedPhases[
+        phaseIndex
+    ] || null;
+
+}
+
+
+function updatePhaseUI() {
+
+    const phase =
+        currentPhaseObject();
+
+
+    if (!phase) {
+
+        $("phaseName").textContent =
+            "ALLENAMENTO TERMINATO";
+
+        $("phaseInfo").textContent =
+            "";
+
+        $("targetPace").textContent =
+            "—";
+
+        $("currentPhase").textContent =
+            `${expandedPhases.length}/${expandedPhases.length}`;
+
+        return;
+
+    }
+
+
+    $("phaseName").textContent =
+        phase.name.toUpperCase();
+
+
+    let info =
+        `${phaseIndex + 1}/${expandedPhases.length}`;
+
+
+    if (
+        phase.repeatTotal > 1
+    ) {
+
+        info +=
+            ` · ripetizione ${phase.repeatIndex}/${phase.repeatTotal}`;
+
+    }
+
+
+    if (
+        phase.durationType === "time"
+    ) {
+
+        info +=
+            ` · ${phase.duration} min`;
+
+    }
+
+    else {
+
+        info +=
+            ` · ${phase.distance} km`;
+
+    }
+
+
+    $("phaseInfo").textContent =
+        info;
+
+
+    $("currentPhase").textContent =
+        `${phaseIndex + 1}/${expandedPhases.length}`;
+
+
+    if (
+        phase.targetType === "pace"
+    ) {
+
+        $("targetPace").textContent =
+            `${secondsToPace(phase.targetMin)}
+             – ${secondsToPace(phase.targetMax)}
+             min/km`;
+
+    }
+
+    else {
+
+        $("targetPace").textContent =
+            "Nessun target";
+
+    }
+
+
+    phaseStartTime =
+        Date.now();
+
+    phaseStartDistance =
+        totalDistance;
+
+    lastCoachState =
+        "unknown";
+
+    lastPaceAnnouncement =
+        0;
+
+    lastTargetAnnouncement =
+        0;
+
+    currentPhaseCompleted =
+        false;
+
+}
+
+
+/* =========================
+   PHASE PROGRESS
+   ========================= */
+
+function processPhase() {
+
+    const phase =
+        currentPhaseObject();
+
+
+    if (!phase) {
+
+        finishRun();
+
+        return;
+
+    }
+
+
+    const phaseElapsed =
+        (
+            Date.now() -
+            phaseStartTime
+        ) / 1000;
+
+
+    const phaseDistance =
+        totalDistance -
+        phaseStartDistance;
+
+
+    let completed =
+        false;
+
+
+    if (
+        phase.durationType === "time"
+    ) {
+
+        completed =
+            phaseElapsed >=
+            Number(phase.duration) * 60;
+
+    }
+
+    else {
+
+        completed =
+            phaseDistance >=
+            Number(phase.distance);
+
+    }
+
+
+    if (completed) {
+
+        advancePhase();
+
+    }
+
+}
+
+
+function advancePhase() {
+
+    if (
+        currentPhaseCompleted
+    ) {
+
+        return;
+
+    }
+
+
+    currentPhaseCompleted =
+        true;
+
+
+    const oldPhase =
+        currentPhaseObject();
+
+
+    if (
+        settings.audioEnabled
+    ) {
+
+        speak(
+            `Fase completata. ${oldPhase.name}.`
+        );
+
+    }
+
+
+    phaseIndex++;
+
+
+    if (
+        phaseIndex >=
+        expandedPhases.length
+    ) {
+
+        setTimeout(
+            () => finishRun(),
+            500
+        );
+
+        return;
+
+    }
+
+
+    updatePhaseUI();
+
+
+    const next =
+        currentPhaseObject();
+
+
+    if (
+        settings.audioEnabled
+    ) {
+
+        speak(
+            `Prossima fase: ${next.name}.`
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CLOSED LOOP COACH
+   ========================================================= */
+
+function processCoach() {
+
+    const phase =
+        currentPhaseObject();
+
+
+    if (!phase) {
+        return;
+    }
+
+
+    if (
+        phase.targetType !== "pace"
+    ) {
+
+        $("coach").textContent =
+            phase.name;
+
+        return;
+
+    }
+
+
+    const pace =
+        getFilteredPace();
+
+
+    if (
+        !pace
+    ) {
+
+        $("coach").textContent =
+            "Acquisizione ritmo GPS…";
+
+        return;
+
+    }
+
+
+    const min =
+        Number(phase.targetMin);
+
+
+    const max =
+        Number(phase.targetMax);
+
+
+    const toleranceMin =
+        Number(
+            settings.paceToleranceMin
+        );
+
+
+    const toleranceMax =
+        Number(
+            settings.paceToleranceMax
+        );
+
+
+    /*
+        Il target è espresso come:
+
+        min = ritmo più veloce
+        max = ritmo più lento
+
+        Esempio:
+
+        5:15 - 5:30
+
+        troppo veloce:
+        < 5:05
+
+        corretto:
+        5:05 - 5:40
+
+        troppo lento:
+        > 5:40
+    */
+
+
+    const lowerBound =
+        min - toleranceMin;
+
+
+    const upperBound =
+        max + toleranceMax;
+
+
+    let state;
+
+
+    if (
+        pace < lowerBound
+    ) {
+
+        state =
+            "too_fast";
+
+    }
+
+    else if (
+        pace > upperBound
+    ) {
+
+        state =
+            "too_slow";
+
+    }
+
+    else {
+
+        state =
+            "ok";
+
+    }
+
+
+    const now =
+        Date.now();
+
+
+    const interval =
+        Number(
+            settings.paceInterval
+        ) * 1000;
+
+
+    const canSpeak =
+        (
+            now -
+            lastPaceAnnouncement
+        ) >= interval;
+
+
+    /*
+        CONTROLLO CHIUSO
+
+        Non ci limitiamo a dire
+        "aumenta".
+
+        Memorizziamo lo stato
+        precedente.
+
+        Quando l'utente modifica
+        realmente il ritmo e passa
+        nella zona corretta,
+        il sistema se ne accorge
+        e conferma.
+
+        Se supera il target,
+        cambia nuovamente feedback.
+    */
+
+
+    if (
+        state !== lastCoachState
+    ) {
+
+        if (
+            state === "ok"
+        ) {
+
+            $("coach").textContent =
+                `✓ Ritmo corretto · ${secondsToPace(pace)}/km`;
+
+
+            if (
+                settings.audioEnabled
+            ) {
+
+                speak(
+                    `Sei a ${secondsToPace(pace)} al chilometro. Ritmo corretto.`
+                );
+
+            }
+
+
+            lastPaceAnnouncement =
+                now;
+
+        }
+
+        else if (
+            state === "too_fast"
+        ) {
+
+            $("coach").textContent =
+                `Rallenta · ${secondsToPace(pace)}/km`;
+
+
+            if (
+                settings.audioEnabled
+            ) {
+
+                speak(
+                    `Sei a ${secondsToPace(pace)} al chilometro. Devi rallentare per arrivare a ${secondsToPace(min)} - ${secondsToPace(max)}.`
+                );
+
+            }
+
+
+            lastPaceAnnouncement =
+                now;
+
+        }
+
+        else if (
+            state === "too_slow"
+        ) {
+
+            $("coach").textContent =
+                `Aumenta · ${secondsToPace(pace)}/km`;
+
+
+            if (
+                settings.audioEnabled
+            ) {
+
+                speak(
+                    `Sei a ${secondsToPace(pace)} al chilometro. Devi aumentare per arrivare a ${secondsToPace(min)} - ${secondsToPace(max)}.`
+                );
+
+            }
+
+
+            lastPaceAnnouncement =
+                now;
+
+        }
+
+
+        lastCoachState =
+            state;
+
+        return;
+
+    }
+
+
+    if (
+        canSpeak &&
+        state !== "ok"
+    ) {
+
+        if (
+            state === "too_fast"
+        ) {
+
+            $("coach").textContent =
+                `Rallenta · ${secondsToPace(pace)}/km`;
+
+        }
+
+        else {
+
+            $("coach").textContent =
+                `Aumenta · ${secondsToPace(pace)}/km`;
+
+        }
+
+
+        if (
+            settings.audioEnabled
+        ) {
+
+            if (
+                state === "too_fast"
+            ) {
+
+                speak(
+                    `Sei a ${secondsToPace(pace)} al chilometro. Rallenta leggermente.`
+                );
+
+            }
+
+            else {
+
+                speak(
+                    `Sei a ${secondsToPace(pace)} al chilometro. Aumenta leggermente.`
+                );
+
+            }
+
+        }
+
+
+        lastPaceAnnouncement =
+            now;
+
+    }
+
+
+    /*
+        Annuncio del target,
+        separato dal controllo.
+    */
+
+    if (
+        settings.targetAnnouncements
+        &&
+        (
+            now -
+            lastTargetAnnouncement
+        ) >
+        60000
+    ) {
+
+        if (
+            state === "ok"
+        ) {
+
+            speak(
+                `Target corretto. Mantieni ${secondsToPace(min)} - ${secondsToPace(max)} al chilometro.`
+            );
+
+        }
+
+
+        lastTargetAnnouncement =
+            now;
+
+    }
+
+}
+
+
+/* =========================================================
+   FREE RUN AUDIO
+   ========================================================= */
+
+function processFreeRunAnnouncements() {
+
+    const now =
+        Date.now();
+
+
+    if (
+        !settings.audioEnabled
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        La corsa libera NON usa il coach.
+        Può però dare annunci informativi
+        se l'utente li ha attivati.
+    */
+
+
+    const distanceInterval =
+        Number(
+            settings.distanceInterval
+        );
+
+
+    if (
+        distanceInterval > 0
+    ) {
+
+        const currentKm =
+            Math.floor(
+                totalDistance /
+                distanceInterval
+            )
+            *
+            distanceInterval;
+
+
+        if (
+            currentKm > 0 &&
+            currentKm >
+            lastDistanceAnnouncement
+        ) {
+
+            speak(
+                `${formatDistanceSpeech(currentKm)} completati. Tempo ${formatTime(elapsed)}.`
+            );
+
+
+            lastDistanceAnnouncement =
+                currentKm;
+
+        }
+
+    }
+
+}
+
+
+function formatDistanceSpeech(km) {
+
+    if (
+        Number.isInteger(km)
+    ) {
+
+        return `${km} chilometri`;
+
+    }
+
+    return `${km.toFixed(1)} chilometri`;
+
+}
+
+
+/* =========================================================
+   PAUSE
+   ========================================================= */
+
+function togglePause() {
+
+    if (!running) {
+        return;
+    }
+
+
+    paused =
+        !paused;
+
+
+    if (paused) {
+
+        phaseElapsedBeforePause = Math.max(0, Date.now() - phaseStartTime);
+
+        $("pauseButton").textContent =
+            "▶ RIPRENDI";
+
+        $("coach").textContent =
+            "Corsa in pausa";
+
+        stopGPS();
+
+        if (
+            settings.audioEnabled
+        ) {
+
+            speak(
+                "Corsa in pausa."
+            );
+
+        }
+
+    }
+
+    else {
+
+        runStartTime =
+            Date.now() -
+            elapsed * 1000;
+
+
+        phaseStartTime =
+            Date.now() -
+            (
+                phaseElapsedBeforePause
+            );
+
+
+        lastPosition =
+            null;
+
+        lastPositionTime =
+            null;
+
+        gpsSamples = [];
+        gpsPositionHistory = [];
+        lastGpsSpeed = null;
+        isMoving = false;
+        movementCandidateSince = 0;
+        stationaryCandidateSince = 0;
+
+        $("pauseButton").textContent =
+            "Ⅱ PAUSA";
+
+        $("coach").textContent =
+            "Corsa ripresa";
+
+        startGPS();
+
+        if (
+            settings.audioEnabled
+        ) {
+
+            speak(
+                "Corsa ripresa."
+            );
+
+        }
+
+    }
+
+}
+
+
+let phaseElapsedBeforePause = 0;
+
+
+/* =========================================================
+   FINISH
+   ========================================================= */
+
+function finishRun() {
+
+    if (!running) {
+        return;
+    }
+
+
+    running = false;
+
+    paused = false;
+
+    clearInterval(
+        timerId
+    );
+
+    timerId = null;
+
+    stopGPS();
+
+
+    const avgPace =
+        getAveragePace();
+
+
+    $("summaryDistance").textContent =
+        totalDistance.toFixed(2);
+
+
+    $("summaryTime").textContent =
+        formatTime(elapsed);
+
+
+    $("summaryPace").textContent =
+        avgPace
+        ?
+        secondsToPace(avgPace)
+        :
+        "--:--";
+
+
+    $("summarySpeed").textContent =
+        getSpeed().toFixed(1);
+
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        );
+
+
+    const activity = {
+
+        id: uuid(),
+
+        date:
+            new Date().toISOString(),
+
+        mode:
+            runMode,
+
+        planId:
+            activePlan
+            ?
+            activePlan.id
+            :
+            null,
+
+        planName:
+            activePlan
+            ?
+            activePlan.name
+            :
+            "Corsa libera",
+
+        distance:
+            totalDistance,
+
+        time:
+            elapsed,
+
+        pace:
+            avgPace,
+
+        speed:
+            getSpeed(),
+
+        scheduleId:
+            activeScheduleId
+
     };
 
-    S.samples.push(s);
-    if(S.samples.length>7) S.samples.shift();
 
-    if(s.acc > MAX_ACCURACY) return {valid:false, state:S.moving?'moving':'stopped'};
+    history.unshift(
+        activity
+    );
 
-    const prev=S.lastAccepted;
-    let derived=null, dt=null, d=0;
-    if(prev){
-      dt=(s.t-prev.t)/1000;
-      if(dt>0){
-        d=hav(prev,s);
-        derived=d/dt;
-        // Reject implausible coordinate jumps.
-        if(derived > MAX_JUMP_SPEED && (s.speed===null || s.speed < MAX_JUMP_SPEED)){
-          return {valid:false, state:S.moving?'moving':'stopped'};
+
+    saveJSON(
+        STORAGE.history,
+        history
+    );
+
+
+    if (
+        activeScheduleId
+    ) {
+
+        const schedules =
+            getSchedules();
+
+
+        const item =
+            schedules.find(
+                schedule =>
+                    schedule.id ===
+                    activeScheduleId
+            );
+
+
+        if (item) {
+
+            item.completed =
+                true;
+
+            item.completedAt =
+                new Date().toISOString();
+
         }
-      }
+
+
+        saveJSON(
+            STORAGE.schedules,
+            schedules
+        );
+
     }
 
-    const speed = s.speed!==null ? s.speed : derived;
-    const startEvidence = speed!==null && speed >= START_SPEED;
-    const stopEvidence = speed!==null && speed <= STOP_SPEED;
 
-    if(startEvidence){ S.moveHits++; S.stopHits=0; }
-    else if(stopEvidence){ S.stopHits++; S.moveHits=0; }
+    if (
+        settings.audioEnabled
+    ) {
 
-    if(!S.moving && S.moveHits>=2){
-      S.moving=true;
-      // Establish a clean origin at confirmed movement.
-      S.lastAccepted=s;
-      return {valid:true, started:true, state:'moving', speed};
+        speak(
+            `Allenamento terminato. ${totalDistance.toFixed(2)} chilometri in ${formatTime(elapsed)}.`
+        );
+
     }
 
-    if(S.moving && S.stopHits>=3){
-      S.moving=false;
-      S.lastAccepted=s;
-      return {valid:true, stopped:true, state:'stopped', speed:0};
+
+    if (activePlan) {
+
+        $("summaryPlan").style.display =
+            "block";
+
+        $("summaryPlan").innerHTML = `
+            <div class="muted small">
+                ALLENAMENTO
+            </div>
+
+            <div
+                style="
+                    font-size:20px;
+                    font-weight:850;
+                    margin-top:5px;">
+                ${escapeHTML(activePlan.name)}
+            </div>
+        `;
+
     }
 
-    if(S.moving && prev && dt>0){
-      // Ignore tiny movements that are within the reported GPS uncertainty.
-      const uncertainty=Math.max(2, Math.min(12, (s.acc+prev.acc)*0.35));
-      if(d >= uncertainty){
-        S.distance += d;
-        S.lastAccepted=s;
-        S.accepted.push(s);
-        if(S.accepted.length>12) S.accepted.shift();
-      }
-    } else if(!prev){
-      S.lastAccepted=s;
+    else {
+
+        $("summaryPlan").style.display =
+            "none";
+
     }
 
-    // Stabilized pace from recent accepted movement, not one GPS point.
-    let pace=null;
-    if(S.moving && S.accepted.length>=2){
-      const a=S.accepted[0], b=S.accepted[S.accepted.length-1];
-      const dd=hav(a,b), secs=(b.t-a.t)/1000;
-      if(dd>=8 && secs>0){
-        const mps=dd/secs;
-        if(mps>=0.5 && mps<=8.5) pace=1000/mps/60;
-      }
+
+    activePlan = null;
+
+    activeScheduleId = null;
+
+    showScreen("summary");
+
+}
+
+
+/* =========================================================
+   EXIT RUN
+   ========================================================= */
+
+function confirmExitRun() {
+
+    if (!running) {
+
+        showScreen("home");
+
+        return;
+
     }
-    S.pace=pace;
 
-    return {valid:true, state:S.moving?'moving':'stopped', speed, distance:S.distance, pace};
-  }
 
-  window.RunnerGPSv7={process,reset,state:()=>({...S}),distance:()=>S.distance,pace:()=>S.pace};
-})();
+    if (
+        confirm(
+            "Uscire dalla corsa senza salvarla?"
+        )
+    ) {
+
+        cancelRun();
+
+    }
+
+}
+
+
+function cancelRun() {
+
+    running = false;
+
+    paused = false;
+
+    clearInterval(
+        timerId
+    );
+
+    timerId = null;
+
+    stopGPS();
+
+    activePlan = null;
+
+    activeScheduleId = null;
+
+    showScreen("home");
+
+}
+
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+
+let availableVoices = [];
+
+
+function loadVoices() {
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+
+        return;
+
+    }
+
+
+    availableVoices =
+        speechSynthesis
+            .getVoices();
+
+
+    const select =
+        $("voiceSelect");
+
+
+    if (!select) {
+        return;
+    }
+
+
+    select.innerHTML =
+        `<option value="">
+            Voce predefinita
+        </option>`;
+
+
+    const italian =
+        availableVoices
+            .filter(
+                voice =>
+                    voice.lang
+                        .toLowerCase()
+                        .startsWith("it")
+            );
+
+
+    const voices =
+        italian.length
+        ?
+        italian
+        :
+        availableVoices;
+
+
+    voices.forEach(
+        voice => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                voice.name;
+
+            option.textContent =
+                `${voice.name} (${voice.lang})`;
+
+
+            if (
+                voice.name ===
+                settings.voiceName
+            ) {
+
+                option.selected =
+                    true;
+
+            }
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+if (
+    "speechSynthesis" in window
+) {
+
+    speechSynthesis.onvoiceschanged =
+        loadVoices;
+
+}
+
+
+function speak(text) {
+
+    if (
+        !settings.audioEnabled
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        speechSynthesis.cancel();
+
+
+        const utterance =
+            new SpeechSynthesisUtterance(
+                text
+            );
+
+
+        const selected =
+            availableVoices
+                .find(
+                    voice =>
+                        voice.name ===
+                        settings.voiceName
+                );
+
+
+        if (selected) {
+
+            utterance.voice =
+                selected;
+
+            utterance.lang =
+                selected.lang;
+
+        }
+
+        else {
+
+            utterance.lang =
+                "it-IT";
+
+        }
+
+
+        utterance.rate =
+            1.0;
+
+        utterance.pitch =
+            1.0;
+
+        utterance.volume =
+            1.0;
+
+
+        speechSynthesis.speak(
+            utterance
+        );
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Audio error",
+            error
+        );
+
+    }
+
+}
+
+
+function testVoice() {
+
+    speak(
+        "Questa è la voce di RUNNER."
+    );
+
+}
+
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+function loadSettingsUI() {
+
+    $("audioEnabled").checked =
+        Boolean(
+            settings.audioEnabled
+        );
+
+
+    $("paceInterval").value =
+        settings.paceInterval;
+
+
+    $("distanceInterval").value =
+        settings.distanceInterval;
+
+
+    $("targetAnnouncements").checked =
+        Boolean(
+            settings.targetAnnouncements
+        );
+
+
+    $("paceToleranceMin").value =
+        settings.paceToleranceMin;
+
+
+    $("paceToleranceMax").value =
+        settings.paceToleranceMax;
+
+
+    $("paceWindow").value =
+        settings.paceWindow;
+
+
+    $("gpsAccuracy").value =
+        settings.gpsAccuracy;
+
+
+    $("gpsFiltering").checked =
+        Boolean(
+            settings.gpsFiltering
+        );
+
+
+    loadVoices();
+
+}
+
+
+function saveSettings() {
+
+    settings = {
+
+        audioEnabled:
+            $("audioEnabled").checked,
+
+        voiceName:
+            $("voiceSelect").value,
+
+        paceInterval:
+            Number(
+                $("paceInterval").value
+            ),
+
+        distanceInterval:
+            Number(
+                $("distanceInterval").value
+            ),
+
+        targetAnnouncements:
+            $("targetAnnouncements").checked,
+
+        paceToleranceMin:
+            Math.max(
+                0,
+                Number(
+                    $("paceToleranceMin").value
+                )
+            ),
+
+        paceToleranceMax:
+            Math.max(
+                0,
+                Number(
+                    $("paceToleranceMax").value
+                )
+            ),
+
+        paceWindow:
+            Number(
+                $("paceWindow").value
+            ),
+
+        gpsAccuracy:
+            Number(
+                $("gpsAccuracy").value
+            ),
+
+        gpsFiltering:
+            $("gpsFiltering").checked
+
+    };
+
+
+    saveJSON(
+        STORAGE.settings,
+        settings
+    );
+
+}
+
+
+function resetSettings() {
+
+    if (
+        !confirm(
+            "Ripristinare tutte le impostazioni?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    settings =
+        {
+            ...defaultSettings
+        };
+
+
+    saveJSON(
+        STORAGE.settings,
+        settings
+    );
+
+
+    loadSettingsUI();
+
+    showToast(
+        "Impostazioni ripristinate."
+    );
+
+}
+
+
+function clearAllData() {
+
+    if (
+        !confirm(
+            "ATTENZIONE: verranno cancellati piani, calendario e storico. Continuare?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    localStorage.removeItem(
+        STORAGE.plans
+    );
+
+    localStorage.removeItem(
+        STORAGE.schedules
+    );
+
+    localStorage.removeItem(
+        STORAGE.history
+    );
+
+
+    showToast(
+        "Dati cancellati."
+    );
+
+
+    renderPlans();
+    renderCalendar();
+    renderScheduleList();
+    renderHistory();
+    refreshHome();
+
+}
+
+
+/* =========================================================
+   HISTORY
+   ========================================================= */
+
+function renderHistory() {
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        );
+
+
+    const container =
+        $("historyList");
+
+
+    container.innerHTML = "";
+
+
+    if (!history.length) {
+
+        container.innerHTML = `
+            <div class="card empty">
+                Nessuna uscita registrata.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    history.forEach(
+        activity => {
+
+            const date =
+                new Date(
+                    activity.date
+                );
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "list-item";
+
+
+            const pace =
+                activity.pace
+                ?
+                secondsToPace(
+                    activity.pace
+                )
+                :
+                "--:--";
+
+
+            div.innerHTML = `
+
+                <div class="list-row">
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size:17px;
+                                font-weight:850;">
+                            ${
+                                escapeHTML(
+                                    activity.planName ||
+                                    "Corsa"
+                                )
+                            }
+                        </div>
+
+                        <div
+                            class="muted small"
+                            style="margin-top:4px;">
+                            ${
+                                date.toLocaleDateString(
+                                    "it-IT"
+                                )
+                            }
+                            ·
+                            ${
+                                date.toLocaleTimeString(
+                                    "it-IT",
+                                    {
+                                        hour: "2-digit",
+                                        minute: "2-digit"
+                                    }
+                                )
+                            }
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="icon-btn"
+                        onclick="
+                            deleteHistory(
+                                '${activity.id}'
+                            )">
+                        🗑
+                    </button>
+
+                </div>
+
+                <div class="history-stat">
+
+                    <div class="metric">
+                        <div class="value">
+                            ${activity.distance.toFixed(2)}
+                        </div>
+                        <div class="label">
+                            KM
+                        </div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="value">
+                            ${formatTime(activity.time)}
+                        </div>
+                        <div class="label">
+                            TEMPO
+                        </div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="value">
+                            ${pace}
+                        </div>
+                        <div class="label">
+                            RITMO
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="history-detail muted small">
+
+                    Velocità media:
+                    ${
+                        Number(
+                            activity.speed || 0
+                        ).toFixed(1)
+                    } km/h
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                div
+            );
+
+        }
+    );
+
+}
+
+
+function deleteHistory(id) {
+
+    if (
+        !confirm(
+            "Eliminare questa attività?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        )
+        .filter(
+            activity =>
+                activity.id !== id
+        );
+
+
+    saveJSON(
+        STORAGE.history,
+        history
+    );
+
+
+    renderHistory();
+    refreshHome();
+
+}
+
+
+/* =========================================================
+   WEEK STATS
+   ========================================================= */
+
+function refreshWeekStats() {
+
+    const history =
+        loadJSON(
+            STORAGE.history,
+            []
+        );
+
+
+    const now =
+        new Date();
+
+
+    const start =
+        new Date(now);
+
+
+    const day =
+        start.getDay();
+
+
+    const diff =
+        day === 0
+        ? 6
+        : day - 1;
+
+
+    start.setDate(
+        start.getDate() - diff
+    );
+
+
+    start.setHours(
+        0, 0, 0, 0
+    );
+
+
+    const week =
+        history.filter(
+            activity =>
+                new Date(
+                    activity.date
+                ) >= start
+        );
+
+
+    const km =
+        week.reduce(
+            (sum, activity) =>
+                sum +
+                Number(
+                    activity.distance || 0
+                ),
+            0
+        );
+
+
+    $("weekKm").textContent =
+        km.toFixed(1);
+
+
+    $("weekRuns").textContent =
+        week.length;
+
+}
+
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+function init() {
+
+    loadVoices();
+
+    loadSettingsUI();
+
+    refreshHome();
+
+    renderPlans();
+
+    renderCalendar();
+
+    renderScheduleList();
+
+    renderHistory();
+
+}
+
+
+init();
 
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+
+        navigator.serviceWorker.register("./sw.js")
+            .then(function () {
+                console.log("RUNNER: Service Worker attivo");
+            })
+            .catch(function (error) {
+                console.error(
+                    "RUNNER: errore Service Worker",
+                    error
+                );
+            });
+
+    });
+}
+
+
+// Il timer è basato su Date.now(), quindi non accumula errori se il browser
+// rallenta setInterval. Al ritorno in primo piano aggiorniamo subito il display.
+document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && running && !paused) {
+        elapsed = Math.max(0, (Date.now() - runStartTime) / 1000);
+        updateDisplay();
+    }
+});
+</script> 
+
+
       
 </body>
 </html>
