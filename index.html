@@ -15,14 +15,16 @@
 
 <style>
 
-*{
-    box-sizing:border-box;
+* {
+    box-sizing: border-box;
 }
 
-body{
-    margin:0;
-    background:#101010;
-    color:white;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background: #101010;
+    color: white;
     font-family:
         -apple-system,
         BlinkMacSystemFont,
@@ -30,314 +32,416 @@ body{
         sans-serif;
 }
 
-.app{
-    max-width:520px;
-    margin:auto;
-    padding:22px 16px 110px;
+body {
+    min-height: 100vh;
 }
 
-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:22px;
+button,
+input,
+select {
+    font-family: inherit;
 }
 
-h1{
-    margin:0;
-    font-size:28px;
-    letter-spacing:1px;
+button {
+    border: none;
+    cursor: pointer;
 }
 
-h2{
-    font-size:18px;
-    margin:0 0 12px;
+.app {
+    max-width: 520px;
+    margin: auto;
+    padding: 22px 16px 105px;
 }
 
-h3{
-    font-size:15px;
-    margin:15px 0 8px;
+/* =========================
+   GENERALE
+========================= */
+
+.screen {
+    display: none;
 }
 
-.muted{
-    color:#999;
+.screen.active {
+    display: block;
 }
 
-.card{
-    background:#1c1c1c;
-    border-radius:20px;
-    padding:18px;
-    margin-bottom:14px;
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
 }
 
-button{
-    border:none;
-    border-radius:16px;
-    padding:15px;
-    width:100%;
-    font-size:16px;
-    font-weight:800;
-    cursor:pointer;
+h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 1px;
 }
 
-.primary{
-    background:#8cff72;
-    color:#101010;
+h2 {
+    margin: 0 0 12px;
+    font-size: 18px;
 }
 
-.secondary{
-    background:#292929;
-    color:white;
-    margin-top:10px;
+h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
 }
 
-.danger{
-    background:#ff5757;
-    color:white;
-    margin-top:10px;
+.muted {
+    color: #999;
 }
 
-.small{
-    font-size:13px;
-    padding:10px;
+.small {
+    font-size: 13px;
 }
 
-.grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
+.card {
+    background: #1c1c1c;
+    border-radius: 22px;
+    padding: 19px;
+    margin-bottom: 15px;
 }
 
-.grid3{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:8px;
+.target {
+    font-size: 36px;
+    font-weight: 900;
+    margin: 5px 0 12px;
 }
 
-.metric{
-    background:#242424;
-    border-radius:16px;
-    padding:14px 8px;
-    text-align:center;
+.primary {
+    background: #8cff72;
+    color: #101010;
 }
 
-.value{
-    font-size:27px;
-    font-weight:850;
+.secondary {
+    background: #292929;
+    color: white;
 }
 
-.label{
-    font-size:11px;
-    color:#999;
-    margin-top:4px;
+.danger {
+    background: #ff5757;
+    color: white;
 }
 
-.big{
-    text-align:center;
-    font-size:58px;
-    font-weight:900;
-    margin-top:25px;
+button.main-button {
+    width: 100%;
+    border-radius: 17px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    margin-top: 10px;
 }
 
-.unit{
-    text-align:center;
-    color:#999;
+.icon-button {
+    width: auto;
+    background: none;
+    color: white;
+    font-size: 27px;
+    padding: 5px 8px;
 }
 
-.phase{
-    text-align:center;
-    font-size:20px;
-    font-weight:800;
-    margin-top:12px;
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 }
 
-.coach{
-    text-align:center;
-    color:#ddd;
-    min-height:45px;
-    margin:8px 0;
-    line-height:1.35;
+.metric {
+    background: #242424;
+    border-radius: 17px;
+    padding: 16px 8px;
+    text-align: center;
 }
 
-.screen{
-    display:none;
+.value {
+    font-size: 27px;
+    font-weight: 850;
 }
 
-.screen.active{
-    display:block;
+.label {
+    font-size: 11px;
+    color: #999;
+    margin-top: 5px;
 }
 
-.status{
-    text-align:center;
-    margin:14px 0;
-    color:#8cff72;
-    font-weight:700;
+.big {
+    text-align: center;
+    font-size: 56px;
+    font-weight: 900;
+    margin-top: 30px;
 }
 
-.nav{
-    position:fixed;
-    bottom:0;
-    left:0;
-    right:0;
-    background:#181818;
-    border-top:1px solid #292929;
-    display:flex;
-    justify-content:center;
-    gap:2px;
-    padding:
-        8px
-        5px
-        calc(8px + env(safe-area-inset-bottom));
-    z-index:20;
+.unit {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
 }
 
-.nav button{
-    background:none;
-    color:#999;
-    padding:8px 7px;
-    width:auto;
-    font-size:11px;
+.phase {
+    text-align: center;
+    font-size: 21px;
+    font-weight: 800;
+    margin-top: 10px;
 }
 
-.nav button.active{
-    color:#8cff72;
+.coach {
+    text-align: center;
+    color: #ddd;
+    min-height: 44px;
+    margin: 10px 0;
+    line-height: 1.4;
+}
+
+.status {
+    text-align: center;
+    margin: 16px 0;
+    color: #8cff72;
+    font-weight: 700;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #303030;
+    margin: 18px 0;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-row {
+    margin-bottom: 14px;
+}
+
+.form-row label {
+    display: block;
+    color: #bbb;
+    font-size: 13px;
+    margin-bottom: 7px;
 }
 
 input,
-select{
-    width:100%;
-    background:#292929;
-    border:1px solid #444;
-    color:white;
-    border-radius:12px;
-    padding:12px;
-    font-size:15px;
+select {
+    width: 100%;
+    background: #292929;
+    border: 1px solid #383838;
+    border-radius: 13px;
+    padding: 13px;
+    color: white;
+    font-size: 16px;
+    outline: none;
 }
 
-textarea{
-    width:100%;
-    min-height:70px;
-    resize:vertical;
-    background:#292929;
-    border:1px solid #444;
-    color:white;
-    border-radius:12px;
-    padding:12px;
-    font-size:15px;
+input:focus,
+select:focus {
+    border-color: #8cff72;
 }
 
-.row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ddd;
+    margin: 10px 0;
 }
 
-.row3{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:8px;
+.checkbox-row input {
+    width: auto;
 }
 
-.formGroup{
-    margin-bottom:10px;
+/* =========================
+   ALLENAMENTI
+========================= */
+
+.workout-item {
+    background: #242424;
+    border-radius: 17px;
+    padding: 15px;
+    margin-bottom: 10px;
 }
 
-.formLabel{
-    color:#999;
-    font-size:12px;
-    margin-bottom:5px;
+.workout-item-title {
+    font-weight: 800;
+    font-size: 16px;
 }
 
-.checkbox{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin:10px 0;
+.workout-item-info {
+    color: #999;
+    font-size: 13px;
+    margin-top: 5px;
 }
 
-.checkbox input{
-    width:auto;
+.workout-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
 }
 
-hr{
-    border:0;
-    border-top:1px solid #333;
-    margin:16px 0;
+.workout-actions button {
+    padding: 11px;
+    border-radius: 12px;
+    font-weight: 700;
 }
 
-.listItem{
-    background:#242424;
-    border-radius:14px;
-    padding:13px;
-    margin:8px 0;
+/* =========================
+   EDITOR ALLENAMENTO
+========================= */
+
+.phase-editor {
+    background: #242424;
+    border-radius: 17px;
+    padding: 15px;
+    margin-bottom: 10px;
 }
 
-.listItem b{
-    display:block;
-    margin-bottom:6px;
+.phase-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
-.pill{
-    display:inline-block;
-    background:#292929;
-    border-radius:999px;
-    padding:5px 9px;
-    font-size:12px;
-    color:#bbb;
-    margin:2px;
+.phase-number {
+    font-weight: 800;
 }
 
-.notice{
-    background:#202820;
-    border:1px solid #355a35;
-    border-radius:14px;
-    padding:12px;
-    color:#cfeccc;
-    font-size:13px;
+.remove-phase {
+    background: #3a3a3a;
+    color: #ff7777;
+    border-radius: 10px;
+    padding: 7px 10px;
 }
 
-.warning{
-    background:#30281b;
-    border:1px solid #69552d;
-    border-radius:14px;
-    padding:12px;
-    color:#f1ddb0;
-    font-size:13px;
+.add-phase {
+    width: 100%;
+    background: #292929;
+    color: #8cff72;
+    padding: 13px;
+    border-radius: 14px;
+    font-weight: 800;
+    margin-top: 4px;
 }
 
-.phaseEditor{
-    background:#242424;
-    border-radius:15px;
-    padding:13px;
-    margin-top:10px;
+/* =========================
+   CORSA
+========================= */
+
+.run-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    align-items: center;
 }
 
-.phaseEditorTitle{
-    font-weight:800;
-    margin-bottom:8px;
+.run-header h1 {
+    text-align: center;
+    font-size: 20px;
 }
 
-.toggleRow{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px 0;
-    border-bottom:1px solid #333;
+.gps {
+    text-align: right;
+    color: #999;
+    font-size: 12px;
 }
 
-.toggleRow:last-child{
-    border-bottom:none;
+.run-buttons {
+    margin-top: 15px;
 }
 
-.toggle{
-    width:46px;
-    height:26px;
+/* =========================
+   AUDIO
+========================= */
+
+.voice-test {
+    margin-top: 8px;
 }
 
-.empty{
-    color:#777;
-    text-align:center;
-    padding:15px 0;
+/* =========================
+   NAV
+========================= */
+
+.nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    background: #181818;
+    border-top: 1px solid #292929;
+
+    display: flex;
+    justify-content: space-around;
+
+    padding:
+        8px
+        6px
+        calc(8px + env(safe-area-inset-bottom));
+
+    z-index: 100;
+}
+
+.nav button {
+    background: none;
+    color: #888;
+    padding: 7px 8px;
+    width: auto;
+    font-size: 11px;
+}
+
+.nav button.active {
+    color: #8cff72;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.72);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 200;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 520px;
+    background: #1c1c1c;
+    border-radius: 24px 24px 0 0;
+    padding: 22px 18px 30px;
+}
+
+.modal-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.modal-buttons button {
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 800;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (min-width: 600px) {
+    .nav {
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 520px;
+        border-radius: 20px 20px 0 0;
+    }
 }
 
 </style>
@@ -347,7 +451,6 @@ hr{
 
 <div class="app">
 
-
 <!-- =====================================================
      HOME
 ===================================================== -->
@@ -355,998 +458,483 @@ hr{
 <section id="home" class="screen active">
 
 <header>
+    <div>
+        <h1>RUNNER</h1>
+        <div class="muted">Il tuo allenatore</div>
+    </div>
 
-<div>
-<h1>RUNNER</h1>
-<div class="muted">
-Il tuo allenatore
-</div>
-</div>
-
-<div>🏃</div>
-
+    <div style="font-size:28px;">🏃</div>
 </header>
 
 
 <div class="card">
 
-<div class="muted">
-OBIETTIVO
-</div>
+    <div class="muted">OBIETTIVO</div>
 
-<div style="
-font-size:36px;
-font-weight:900;
-margin:5px 0 10px;
-">
-5 KM
-</div>
+    <div class="target" id="homeGoal">
+        5 KM
+    </div>
 
-<div class="muted">
-L'obiettivo generale è modificabile
-nelle prossime versioni.
-L'allenamento invece è completamente
-personalizzabile.
-</div>
+    <div class="muted" id="homeGoalText">
+        Costruiamo la resistenza, un allenamento alla volta.
+    </div>
 
 </div>
 
-
-<!-- ALLENAMENTO -->
 
 <div class="card">
 
-<h2>
-Allenamento selezionato
-</h2>
+    <h2>Corsa libera</h2>
 
-<div id="homePlanInfo"
-     class="muted">
+    <div class="muted">
+        GPS, distanza, tempo, velocità e ritmo.
+    </div>
 
-Nessun piano selezionato
+    <div class="small muted" style="margin-top:8px;">
+        Nessun coaching vocale.
+    </div>
 
-</div>
+    <button
+        class="main-button primary"
+        onclick="startFreeRun()">
 
-<button
-class="primary"
-onclick="startSelectedWorkout()">
+        🏃 CORSA LIBERA
 
-🎯 INIZIA ALLENAMENTO
-
-</button>
-
-<button
-class="secondary"
-onclick="show('plans')">
-
-⚙️ GESTISCI ALLENAMENTI
-
-</button>
+    </button>
 
 </div>
 
-
-<!-- CORSA LIBERA -->
 
 <div class="card">
 
-<h2>
-Corsa libera
-</h2>
+    <h2>Allenamento</h2>
 
-<div class="muted">
+    <div id="nextWorkoutName">
+        Nessun allenamento selezionato
+    </div>
 
-GPS, distanza, tempo,
-velocità e ritmo.
+    <div
+        id="nextWorkoutInfo"
+        class="muted"
+        style="margin-top:5px;">
 
-<br><br>
+        Crea il tuo primo piano personalizzato.
+    </div>
 
-<b>
-Nessun feedback vocale.
-Nessun target.
-Nessuna correzione.
-</b>
+    <button
+        class="main-button secondary"
+        onclick="showScreen('workouts')">
 
-</div>
+        ⚙ GESTISCI ALLENAMENTI
 
-<button
-class="secondary"
-onclick="startFreeRun()">
-
-🏃 CORSA LIBERA
-
-</button>
+    </button>
 
 </div>
 
-
-<!-- STATS -->
 
 <div class="card">
 
-<h2>
-Statistiche
-</h2>
+    <h2>Questa settimana</h2>
 
-<div class="grid">
+    <div class="grid">
 
-<div class="metric">
+        <div class="metric">
 
-<div
-id="weekKm"
-class="value">
-0.0
-</div>
+            <div id="weekKm" class="value">
+                0.0
+            </div>
 
-<div class="label">
-KM
-</div>
+            <div class="label">
+                KM
+            </div>
 
-</div>
+        </div>
 
-<div class="metric">
+        <div class="metric">
 
-<div
-id="weekRuns"
-class="value">
-0
-</div>
+            <div id="weekRuns" class="value">
+                0
+            </div>
 
-<div class="label">
-USCITE
-</div>
+            <div class="label">
+                USCITE
+            </div>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 
-
 <!-- =====================================================
-     PLANS
+     WORKOUT LIST
 ===================================================== -->
 
-<section id="plans" class="screen">
+<section id="workouts" class="screen">
 
 <header>
 
-<button
-class="small secondary"
-style="width:auto;margin:0;"
-onclick="showHome()">
-←
-</button>
+    <button
+        class="icon-button"
+        onclick="showHome()">
 
-<h1 style="font-size:21px;">
-ALLENAMENTI
-</h1>
+        ←
 
-<div></div>
+    </button>
+
+    <h1 style="font-size:22px;">
+        ALLENAMENTI
+    </h1>
+
+    <div style="width:40px;"></div>
 
 </header>
 
 
 <div class="card">
 
-<h2>
-Crea nuovo allenamento
-</h2>
+    <h2>I miei allenamenti</h2>
 
+    <div class="muted">
+        Crea, modifica e salva i tuoi piani.
+    </div>
 
-<div class="formGroup">
+    <button
+        class="main-button primary"
+        onclick="createWorkout()">
 
-<div class="formLabel">
-Nome
-</div>
+        ＋ CREA ALLENAMENTO
 
-<input
-id="planName"
-value="Nuovo allenamento">
-
-</div>
-
-
-<div class="formGroup">
-
-<div class="formLabel">
-Descrizione
-</div>
-
-<textarea
-id="planDesc"
-placeholder="Descrizione facoltativa">
-</textarea>
+    </button>
 
 </div>
 
 
-<hr>
-
-
-<h3>
-Nuova fase
-</h3>
-
-
-<div class="row">
-
-
-<div class="formGroup">
-
-<div class="formLabel">
-Tipo
-</div>
-
-<select id="phaseType">
-
-<option value="warmup">
-Riscaldamento
-</option>
-
-<option value="run">
-Corsa
-</option>
-
-<option value="interval">
-Ripetuta
-</option>
-
-<option value="recovery">
-Recupero
-</option>
-
-<option value="cooldown">
-Defaticamento
-</option>
-
-</select>
-
-</div>
-
-
-<div class="formGroup">
-
-<div class="formLabel">
-Durata
-</div>
-
-<input
-id="phaseDuration"
-type="number"
-min="1"
-value="5">
-
-</div>
-
-</div>
-
-
-<div class="formLabel">
-Unità durata
-</div>
-
-<select id="durationUnit">
-
-<option value="time">
-Minuti
-</option>
-
-<option value="distance">
-Kilometri
-</option>
-
-</select>
-
-
-<div class="formGroup"
-     style="margin-top:10px;">
-
-<div class="formLabel">
-Target
-</div>
-
-<select id="targetType">
-
-<option value="pace">
-Ritmo min/km
-</option>
-
-<option value="speed">
-Velocità km/h
-</option>
-
-<option value="none">
-Nessun target
-</option>
-
-</select>
-
-</div>
-
-
-<div
-id="paceTargetBox">
-
-<div class="formLabel">
-Target ritmo
-</div>
-
-<input
-id="phasePace"
-placeholder="5:30">
-
-</div>
-
-
-<div
-id="speedTargetBox"
-style="display:none;">
-
-<div class="formLabel">
-Target velocità km/h
-</div>
-
-<input
-id="phaseSpeed"
-type="number"
-step="0.1"
-placeholder="10.9">
-
-</div>
-
-
-<div
-class="row"
-style="margin-top:10px;">
-
-<div>
-
-<div class="formLabel">
-Tolleranza ± sec/km
-</div>
-
-<input
-id="phaseTolerance"
-type="number"
-min="0"
-value="15">
-
-</div>
-
-
-<div>
-
-<div class="formLabel">
-Repetições
-</div>
-
-<input
-id="phaseRepeats"
-type="number"
-min="1"
-value="1">
-
-</div>
-
-</div>
-
-
-<button
-class="secondary"
-onclick="addPhase()">
-
-＋ AGGIUNGI FASE
-
-</button>
-
-
-<div id="draftPhases">
-</div>
-
-
-<button
-class="primary"
-onclick="savePlan()">
-
-💾 SALVA ALLENAMENTO
-
-</button>
-
-</div>
-
-
-<div class="card">
-
-<h2>
-I miei allenamenti
-</h2>
-
-<div id="savedPlans">
-</div>
-
-</div>
+<div id="workoutList"></div>
 
 </section>
 
 
-
 <!-- =====================================================
-     AUDIO
+     WORKOUT EDITOR
 ===================================================== -->
 
-<section id="audio" class="screen">
+<section id="editor" class="screen">
 
 <header>
 
-<button
-class="small secondary"
-style="width:auto;margin:0;"
-onclick="showHome()">
-←
-</button>
+    <button
+        class="icon-button"
+        onclick="showScreen('workouts')">
 
-<h1 style="font-size:21px;">
-AUDIO
-</h1>
+        ←
 
-<div>🔊</div>
+    </button>
+
+    <h1 style="font-size:22px;">
+        CREA PIANO
+    </h1>
+
+    <div style="width:40px;"></div>
 
 </header>
 
 
 <div class="card">
 
-<h2>
-Coach vocale
-</h2>
+    <div class="form-row">
 
+        <label>
+            Nome allenamento
+        </label>
 
-<label class="checkbox">
+        <input
+            id="workoutName"
+            type="text"
+            placeholder="Es. Ripetute 5 km">
 
-<input
-id="audioEnabled"
-type="checkbox">
+    </div>
 
-Abilita coach vocale
 
-</label>
+    <div class="form-row">
 
+        <label>
+            Descrizione
+        </label>
 
-<div class="formGroup">
+        <input
+            id="workoutDescription"
+            type="text"
+            placeholder="Es. Allenamento velocità">
 
-<div class="formLabel">
-Voce
-</div>
-
-<select id="voiceSelect">
-</select>
-
-</div>
-
-
-<div class="formGroup">
-
-<div class="formLabel">
-Velocità voce
-</div>
-
-<select id="voiceRate">
-
-<option value="0.75">
-Lenta
-</option>
-
-<option value="0.9">
-Normale lenta
-</option>
-
-<option value="1">
-Normale
-</option>
-
-<option value="1.1">
-Veloce
-</option>
-
-<option value="1.25">
-Molto veloce
-</option>
-
-</select>
-
-</div>
-
-
-<button
-class="secondary"
-onclick="testVoice()">
-
-🔊 PROVA VOCE
-
-</button>
-
-
-<hr>
-
-
-<h2>
-Comportamento coach
-</h2>
-
-
-<div class="toggleRow">
-
-<span>
-Correggi se troppo lento
-</span>
-
-<input
-id="coachSlow"
-class="toggle"
-type="checkbox">
-
-</div>
-
-
-<div class="toggleRow">
-
-<span>
-Correggi se troppo veloce
-</span>
-
-<input
-id="coachFast"
-class="toggle"
-type="checkbox">
-
-</div>
-
-
-<div class="toggleRow">
-
-<span>
-Conferma quando entro nel target
-</span>
-
-<input
-id="coachConfirm"
-class="toggle"
-type="checkbox">
-
-</div>
-
-
-<div class="toggleRow">
-
-<span>
-Notifica periodica del ritmo
-</span>
-
-<input
-id="coachPace"
-class="toggle"
-type="checkbox">
-
-</div>
-
-
-<div class="toggleRow">
-
-<span>
-Notifica distanza
-</span>
-
-<input
-id="coachKm"
-class="toggle"
-type="checkbox">
-
-</div>
-
-
-<div class="toggleRow">
-
-<span>
-Notifica target
-</span>
-
-<input
-id="coachTarget"
-class="toggle"
-type="checkbox">
-
-</div>
-
-</div>
-
-
-
-<div class="card">
-
-<h2>
-Frequenza notifiche
-</h2>
-
-
-<div class="row3">
-
-<div>
-
-<div class="formLabel">
-Ritmo
-</div>
-
-<select id="paceNotify">
-
-<option value="0">
-Mai
-</option>
-
-<option value="15">
-15s
-</option>
-
-<option value="30">
-30s
-</option>
-
-<option value="60">
-1m
-</option>
-
-<option value="120">
-2m
-</option>
-
-<option value="300">
-5m
-</option>
-
-</select>
-
-</div>
-
-
-<div>
-
-<div class="formLabel">
-Distanza
-</div>
-
-<select id="kmNotify">
-
-<option value="0">
-Mai
-</option>
-
-<option value="0.5">
-0,5 km
-</option>
-
-<option value="1">
-1 km
-</option>
-
-<option value="2">
-2 km
-</option>
-
-<option value="5">
-5 km
-</option>
-
-</select>
-
-</div>
-
-
-<div>
-
-<div class="formLabel">
-Target
-</div>
-
-<select id="targetNotify">
-
-<option value="0">
-Mai
-</option>
-
-<option value="30">
-30s
-</option>
-
-<option value="60">
-1m
-</option>
-
-<option value="120">
-2m
-</option>
-
-<option value="300">
-5m
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-
-<div style="margin-top:12px;">
-
-<div class="formLabel">
-Tempo minimo tra correzioni
-</div>
-
-<select id="correctionCooldown">
-
-<option value="5">
-5 secondi
-</option>
-
-<option value="10">
-10 secondi
-</option>
-
-<option value="15">
-15 secondi
-</option>
-
-<option value="20">
-20 secondi
-</option>
-
-<option value="30">
-30 secondi
-</option>
-
-<option value="45">
-45 secondi
-</option>
-
-</select>
-
-</div>
-
-
-<button
-class="primary"
-onclick="saveAudioSettings()">
-
-💾 SALVA IMPOSTAZIONI AUDIO
-
-</button>
+    </div>
 
 </div>
 
 
 <div class="card">
 
-<h2>
-Tolleranza predefinita
-</h2>
+    <h2>Fasi</h2>
 
-<div class="muted">
+    <div
+        id="phaseEditorList">
+    </div>
 
-Questa tolleranza viene utilizzata
-quando crei una nuova fase.
+    <button
+        class="add-phase"
+        onclick="addPhase()">
 
-Ogni fase può comunque avere
-una tolleranza diversa.
+        ＋ AGGIUNGI FASE
 
-</div>
-
-<div
-class="formGroup"
-style="margin-top:10px;">
-
-<div class="formLabel">
-Tolleranza ± sec/km
-</div>
-
-<input
-id="globalTolerance"
-type="number"
-min="0"
-value="15">
+    </button>
 
 </div>
+
+
+<div class="card">
+
+    <button
+        class="main-button primary"
+        onclick="saveWorkout()">
+
+        💾 SALVA ALLENAMENTO
+
+    </button>
+
+    <button
+        class="main-button secondary"
+        onclick="showScreen('workouts')">
+
+        ANNULLA
+
+    </button>
 
 </div>
 
 </section>
 
 
-
 <!-- =====================================================
-     SETTINGS / GPS
+     AUDIO / IMPOSTAZIONI
 ===================================================== -->
 
 <section id="settings" class="screen">
 
 <header>
 
-<button
-class="small secondary"
-style="width:auto;margin:0;"
-onclick="showHome()">
-←
-</button>
+    <button
+        class="icon-button"
+        onclick="showHome()">
 
-<h1 style="font-size:21px;">
-IMPOSTAZIONI
-</h1>
+        ←
 
-<div>⚙️</div>
+    </button>
+
+    <h1 style="font-size:22px;">
+        IMPOSTAZIONI
+    </h1>
+
+    <div style="width:40px;"></div>
 
 </header>
 
 
 <div class="card">
 
-<h2>
-GPS
-</h2>
+    <h2>🔊 Audio</h2>
+
+    <div class="form-row">
+
+        <label>
+            Voce
+        </label>
+
+        <select id="voiceSelect">
+        </select>
+
+    </div>
 
 
-<div class="notice">
+    <button
+        class="main-button secondary voice-test"
+        onclick="testVoice()">
 
-RUNNER utilizza il GPS del dispositivo
-con alta precisione e filtra i punti
-anomali prima di calcolare distanza
-e ritmo.
+        🔊 PROVA VOCE
 
-</div>
-
-
-<div class="toggleRow">
-
-<span>
-Alta precisione GPS
-</span>
-
-<input
-id="gpsHighAccuracy"
-type="checkbox">
-
-</div>
+    </button>
 
 
-<div class="toggleRow">
+    <div class="checkbox-row">
 
-<span>
-Filtro salti GPS
-</span>
+        <input
+            type="checkbox"
+            id="audioEnabled">
 
-<input
-id="gpsFilter"
-type="checkbox">
+        <label for="audioEnabled">
+            Coaching vocale attivo
+        </label>
 
-</div>
-
-
-<div class="formGroup"
-     style="margin-top:12px;">
-
-<div class="formLabel">
-Accuratezza massima accettata
-</div>
-
-<select id="gpsMaxAccuracy">
-
-<option value="30">
-30 metri
-</option>
-
-<option value="50">
-50 metri
-</option>
-
-<option value="80">
-80 metri
-</option>
-
-<option value="120">
-120 metri
-</option>
-
-</select>
-
-</div>
-
-
-<div class="formGroup">
-
-<div class="formLabel">
-Velocità massima plausibile
-</div>
-
-<select id="gpsMaxSpeed">
-
-<option value="15">
-15 km/h
-</option>
-
-<option value="18">
-18 km/h
-</option>
-
-<option value="22">
-22 km/h
-</option>
-
-<option value="30">
-30 km/h
-</option>
-
-</select>
-
-</div>
-
-
-<button
-class="primary"
-onclick="saveGpsSettings()">
-
-💾 SALVA IMPOSTAZIONI GPS
-
-</button>
+    </div>
 
 </div>
 
 
 <div class="card">
 
-<h2>
-Ritmo
-</h2>
+    <h2>🎯 Controllo ritmo</h2>
 
-<div class="muted">
+    <div class="muted small">
+        L'app confronta il ritmo GPS filtrato con il target.
+    </div>
 
-Il ritmo utilizzato dal coach è
-il ritmo GPS filtrato su una finestra
-di campioni recenti.
 
-Il ritmo medio è invece calcolato
-sulla distanza totale.
+    <div class="form-row" style="margin-top:15px;">
 
-</div>
+        <label>
+            Tolleranza rispetto al target (secondi/km)
+        </label>
+
+        <input
+            id="paceTolerance"
+            type="number"
+            min="1"
+            max="120"
+            step="1">
+
+    </div>
+
+
+    <div class="muted small">
+        Esempio: 15 significa che con target 5:30/km
+        il range corretto sarà 5:15–5:45/km.
+    </div>
 
 </div>
 
 
 <div class="card">
 
-<h2>
-Dati salvati
-</h2>
+    <h2>📢 Frequenza notifiche</h2>
 
-<div class="muted">
+    <div class="form-row">
 
-I tuoi piani, impostazioni e statistiche
-sono salvati localmente sul dispositivo.
+        <label>
+            Notifica ritmo
+        </label>
+
+        <select id="notifyPace">
+
+            <option value="0">
+                Mai
+            </option>
+
+            <option value="15">
+                Ogni 15 secondi
+            </option>
+
+            <option value="30">
+                Ogni 30 secondi
+            </option>
+
+            <option value="60">
+                Ogni minuto
+            </option>
+
+            <option value="120">
+                Ogni 2 minuti
+            </option>
+
+            <option value="300">
+                Ogni 5 minuti
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="form-row">
+
+        <label>
+            Notifica chilometri
+        </label>
+
+        <select id="notifyKm">
+
+            <option value="0">
+                Mai
+            </option>
+
+            <option value="0.5">
+                Ogni 0,5 km
+            </option>
+
+            <option value="1">
+                Ogni 1 km
+            </option>
+
+            <option value="2">
+                Ogni 2 km
+            </option>
+
+            <option value="5">
+                Ogni 5 km
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="form-row">
+
+        <label>
+            Notifica target
+        </label>
+
+        <select id="notifyTarget">
+
+            <option value="0">
+                Solo quando cambia fase
+            </option>
+
+            <option value="30">
+                Ogni 30 secondi
+            </option>
+
+            <option value="60">
+                Ogni minuto
+            </option>
+
+            <option value="120">
+                Ogni 2 minuti
+            </option>
+
+        </select>
+
+    </div>
 
 </div>
 
-<button
-class="danger"
-onclick="resetAllData()">
 
-RESETTA TUTTI I DATI
+<div class="card">
 
-</button>
+    <h2>💾 Impostazioni</h2>
+
+    <button
+        class="main-button primary"
+        onclick="saveSettings()">
+
+        SALVA IMPOSTAZIONI
+
+    </button>
 
 </div>
 
 </section>
-
 
 
 <!-- =====================================================
@@ -1355,160 +943,164 @@ RESETTA TUTTI I DATI
 
 <section id="run" class="screen">
 
-<header>
+<header class="run-header">
 
-<button
-class="small secondary"
-style="width:auto;margin:0;"
-onclick="cancelRun()">
+    <button
+        class="icon-button"
+        onclick="requestExitRun()">
 
-←
+        ←
 
-</button>
+    </button>
 
-<h1 style="font-size:20px;">
-CORSA
-</h1>
+    <h1>
+        CORSA
+    </h1>
 
-<div
-id="gps"
-style="color:#999;">
-GPS…
-</div>
+    <div
+        id="gps"
+        class="gps">
+
+        GPS…
+
+    </div>
 
 </header>
 
 
 <div
-id="runMode"
-class="phase">
-CORSA LIBERA
+    id="phase"
+    class="phase">
+
+    CORSA LIBERA
+
 </div>
 
 
 <div
-id="phaseName"
-class="muted"
-style="
-text-align:center;
-margin-top:4px;
-">
+    id="coach"
+    class="coach">
+
+    Acquisizione GPS…
+
 </div>
 
 
 <div
-id="coach"
-class="coach">
-Acquisizione GPS…
-</div>
+    id="pace"
+    class="big">
 
+    --:--
 
-<div
-id="pace"
-class="big">
---:--
 </div>
 
 <div class="unit">
-min/km · ritmo filtrato
+    min/km
 </div>
 
 
 <div
-class="grid"
-style="margin-top:22px;">
+    class="grid"
+    style="margin-top:25px;">
+
+    <div class="metric">
+
+        <div
+            id="distance"
+            class="value">
+
+            0.00
+
+        </div>
+
+        <div class="label">
+            KM
+        </div>
+
+    </div>
 
 
-<div class="metric">
+    <div class="metric">
+
+        <div
+            id="time"
+            class="value">
+
+            00:00
+
+        </div>
+
+        <div class="label">
+            TEMPO
+        </div>
+
+    </div>
+
+
+    <div class="metric">
+
+        <div
+            id="speed"
+            class="value">
+
+            0.0
+
+        </div>
+
+        <div class="label">
+            KM/H
+        </div>
+
+    </div>
+
+
+    <div class="metric">
+
+        <div
+            id="avgPace"
+            class="value">
+
+            --:--
+
+        </div>
+
+        <div class="label">
+            RITMO MEDIO
+        </div>
+
+    </div>
+
+</div>
+
 
 <div
-id="distance"
-class="value">
-0.00
-</div>
+    id="gpsStatus"
+    class="status">
 
-<div class="label">
-KM
-</div>
+    ● GPS IN ATTESA
 
-</div>
-
-
-<div class="metric">
-
-<div
-id="time"
-class="value">
-00:00
-</div>
-
-<div class="label">
-TEMPO
-</div>
-
-</div>
-
-
-<div class="metric">
-
-<div
-id="speed"
-class="value">
-0.0
-</div>
-
-<div class="label">
-KM/H
-</div>
-
-</div>
-
-
-<div class="metric">
-
-<div
-id="avgPace"
-class="value">
---:--
-</div>
-
-<div class="label">
-RITMO MEDIO
-</div>
-
-</div>
-
-
-</div>
-
-
-<div
-id="gpsStatus"
-class="status">
-● GPS in attesa
 </div>
 
 
 <button
-id="pauseButton"
-class="secondary"
-onclick="togglePause()">
+    id="pauseButton"
+    class="main-button secondary"
+    onclick="togglePause()">
 
-Ⅱ PAUSA
+    Ⅱ PAUSA
 
 </button>
 
 
 <button
-class="danger"
-onclick="finishRun()">
+    class="main-button danger"
+    onclick="finishRun()">
 
-■ TERMINA
+    ■ TERMINA
 
 </button>
 
 </section>
-
 
 
 <!-- =====================================================
@@ -1519,135 +1111,192 @@ onclick="finishRun()">
 
 <header>
 
-<h1>
-RISULTATO
-</h1>
+    <button
+        class="icon-button"
+        onclick="showHome()">
 
-<div></div>
+        ←
+
+    </button>
+
+    <h1>
+        RISULTATO
+    </h1>
+
+    <div style="width:40px;"></div>
 
 </header>
 
 
 <div class="card">
 
-<div
-id="summaryTitle"
-class="muted"
-style="margin-bottom:12px;">
-</div>
+    <div class="grid">
+
+        <div class="metric">
+
+            <div
+                id="summaryDistance"
+                class="value">
+
+                0.00
+
+            </div>
+
+            <div class="label">
+                KM
+            </div>
+
+        </div>
 
 
-<div class="grid">
+        <div class="metric">
+
+            <div
+                id="summaryTime"
+                class="value">
+
+                00:00
+
+            </div>
+
+            <div class="label">
+                TEMPO
+            </div>
+
+        </div>
 
 
-<div class="metric">
+        <div class="metric">
 
-<div
-id="summaryDistance"
-class="value">
-0.00
-</div>
+            <div
+                id="summaryPace"
+                class="value">
 
-<div class="label">
-KM
-</div>
+                --:--
 
-</div>
+            </div>
 
+            <div class="label">
+                RITMO
+            </div>
 
-<div class="metric">
-
-<div
-id="summaryTime"
-class="value">
-00:00
-</div>
-
-<div class="label">
-TEMPO
-</div>
-
-</div>
+        </div>
 
 
-<div class="metric">
+        <div class="metric">
 
-<div
-id="summaryPace"
-class="value">
---:--
-</div>
+            <div
+                id="summarySpeed"
+                class="value">
 
-<div class="label">
-RITMO MEDIO
-</div>
+                0.0
 
-</div>
+            </div>
 
+            <div class="label">
+                KM/H
+            </div>
 
-<div class="metric">
+        </div>
 
-<div
-id="summarySpeed"
-class="value">
-0.0
-</div>
-
-<div class="label">
-KM/H
-</div>
-
-</div>
-
-
-</div>
+    </div>
 
 </div>
 
 
 <button
-class="primary"
-onclick="showHome()">
+    class="main-button primary"
+    onclick="showHome()">
 
-← HOME
+    ← HOME
 
 </button>
 
 </section>
 
+</div>
 
 
 <!-- =====================================================
-     NAV
+     NAVIGATION
 ===================================================== -->
 
 <nav class="nav">
 
-<button onclick="showHome()">
-🏠 Home
+<button
+    id="navHome"
+    class="active"
+    onclick="showHome()">
+
+    🏠<br>
+    Home
+
 </button>
 
-<button onclick="startFreeRun()">
-🏃 Corri
+
+<button
+    id="navWorkouts"
+    onclick="showScreen('workouts')">
+
+    🏃<br>
+    Allenamenti
+
 </button>
 
-<button onclick="show('plans')">
-🎯 Piani
-</button>
 
-<button onclick="show('audio')">
-🔊 Audio
-</button>
+<button
+    id="navSettings"
+    onclick="showScreen('settings')">
 
-<button onclick="show('settings')">
-⚙️ Altro
+    ⚙️<br>
+    Audio
+
 </button>
 
 </nav>
 
 
-</div>
+<!-- =====================================================
+     MODAL USCITA CORSA
+===================================================== -->
 
+<div
+    id="exitModal"
+    class="modal">
+
+    <div class="modal-content">
+
+        <h2>
+            Uscire dalla corsa?
+        </h2>
+
+        <p class="muted">
+            La corsa attuale non verrà salvata.
+        </p>
+
+        <div class="modal-buttons">
+
+            <button
+                class="secondary"
+                onclick="closeExitModal()">
+
+                ANNULLA
+
+            </button>
+
+            <button
+                class="danger"
+                onclick="confirmExitRun()">
+
+                ESCI
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 
 <script>
@@ -1656,2114 +1305,1627 @@ onclick="showHome()">
    STORAGE
 ===================================================== */
 
-const STORAGE_PLANS =
-"runner_plans_v6";
-
-const STORAGE_SELECTED =
-"runner_selected_plan_v6";
-
-const STORAGE_AUDIO =
-"runner_audio_v6";
-
-const STORAGE_GPS =
-"runner_gps_v6";
-
-const STORAGE_KM =
-"runner_km_v6";
-
-const STORAGE_RUNS =
-"runner_runs_v6";
+const STORAGE_WORKOUTS = "runner_workouts_v3";
+const STORAGE_SETTINGS = "runner_settings_v3";
+const STORAGE_KM = "runner_total_km_v3";
+const STORAGE_RUNS = "runner_total_runs_v3";
 
 
 /* =====================================================
    DEFAULT SETTINGS
 ===================================================== */
 
-let settings = {
+const defaultSettings = {
 
-audioEnabled:true,
+    audioEnabled: true,
 
-voiceName:"",
+    voiceName: "",
 
-voiceRate:1,
+    paceTolerance: 15,
 
-coachSlow:true,
+    notifyPace: 60,
 
-coachFast:true,
+    notifyKm: 1,
 
-coachConfirm:true,
-
-coachPace:true,
-
-coachKm:true,
-
-coachTarget:true,
-
-paceNotify:60,
-
-kmNotify:1,
-
-targetNotify:60,
-
-correctionCooldown:15,
-
-globalTolerance:15
+    notifyTarget: 60
 
 };
 
 
-let gpsSettings = {
+/* =====================================================
+   GLOBAL RUN STATE
+===================================================== */
 
-highAccuracy:true,
+let watchId = null;
 
-filter:true,
+let timer = null;
 
-maxAccuracy:80,
+let running = false;
 
-maxSpeed:18
+let paused = false;
 
-};
+let freeRun = false;
 
+let currentWorkout = null;
 
-try{
+let currentPhaseIndex = 0;
 
-Object.assign(
-settings,
-JSON.parse(
-localStorage.getItem(
-STORAGE_AUDIO
-) || "{}"
-)
-);
+let phaseStartTime = 0;
 
-}catch(e){}
+let phaseElapsed = 0;
 
+let startTime = 0;
 
-try{
+let elapsed = 0;
 
-Object.assign(
-gpsSettings,
-JSON.parse(
-localStorage.getItem(
-STORAGE_GPS
-) || "{}"
-)
-);
+let totalDistance = 0;
 
-}catch(e){}
+let lastPosition = null;
+
+let lastPositionTime = null;
+
+let gpsSamples = [];
+
+let paceHistory = [];
+
+let lastVoiceTime = 0;
+
+let lastPaceNotification = 0;
+
+let lastTargetNotification = 0;
+
+let nextKmNotification = 1;
+
+let phaseCompletedDistance = 0;
+
+let editingWorkoutId = null;
 
 
 /* =====================================================
-   PLANS
+   DOM HELPER
 ===================================================== */
 
-let plans=[];
+function $(id) {
 
-try{
-
-plans=
-JSON.parse(
-localStorage.getItem(
-STORAGE_PLANS
-) || "[]"
-);
-
-}catch(e){
-
-plans=[];
-
-}
-
-
-let selectedPlanId=
-localStorage.getItem(
-STORAGE_SELECTED
-) || null;
-
-
-let draftPhases=[];
-
-
-/* =====================================================
-   RUN STATE
-===================================================== */
-
-let watchId=null;
-
-let timer=null;
-
-let running=false;
-
-let paused=false;
-
-let runMode="free";
-
-let startTime=0;
-
-let elapsed=0;
-
-let totalDistance=0;
-
-let lastPosition=null;
-
-let lastPositionTime=null;
-
-
-/* =====================================================
-   GPS FILTER
-===================================================== */
-
-let gpsSamples=[];
-
-let filteredSpeedKmh=0;
-
-const DEFAULT_MAX_SPEED=18;
-
-
-/* =====================================================
-   WORKOUT
-===================================================== */
-
-let currentPlan=null;
-
-let phaseIndex=0;
-
-let phaseRepeat=1;
-
-let phaseStartElapsed=0;
-
-let phaseDistanceStart=0;
-
-
-/* =====================================================
-   COACH
-===================================================== */
-
-let coachState="idle";
-
-let pendingCorrection=false;
-
-let lastCoachTime=0;
-
-let lastPaceNotification=0;
-
-let lastTargetNotification=0;
-
-let lastDistanceNotification=0;
-
-
-/* =====================================================
-   HELPERS
-===================================================== */
-
-function $(id){
-
-return document.getElementById(id);
-
-}
-
-
-function show(id){
-
-document
-.querySelectorAll(".screen")
-.forEach(
-s=>s.classList.remove("active")
-);
-
-$(id).classList.add("active");
-
-}
-
-
-function typeLabel(type){
-
-return {
-
-warmup:"Riscaldamento",
-
-run:"Corsa",
-
-interval:"Ripetuta",
-
-recovery:"Recupero",
-
-cooldown:"Defaticamento"
-
-}[type] || type;
-
-}
-
-
-function escapeHtml(text){
-
-return String(text)
-.replace(
-/[&<>"']/g,
-m=>({
-
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#39;"
-
-}[m])
-);
+    return document.getElementById(id);
 
 }
 
 
 /* =====================================================
-   TIME
+   SETTINGS
 ===================================================== */
 
-function formatTime(seconds){
+function loadSettings() {
 
-seconds=Math.max(
-0,
-Math.floor(seconds)
-);
+    try {
 
-const h=
-Math.floor(seconds/3600);
+        const saved =
+            JSON.parse(
+                localStorage.getItem(
+                    STORAGE_SETTINGS
+                )
+            );
 
-const m=
-Math.floor(
-(seconds%3600)/60
-);
+        return {
+            ...defaultSettings,
+            ...(saved || {})
+        };
 
-const s=
-seconds%60;
+    } catch {
 
+        return {
+            ...defaultSettings
+        };
 
-if(h>0){
-
-return (
-
-String(h).padStart(2,"0")
-+
-":"
-+
-String(m).padStart(2,"0")
-+
-":"
-+
-String(s).padStart(2,"0")
-
-);
+    }
 
 }
 
 
-return (
+let settings = loadSettings();
 
-String(m).padStart(2,"0")
-+
-":"
-+
-String(s).padStart(2,"0")
 
-);
+function saveSettings() {
+
+    settings.audioEnabled =
+        $("audioEnabled").checked;
+
+    settings.voiceName =
+        $("voiceSelect").value;
+
+    settings.paceTolerance =
+        Number(
+            $("paceTolerance").value
+        ) || 15;
+
+    settings.notifyPace =
+        Number(
+            $("notifyPace").value
+        ) || 0;
+
+    settings.notifyKm =
+        Number(
+            $("notifyKm").value
+        ) || 0;
+
+    settings.notifyTarget =
+        Number(
+            $("notifyTarget").value
+        ) || 0;
+
+    localStorage.setItem(
+        STORAGE_SETTINGS,
+        JSON.stringify(settings)
+    );
+
+    alert("Impostazioni salvate.");
+
+}
+
+
+function loadSettingsUI() {
+
+    $("audioEnabled").checked =
+        settings.audioEnabled;
+
+    $("paceTolerance").value =
+        settings.paceTolerance;
+
+    $("notifyPace").value =
+        settings.notifyPace;
+
+    $("notifyKm").value =
+        settings.notifyKm;
+
+    $("notifyTarget").value =
+        settings.notifyTarget;
 
 }
 
 
 /* =====================================================
-   PACE
+   VOICES
 ===================================================== */
 
-function formatPace(seconds){
+let availableVoices = [];
 
-if(
-!isFinite(seconds) ||
-seconds<=0 ||
-seconds>3600
-){
 
-return "--:--";
+function loadVoices() {
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+
+        $("voiceSelect").innerHTML =
+            "<option>Audio non supportato</option>";
+
+        return;
+
+    }
+
+    availableVoices =
+        speechSynthesis.getVoices();
+
+    const italian =
+        availableVoices.filter(
+            voice =>
+                voice.lang
+                    .toLowerCase()
+                    .startsWith("it")
+        );
+
+    const voices =
+        italian.length
+            ? italian
+            : availableVoices;
+
+    $("voiceSelect").innerHTML = "";
+
+    const automatic =
+        document.createElement("option");
+
+    automatic.value = "";
+
+    automatic.textContent =
+        "Automatica";
+
+    $("voiceSelect")
+        .appendChild(automatic);
+
+
+    voices.forEach(
+        (voice, index) => {
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                voice.name;
+
+            option.textContent =
+                voice.name +
+                " (" +
+                voice.lang +
+                ")";
+
+            $("voiceSelect")
+                .appendChild(option);
+
+        }
+    );
+
+
+    $("voiceSelect").value =
+        settings.voiceName;
 
 }
 
 
-let minutes=
-Math.floor(seconds/60);
+if (
+    "speechSynthesis" in window
+) {
 
-let secs=
-Math.round(seconds%60);
+    speechSynthesis.onvoiceschanged =
+        loadVoices;
+
+}
+
+loadVoices();
 
 
-if(secs>=60){
+function speak(text, force = false) {
 
-minutes++;
+    if (
+        !settings.audioEnabled &&
+        !force
+    ) {
 
-secs=0;
+        return;
+
+    }
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+
+        return;
+
+    }
+
+    const now =
+        Date.now();
+
+    /*
+       Evitiamo che il coach
+       parli continuamente.
+    */
+
+    if (
+        !force &&
+        now - lastVoiceTime < 5000
+    ) {
+
+        return;
+
+    }
+
+    speechSynthesis.cancel();
+
+    const utterance =
+        new SpeechSynthesisUtterance(text);
+
+    utterance.lang = "it-IT";
+
+    utterance.rate = 0.95;
+
+    utterance.pitch = 1.0;
+
+    const selected =
+        availableVoices.find(
+            voice =>
+                voice.name ===
+                settings.voiceName
+        );
+
+    if (selected) {
+
+        utterance.voice =
+            selected;
+
+    }
+
+    speechSynthesis.speak(
+        utterance
+    );
+
+    lastVoiceTime = now;
 
 }
 
 
-return (
+function testVoice() {
 
-minutes
-+
-":"
-+
-String(secs).padStart(2,"0")
+    const previous =
+        settings.audioEnabled;
 
-);
+    settings.audioEnabled = true;
+
+    speak(
+        "Questa è la voce selezionata per RUNNER.",
+        true
+    );
+
+    settings.audioEnabled =
+        previous;
 
 }
 
 
 /* =====================================================
-   PARSE PACE
+   NAVIGATION
 ===================================================== */
 
-function parsePace(value){
+function hideAllScreens() {
 
-if(!value)
-return 0;
-
-
-const v=
-String(value)
-.trim();
-
-
-if(v.includes(":")){
-
-const p=v.split(":");
-
-const min=
-Number(p[0]);
-
-const sec=
-Number(p[1] || 0);
-
-
-if(
-!isFinite(min) ||
-!isFinite(sec) ||
-sec<0 ||
-sec>=60
-){
-
-return 0;
+    document
+        .querySelectorAll(".screen")
+        .forEach(
+            screen =>
+                screen.classList
+                    .remove("active")
+        );
 
 }
 
 
-return min*60+sec;
+function showScreen(screenId) {
+
+    /*
+       Se stiamo uscendo dalla corsa
+       attraverso la navigazione,
+       gestiamo la situazione.
+    */
+
+    if (
+        running &&
+        screenId !== "run"
+    ) {
+
+        requestExitRun();
+
+        return;
+
+    }
+
+    hideAllScreens();
+
+    const screen =
+        $(screenId);
+
+    if (!screen) {
+
+        return;
+
+    }
+
+    screen.classList.add("active");
+
+    updateNavigation(
+        screenId
+    );
+
+    if (
+        screenId === "workouts"
+    ) {
+
+        renderWorkouts();
+
+    }
+
+    if (
+        screenId === "settings"
+    ) {
+
+        loadSettingsUI();
+
+        loadVoices();
+
+    }
 
 }
 
 
-const n=Number(v);
+function updateNavigation(screenId) {
 
+    document
+        .querySelectorAll(".nav button")
+        .forEach(
+            button =>
+                button.classList
+                    .remove("active")
+        );
 
-if(
-isFinite(n) &&
-n>0
-){
+    if (
+        screenId === "home" ||
+        screenId === "summary"
+    ) {
 
-return n*60;
+        $("navHome")
+            .classList
+            .add("active");
+
+    }
+
+    else if (
+        screenId === "workouts"
+    ) {
+
+        $("navWorkouts")
+            .classList
+            .add("active");
+
+    }
+
+    else if (
+        screenId === "settings"
+    ) {
+
+        $("navSettings")
+            .classList
+            .add("active");
+
+    }
 
 }
 
 
-return 0;
+function showHome() {
+
+    /*
+       Questo è il punto importante
+       per il bug di navigazione.
+
+       Se non c'è una corsa attiva,
+       la Home viene sempre aperta.
+    */
+
+    if (running) {
+
+        requestExitRun();
+
+        return;
+
+    }
+
+    hideAllScreens();
+
+    $("home")
+        .classList
+        .add("active");
+
+    updateNavigation("home");
+
+    refreshStats();
+
+    refreshHomeWorkout();
 
 }
 
 
 /* =====================================================
-   DISTANCE
+   WORKOUT STORAGE
 ===================================================== */
 
-function calculateDistance(a,b){
+function getWorkouts() {
 
-const R=6371000;
+    try {
 
-const rad=
-Math.PI/180;
+        return JSON.parse(
+            localStorage.getItem(
+                STORAGE_WORKOUTS
+            )
+        ) || [];
 
+    } catch {
 
-const dLat=
-(b.lat-a.lat)*rad;
+        return [];
 
-const dLon=
-(b.lon-a.lon)*rad;
+    }
 
-
-const x=
-
-Math.sin(dLat/2)**2
-
-+
-
-Math.cos(a.lat*rad)
-
-*
-
-Math.cos(b.lat*rad)
-
-*
-
-Math.sin(dLon/2)**2;
+}
 
 
-return (
+function saveWorkouts(workouts) {
 
-R*
-2*
-Math.atan2(
-Math.sqrt(x),
-Math.sqrt(1-x)
-)
-
-);
+    localStorage.setItem(
+        STORAGE_WORKOUTS,
+        JSON.stringify(workouts)
+    );
 
 }
 
 
 /* =====================================================
-   AUDIO
+   WORKOUT CREATOR
 ===================================================== */
 
-let voices=[];
+function createWorkout() {
 
+    editingWorkoutId = null;
 
-function populateVoices(){
+    $("workoutName").value = "";
 
-if(
-!("speechSynthesis" in window)
-)
-return;
+    $("workoutDescription").value = "";
 
+    $("phaseEditorList").innerHTML = "";
 
-voices=
-window.speechSynthesis
-.getVoices();
+    addPhase("RISCALDAMENTO");
 
+    addPhase("CORSA");
 
-const select=
-$("voiceSelect");
+    addPhase("DEFATICAMENTO");
 
-
-if(!select)
-return;
-
-
-select.innerHTML="";
-
-
-const italian=
-voices.filter(
-v=>
-(v.lang||"")
-.toLowerCase()
-.startsWith("it")
-);
-
-
-const list=
-italian.length
-?
-italian
-:
-voices;
-
-
-list.forEach(
-voice=>{
-
-const option=
-document.createElement(
-"option"
-);
-
-option.value=
-voice.name;
-
-option.textContent=
-voice.name+
-" ("+
-voice.lang+
-")";
-
-select.appendChild(
-option
-);
-
-});
-
-
-if(
-settings.voiceName &&
-list.some(
-v=>v.name===
-settings.voiceName
-)
-){
-
-select.value=
-settings.voiceName;
-
-}
+    showScreen("editor");
 
 }
 
 
-if(
-"speechSynthesis"
-in window
-){
+function addPhase(defaultType = "CORSA") {
 
-window
-.speechSynthesis
-.onvoiceschanged=
-populateVoices;
+    const container =
+        $("phaseEditorList");
 
-}
+    const index =
+        container.children.length;
 
+    const div =
+        document.createElement("div");
 
-function speak(text,force=false){
+    div.className =
+        "phase-editor";
 
-if(
-!settings.audioEnabled &&
-!force
-)
-return;
+    div.dataset.index =
+        index;
 
+    div.innerHTML = `
 
-if(
-!("speechSynthesis" in window)
-)
-return;
+        <div class="phase-editor-header">
 
+            <div class="phase-number">
+                FASE ${index + 1}
+            </div>
 
-try{
+            <button
+                class="remove-phase"
+                onclick="this.closest('.phase-editor').remove(); renumberPhases();">
 
-window
-.speechSynthesis
-.cancel();
+                ✕
 
+            </button>
 
-const u=
-new SpeechSynthesisUtterance(
-text
-);
-
-u.lang="it-IT";
-
-u.rate=
-Number(settings.voiceRate)
-||1;
-
-u.pitch=1;
+        </div>
 
 
-const voiceName=
-$("voiceSelect")?.value ||
-settings.voiceName;
+        <div class="form-row">
+
+            <label>Tipo</label>
+
+            <select class="phase-type">
+
+                <option value="RISCALDAMENTO">
+                    Riscaldamento
+                </option>
+
+                <option value="CORSA">
+                    Corsa
+                </option>
+
+                <option value="RIPETUTA">
+                    Ripetuta
+                </option>
+
+                <option value="RECUPERO">
+                    Recupero
+                </option>
+
+                <option value="DEFATICAMENTO">
+                    Defaticamento
+                </option>
+
+            </select>
+
+        </div>
 
 
-const voice=
-voices.find(
-v=>v.name===voiceName
-);
+        <div class="form-row">
+
+            <label>
+                Durata (minuti)
+            </label>
+
+            <input
+                class="phase-duration"
+                type="number"
+                min="0.1"
+                step="0.1"
+                value="5">
+
+        </div>
 
 
-if(voice)
-u.voice=voice;
+        <div class="form-row">
+
+            <label>
+                Target ritmo min/km
+            </label>
+
+            <input
+                class="phase-pace"
+                type="text"
+                placeholder="5:30">
+
+        </div>
 
 
-window
-.speechSynthesis
-.speak(u);
+        <div class="form-row">
 
-}catch(e){}
+            <label>
+                Note
+            </label>
 
-}
+            <input
+                class="phase-note"
+                type="text"
+                placeholder="Es. ritmo controllato">
 
+        </div>
 
-function testVoice(){
-
-speak(
-"Questa è la voce di RUNNER.",
-true
-);
-
-}
+    `;
 
 
-function loadAudioUI(){
+    container.appendChild(div);
 
-$("audioEnabled")
-.checked=
-settings.audioEnabled;
-
-$("voiceRate")
-.value=
-String(
-settings.voiceRate
-);
-
-$("coachSlow")
-.checked=
-settings.coachSlow;
-
-$("coachFast")
-.checked=
-settings.coachFast;
-
-$("coachConfirm")
-.checked=
-settings.coachConfirm;
-
-$("coachPace")
-.checked=
-settings.coachPace;
-
-$("coachKm")
-.checked=
-settings.coachKm;
-
-$("coachTarget")
-.checked=
-settings.coachTarget;
-
-$("paceNotify")
-.value=
-String(
-settings.paceNotify
-);
-
-$("kmNotify")
-.value=
-String(
-settings.kmNotify
-);
-
-$("targetNotify")
-.value=
-String(
-settings.targetNotify
-);
-
-$("correctionCooldown")
-.value=
-String(
-settings.correctionCooldown
-);
-
-$("globalTolerance")
-.value=
-settings.globalTolerance;
-
-populateVoices();
+    div.querySelector(".phase-type")
+        .value =
+        defaultType;
 
 }
 
 
-function saveAudioSettings(){
+function renumberPhases() {
 
-settings.audioEnabled=
-$("audioEnabled")
-.checked;
+    document
+        .querySelectorAll(
+            ".phase-editor"
+        )
+        .forEach(
+            (phase, index) => {
 
-settings.voiceName=
-$("voiceSelect").value;
+                phase
+                    .querySelector(
+                        ".phase-number"
+                    )
+                    .textContent =
+                    "FASE " +
+                    (index + 1);
 
-settings.voiceRate=
-Number(
-$("voiceRate").value
-);
+            }
+        );
 
-settings.coachSlow=
-$("coachSlow").checked;
-
-settings.coachFast=
-$("coachFast").checked;
-
-settings.coachConfirm=
-$("coachConfirm").checked;
-
-settings.coachPace=
-$("coachPace").checked;
-
-settings.coachKm=
-$("coachKm").checked;
-
-settings.coachTarget=
-$("coachTarget").checked;
-
-settings.paceNotify=
-Number(
-$("paceNotify").value
-);
-
-settings.kmNotify=
-Number(
-$("kmNotify").value
-);
-
-settings.targetNotify=
-Number(
-$("targetNotify").value
-);
-
-settings.correctionCooldown=
-Number(
-$("correctionCooldown").value
-);
-
-settings.globalTolerance=
-Math.max(
-0,
-Number(
-$("globalTolerance").value
-)||0
-);
+}
 
 
-localStorage.setItem(
-STORAGE_AUDIO,
-JSON.stringify(
-settings
-)
-);
+function collectEditorPhases() {
+
+    const phases = [];
+
+    document
+        .querySelectorAll(
+            ".phase-editor"
+        )
+        .forEach(
+            phase => {
+
+                phases.push({
+
+                    type:
+                        phase.querySelector(
+                            ".phase-type"
+                        ).value,
+
+                    duration:
+                        Number(
+                            phase.querySelector(
+                                ".phase-duration"
+                            ).value
+                        ) || 1,
+
+                    pace:
+                        phase.querySelector(
+                            ".phase-pace"
+                        ).value.trim(),
+
+                    note:
+                        phase.querySelector(
+                            ".phase-note"
+                        ).value.trim()
+
+                });
+
+            }
+        );
+
+    return phases;
+
+}
 
 
-speak(
-"Impostazioni audio salvate."
-);
+function saveWorkout() {
+
+    const name =
+        $("workoutName")
+            .value
+            .trim();
+
+    if (!name) {
+
+        alert(
+            "Inserisci il nome dell'allenamento."
+        );
+
+        return;
+
+    }
+
+    const phases =
+        collectEditorPhases();
+
+    if (!phases.length) {
+
+        alert(
+            "Aggiungi almeno una fase."
+        );
+
+        return;
+
+    }
+
+    const workouts =
+        getWorkouts();
+
+    const workout = {
+
+        id:
+            editingWorkoutId ||
+            Date.now(),
+
+        name,
+
+        description:
+            $("workoutDescription")
+                .value
+                .trim(),
+
+        phases,
+
+        createdAt:
+            Date.now()
+
+    };
+
+
+    if (editingWorkoutId) {
+
+        const index =
+            workouts.findIndex(
+                item =>
+                    item.id ===
+                    editingWorkoutId
+            );
+
+        if (index >= 0) {
+
+            workouts[index] =
+                workout;
+
+        }
+
+    }
+
+    else {
+
+        workouts.push(workout);
+
+    }
+
+
+    saveWorkouts(workouts);
+
+    alert(
+        "Allenamento salvato."
+    );
+
+    showScreen("workouts");
+
+}
+
+
+function editWorkout(id) {
+
+    const workout =
+        getWorkouts()
+            .find(
+                item =>
+                    item.id === id
+            );
+
+    if (!workout) {
+
+        return;
+
+    }
+
+    editingWorkoutId =
+        id;
+
+    $("workoutName").value =
+        workout.name;
+
+    $("workoutDescription").value =
+        workout.description || "";
+
+    $("phaseEditorList")
+        .innerHTML = "";
+
+    workout.phases.forEach(
+        phase => {
+
+            addPhase(
+                phase.type
+            );
+
+            const editor =
+                $("phaseEditorList")
+                    .lastElementChild;
+
+            editor.querySelector(
+                ".phase-duration"
+            ).value =
+                phase.duration;
+
+            editor.querySelector(
+                ".phase-pace"
+            ).value =
+                phase.pace || "";
+
+            editor.querySelector(
+                ".phase-note"
+            ).value =
+                phase.note || "";
+
+        }
+    );
+
+    showScreen("editor");
+
+}
+
+
+function deleteWorkout(id) {
+
+    if (
+        !confirm(
+            "Eliminare questo allenamento?"
+        )
+    ) {
+
+        return;
+
+    }
+
+    const workouts =
+        getWorkouts()
+            .filter(
+                item =>
+                    item.id !== id
+            );
+
+    saveWorkouts(workouts);
+
+    renderWorkouts();
+
+}
+
+
+function startWorkout(id) {
+
+    const workout =
+        getWorkouts()
+            .find(
+                item =>
+                    item.id === id
+            );
+
+    if (!workout) {
+
+        return;
+
+    }
+
+    startRun(
+        workout
+    );
+
+}
+
+
+function renderWorkouts() {
+
+    const container =
+        $("workoutList");
+
+    const workouts =
+        getWorkouts();
+
+    container.innerHTML = "";
+
+    if (!workouts.length) {
+
+        container.innerHTML = `
+
+            <div class="card">
+
+                <div class="muted">
+                    Non hai ancora salvato
+                    nessun allenamento.
+                </div>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    workouts.forEach(
+        workout => {
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "workout-item";
+
+            const totalMinutes =
+                workout.phases
+                    .reduce(
+                        (sum, phase) =>
+                            sum +
+                            Number(
+                                phase.duration
+                            ),
+                        0
+                    );
+
+
+            div.innerHTML = `
+
+                <div class="workout-item-title">
+                    ${escapeHtml(workout.name)}
+                </div>
+
+                <div class="workout-item-info">
+
+                    ${escapeHtml(
+                        workout.description ||
+                        "Allenamento personalizzato"
+                    )}
+
+                    <br>
+
+                    ${workout.phases.length}
+                    fasi ·
+                    ${totalMinutes.toFixed(0)}
+                    min
+
+                </div>
+
+
+                <div class="workout-actions">
+
+                    <button
+                        class="primary"
+                        onclick="startWorkout(${workout.id})">
+
+                        ▶ AVVIA
+
+                    </button>
+
+
+                    <button
+                        class="secondary"
+                        onclick="editWorkout(${workout.id})">
+
+                        ✎ MODIFICA
+
+                    </button>
+
+
+                    <button
+                        class="danger"
+                        onclick="deleteWorkout(${workout.id})">
+
+                        🗑 ELIMINA
+
+                    </button>
+
+                </div>
+
+            `;
+
+            container.appendChild(div);
+
+        }
+    );
+
+}
+
+
+function escapeHtml(text) {
+
+    return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
 
 
 /* =====================================================
-   GPS SETTINGS
+   HOME WORKOUT
 ===================================================== */
 
-function loadGpsUI(){
+function refreshHomeWorkout() {
 
-$("gpsHighAccuracy")
-.checked=
-gpsSettings.highAccuracy;
+    const workouts =
+        getWorkouts();
 
-$("gpsFilter")
-.checked=
-gpsSettings.filter;
+    if (!workouts.length) {
 
-$("gpsMaxAccuracy")
-.value=
-String(
-gpsSettings.maxAccuracy
-);
+        $("nextWorkoutName")
+            .textContent =
+            "Nessun allenamento selezionato";
 
-$("gpsMaxSpeed")
-.value=
-String(
-gpsSettings.maxSpeed
-);
+        $("nextWorkoutInfo")
+            .textContent =
+            "Crea il tuo primo piano personalizzato.";
+
+        return;
+
+    }
+
+    const workout =
+        workouts[0];
+
+    $("nextWorkoutName")
+        .textContent =
+        workout.name;
+
+    $("nextWorkoutInfo")
+        .textContent =
+        workout.phases.length +
+        " fasi · " +
+        workout.description;
 
 }
 
 
-function saveGpsSettings(){
+function refreshStats() {
 
-gpsSettings.highAccuracy=
-$("gpsHighAccuracy")
-.checked;
+    const km =
+        Number(
+            localStorage.getItem(
+                STORAGE_KM
+            )
+        ) || 0;
 
-gpsSettings.filter=
-$("gpsFilter")
-.checked;
+    const runs =
+        Number(
+            localStorage.getItem(
+                STORAGE_RUNS
+            )
+        ) || 0;
 
-gpsSettings.maxAccuracy=
-Number(
-$("gpsMaxAccuracy")
-.value
-);
+    $("weekKm")
+        .textContent =
+        km.toFixed(1);
 
-gpsSettings.maxSpeed=
-Number(
-$("gpsMaxSpeed")
-.value
-);
-
-
-localStorage.setItem(
-STORAGE_GPS,
-JSON.stringify(
-gpsSettings
-)
-);
-
-
-alert(
-"Impostazioni GPS salvate."
-);
+    $("weekRuns")
+        .textContent =
+        runs;
 
 }
 
 
 /* =====================================================
-   TARGET UI
+   PACE UTILITIES
 ===================================================== */
 
-$("targetType")
-.addEventListener(
-"change",
-function(){
+function paceToSeconds(pace) {
 
-const type=this.value;
+    if (!pace) {
 
+        return 0;
 
-$("paceTargetBox")
-.style.display=
-type==="pace"
-?
-"block"
-:
-"none";
+    }
 
+    const parts =
+        String(pace)
+            .trim()
+            .split(":");
 
-$("speedTargetBox")
-.style.display=
-type==="speed"
-?
-"block"
-:
-"none";
+    if (parts.length !== 2) {
 
-});
+        return 0;
 
+    }
 
-/* =====================================================
-   PLAN CREATOR
-===================================================== */
+    const minutes =
+        Number(parts[0]);
 
-function addPhase(){
+    const seconds =
+        Number(parts[1]);
 
-const type=
-$("phaseType").value;
+    if (
+        !isFinite(minutes) ||
+        !isFinite(seconds)
+    ) {
 
+        return 0;
 
-const duration=
-Math.max(
-0.1,
-Number(
-$("phaseDuration").value
-)||1
-);
+    }
 
-
-const durationUnit=
-$("durationUnit").value;
-
-
-const targetType=
-$("targetType").value;
-
-
-let targetValue=0;
-
-
-if(
-targetType==="pace"
-){
-
-targetValue=
-parsePace(
-$("phasePace").value
-);
-
-if(!targetValue){
-
-alert(
-"Inserisci un ritmo valido, ad esempio 5:30."
-);
-
-return;
-
-}
+    return (
+        minutes * 60 +
+        seconds
+    );
 
 }
 
 
-if(
-targetType==="speed"
-){
+function secondsToPace(seconds) {
 
-targetValue=
-Number(
-$("phaseSpeed").value
-);
+    if (
+        !isFinite(seconds) ||
+        seconds <= 0
+    ) {
 
-if(
-!isFinite(targetValue) ||
-targetValue<=0
-){
+        return "--:--";
 
-alert(
-"Inserisci una velocità valida."
-);
+    }
 
-return;
+    let minutes =
+        Math.floor(
+            seconds / 60
+        );
+
+    let secs =
+        Math.round(
+            seconds % 60
+        );
+
+    if (secs >= 60) {
+
+        minutes++;
+
+        secs = 0;
+
+    }
+
+    return (
+        minutes +
+        ":" +
+        String(secs)
+            .padStart(2, "0")
+    );
 
 }
 
-}
 
+function formatTime(seconds) {
 
-const tolerance=
-Math.max(
-0,
-Number(
-$("phaseTolerance").value
-)
-||
-settings.globalTolerance
-);
+    seconds =
+        Math.max(
+            0,
+            Math.floor(seconds)
+        );
 
+    const h =
+        Math.floor(
+            seconds / 3600
+        );
 
-const repeats=
-Math.max(
-1,
-Number(
-$("phaseRepeats").value
-)
-||
-1
-);
+    const m =
+        Math.floor(
+            (seconds % 3600) / 60
+        );
 
+    const s =
+        seconds % 60;
 
-draftPhases.push({
+    if (h > 0) {
 
-type:type,
+        return (
+            String(h)
+                .padStart(2, "0") +
+            ":" +
+            String(m)
+                .padStart(2, "0") +
+            ":" +
+            String(s)
+                .padStart(2, "0")
+        );
 
-duration:duration,
+    }
 
-durationUnit:durationUnit,
-
-targetType:targetType,
-
-targetValue:targetValue,
-
-tolerance:tolerance,
-
-repeats:repeats
-
-});
-
-
-renderDraft();
+    return (
+        String(m)
+            .padStart(2, "0") +
+        ":" +
+        String(s)
+            .padStart(2, "0")
+    );
 
 }
 
 
 /* =====================================================
-   RENDER DRAFT
+   GPS DISTANCE
 ===================================================== */
 
-function renderDraft(){
+function calculateDistance(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+) {
 
-const el=
-$("draftPhases");
+    const R = 6371000;
 
+    const rad =
+        Math.PI / 180;
 
-el.innerHTML="";
+    const dLat =
+        (lat2 - lat1) * rad;
 
+    const dLon =
+        (lon2 - lon1) * rad;
 
-if(!draftPhases.length){
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * rad) *
+        Math.cos(lat2 * rad) *
+        Math.sin(dLon / 2) ** 2;
 
-el.innerHTML=
-'<div class="empty">Nessuna fase aggiunta.</div>';
-
-return;
-
-}
-
-
-draftPhases.forEach(
-(p,index)=>{
-
-let target=
-"Nessun target";
-
-
-if(
-p.targetType==="pace"
-){
-
-target=
-formatPace(
-p.targetValue
-)+
-" min/km";
-
-}
-
-else if(
-p.targetType==="speed"
-){
-
-target=
-p.targetValue
-.toFixed(1)
-+
-" km/h";
-
-}
-
-
-const duration=
-p.durationUnit==="time"
-
-?
-
-p.duration+
-" min"
-
-:
-
-p.duration+
-" km";
-
-
-const repeats=
-p.repeats>1
-
-?
-
-" × "+
-p.repeats
-
-:
-
-"";
-
-
-const item=
-document.createElement(
-"div"
-);
-
-item.className=
-"phaseEditor";
-
-
-item.innerHTML=
-
-`
-
-<div class="phaseEditorTitle">
-
-${index+1}.
-${typeLabel(p.type)}
-${repeats}
-
-</div>
-
-<span class="pill">
-${duration}
-</span>
-
-<span class="pill">
-${target}
-</span>
-
-<span class="pill">
-±${p.tolerance}s
-</span>
-
-<button
-class="secondary small"
-onclick="
-draftPhases.splice(${index},1);
-renderDraft();
-">
-
-RIMUOVI
-
-</button>
-
-`;
-
-
-el.appendChild(item);
-
-}
-
-);
+    return (
+        R *
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        )
+    );
 
 }
 
 
 /* =====================================================
-   SAVE PLAN
+   START FREE RUN
 ===================================================== */
 
-function savePlan(){
+function startFreeRun() {
 
-const name=
-$("planName")
-.value
-.trim()
-||
-"Allenamento";
-
-
-if(!draftPhases.length){
-
-alert(
-"Aggiungi almeno una fase."
-);
-
-return;
-
-}
-
-
-const plan={
-
-id:
-Date.now().toString(),
-
-name:name,
-
-desc:
-$("planDesc")
-.value
-.trim(),
-
-phases:
-JSON.parse(
-JSON.stringify(
-draftPhases
-)
-)
-
-};
-
-
-plans.push(plan);
-
-
-localStorage.setItem(
-STORAGE_PLANS,
-JSON.stringify(
-plans
-)
-);
-
-
-selectedPlanId=
-plan.id;
-
-
-localStorage.setItem(
-STORAGE_SELECTED,
-selectedPlanId
-);
-
-
-draftPhases=[];
-
-
-$("planName")
-.value=
-"Nuovo allenamento";
-
-
-$("planDesc")
-.value="";
-
-
-renderDraft();
-
-renderPlans();
-
-updateHomePlan();
-
-
-alert(
-"Allenamento salvato."
-);
+    startRun(null);
 
 }
 
 
 /* =====================================================
-   RENDER PLANS
+   START RUN
 ===================================================== */
 
-function renderPlans(){
+function startRun(workout = null) {
 
-const el=
-$("savedPlans");
+    /*
+       Reset completo.
+    */
 
+    stopGPS();
 
-el.innerHTML="";
+    if (timer) {
 
+        clearInterval(timer);
 
-if(!plans.length){
+    }
 
-el.innerHTML=
-'<div class="empty">Nessun allenamento salvato.</div>';
+    running = true;
 
-return;
+    paused = false;
 
-}
+    freeRun =
+        !workout;
 
+    currentWorkout =
+        workout;
 
-plans.forEach(
-plan=>{
+    currentPhaseIndex = 0;
 
-const selected=
-plan.id===
-selectedPlanId;
+    phaseStartTime = 0;
 
+    phaseElapsed = 0;
 
-const item=
-document.createElement(
-"div"
-);
+    startTime =
+        Date.now();
 
-item.className=
-"listItem";
+    elapsed = 0;
 
+    totalDistance = 0;
 
-item.innerHTML=
+    lastPosition = null;
 
-`
+    lastPositionTime = null;
 
-<b>
+    gpsSamples = [];
 
-${selected?"✓ ":""}
-${escapeHtml(plan.name)}
+    paceHistory = [];
 
-</b>
+    lastVoiceTime = 0;
 
-<div class="muted">
+    lastPaceNotification = 0;
 
-${escapeHtml(plan.desc||"")}
+    lastTargetNotification = 0;
 
-<br>
+    nextKmNotification =
+        settings.notifyKm || 1;
 
-${plan.phases.length}
-fasi
-
-</div>
+    phaseCompletedDistance = 0;
 
 
-<button
-class="secondary small"
-onclick="
-selectPlan('${plan.id}')
-">
+    hideAllScreens();
 
-${selected
-?
-"✓ SELEZIONATO"
-:
-"SELEZIONA"}
+    $("run")
+        .classList
+        .add("active");
 
-</button>
+    updateNavigation("run");
 
 
-<button
-class="secondary small"
-onclick="
-duplicatePlan('${plan.id}')
-">
+    $("gps").textContent =
+        "GPS…";
 
-DUPLICA
+    $("gpsStatus").textContent =
+        "● GPS IN ATTESA";
 
-</button>
+    $("coach").textContent =
+        "Acquisizione GPS…";
+
+    $("pace").textContent =
+        "--:--";
+
+    $("distance").textContent =
+        "0.00";
+
+    $("time").textContent =
+        "00:00";
+
+    $("speed").textContent =
+        "0.0";
+
+    $("avgPace").textContent =
+        "--:--";
+
+    $("pauseButton").textContent =
+        "Ⅱ PAUSA";
 
 
-<button
-class="danger small"
-onclick="
-deletePlan('${plan.id}')
-">
+    if (freeRun) {
 
-ELIMINA
+        $("phase")
+            .textContent =
+            "CORSA LIBERA";
 
-</button>
+        $("coach")
+            .textContent =
+            "Nessun coaching. Buona corsa!";
 
-`;
+    }
+
+    else {
+
+        setupCurrentPhase();
+
+    }
 
 
-el.appendChild(item);
+    timer =
+        setInterval(
+            updateRunTimer,
+            250
+        );
 
-}
 
-);
+    if (
+        !navigator.geolocation
+    ) {
+
+        $("coach").textContent =
+            "Questo browser non supporta il GPS.";
+
+        return;
+
+    }
+
+
+    watchId =
+        navigator.geolocation.watchPosition(
+
+            positionReceived,
+
+            gpsError,
+
+            {
+                enableHighAccuracy: true,
+
+                maximumAge: 1000,
+
+                timeout: 15000
+            }
+
+        );
 
 }
 
 
 /* =====================================================
-   SELECT
+   GPS CALLBACK
 ===================================================== */
 
-function selectPlan(id){
+function positionReceived(position) {
 
-selectedPlanId=id;
+    if (
+        !running ||
+        paused
+    ) {
 
+        return;
 
-localStorage.setItem(
-STORAGE_SELECTED,
-id
-);
+    }
 
+    const coords =
+        position.coords;
 
-renderPlans();
+    const lat =
+        coords.latitude;
 
-updateHomePlan();
+    const lon =
+        coords.longitude;
 
-showHome();
+    const accuracy =
+        Number(
+            coords.accuracy
+        ) || 999;
 
-}
+    const now =
+        Date.now();
 
 
-/* =====================================================
-   DUPLICATE
-===================================================== */
+    /*
+       Ignoriamo letture GPS
+       estremamente imprecise.
+    */
 
-function duplicatePlan(id){
+    if (
+        accuracy > 60
+    ) {
 
-const original=
-plans.find(
-p=>p.id===id
-);
+        $("gps").textContent =
+            "GPS ~";
 
+        $("gpsStatus").textContent =
+            "● GPS poco preciso";
 
-if(!original)
-return;
+        return;
 
+    }
 
-const copy=
-JSON.parse(
-JSON.stringify(
-original
-)
-);
 
+    if (lastPosition) {
 
-copy.id=
-Date.now().toString();
+        const meters =
+            calculateDistance(
+                lastPosition.lat,
+                lastPosition.lon,
+                lat,
+                lon
+            );
 
+        const seconds =
+            (now -
+                lastPositionTime) /
+            1000;
 
-copy.name=
-original.name+
-" - copia";
 
+        /*
+           Filtri anti-jump.
 
-plans.push(copy);
+           Movimento < 2 m:
+           probabilmente rumore.
 
+           Movimento > 100 m in una
+           singola lettura:
+           probabilmente salto GPS.
+        */
 
-localStorage.setItem(
-STORAGE_PLANS,
-JSON.stringify(
-plans
-)
-);
+        if (
+            meters >= 2 &&
+            meters <= 100 &&
+            seconds > 0 &&
+            seconds <= 10
+        ) {
 
+            totalDistance +=
+                meters / 1000;
 
-renderPlans();
+        }
 
-}
+    }
 
 
-/* =====================================================
-   DELETE
-===================================================== */
+    lastPosition = {
+        lat,
+        lon
+    };
 
-function deletePlan(id){
+    lastPositionTime =
+        now;
 
-if(
-!confirm(
-"Eliminare questo allenamento?"
-)
-)
-return;
 
+    gpsSamples.push({
 
-plans=
-plans.filter(
-p=>p.id!==id
-);
+        lat,
+        lon,
+        accuracy,
+        time: now
 
+    });
 
-localStorage.setItem(
-STORAGE_PLANS,
-JSON.stringify(
-plans
-)
-);
 
+    if (
+        gpsSamples.length > 30
+    ) {
 
-if(
-selectedPlanId===id
-){
+        gpsSamples.shift();
 
-selectedPlanId=
-plans[0]?.id ||
-null;
+    }
 
 
-localStorage.setItem(
-STORAGE_SELECTED,
-selectedPlanId ||
-""
-);
+    $("gps").textContent =
+        "GPS ✓";
 
-}
+    $("gpsStatus").textContent =
+        "● GPS ATTIVO";
 
 
-renderPlans();
+    updateDisplay();
 
-updateHomePlan();
+    updatePaceEngine();
 
-}
-
-
-/* =====================================================
-   HOME PLAN
-===================================================== */
-
-function updateHomePlan(){
-
-const plan=
-plans.find(
-p=>p.id===selectedPlanId
-);
-
-
-$("homePlanInfo")
-.textContent=
-
-plan
-
-?
-
-plan.name+
-" · "+
-plan.phases.length+
-" fasi"
-
-:
-
-"Nessun piano selezionato";
-
-}
-
-
-/* =====================================================
-   RESET RUN
-===================================================== */
-
-function resetRun(){
-
-if(timer)
-clearInterval(timer);
-
-
-if(
-watchId!==null &&
-navigator.geolocation
-){
-
-navigator
-.geolocation
-.clearWatch(
-watchId
-);
-
-}
-
-
-watchId=null;
-
-timer=null;
-
-running=true;
-
-paused=false;
-
-startTime=
-Date.now();
-
-elapsed=0;
-
-totalDistance=0;
-
-lastPosition=null;
-
-lastPositionTime=null;
-
-gpsSamples=[];
-
-filteredSpeedKmh=0;
-
-
-phaseIndex=0;
-
-phaseRepeat=1;
-
-phaseStartElapsed=0;
-
-phaseDistanceStart=0;
-
-
-coachState="idle";
-
-pendingCorrection=false;
-
-lastCoachTime=0;
-
-lastPaceNotification=0;
-
-lastTargetNotification=0;
-
-lastDistanceNotification=0;
-
-}
-
-
-/* =====================================================
-   FREE RUN
-===================================================== */
-
-function startFreeRun(){
-
-runMode="free";
-
-currentPlan=null;
-
-resetRun();
-
-
-$("runMode")
-.textContent=
-"CORSA LIBERA";
-
-
-$("phaseName")
-.textContent=
-"";
-
-
-$("coach")
-.textContent=
-"Acquisizione GPS…";
-
-
-$("gps")
-.textContent=
-"GPS…";
-
-
-$("gpsStatus")
-.textContent=
-"● GPS in attesa";
-
-
-show("run");
-
-
-startGPS();
-
-}
-
-
-/* =====================================================
-   WORKOUT
-===================================================== */
-
-function startSelectedWorkout(){
-
-const plan=
-plans.find(
-p=>p.id===selectedPlanId
-);
-
-
-if(!plan){
-
-alert(
-"Prima crea e seleziona un allenamento."
-);
-
-show("plans");
-
-return;
-
-}
-
-
-runMode="workout";
-
-currentPlan=plan;
-
-resetRun();
-
-
-$("runMode")
-.textContent=
-"🎯 "+
-plan.name;
-
-
-$("coach")
-.textContent=
-"Acquisizione GPS…";
-
-
-$("gps")
-.textContent=
-"GPS…";
-
-
-$("gpsStatus")
-.textContent=
-"● GPS in attesa";
-
-
-show("run");
-
-
-setPhase();
-
-startGPS();
-
-}
-
-
-/* =====================================================
-   GPS START
-===================================================== */
-
-function startGPS(){
-
-if(
-!("geolocation" in navigator)
-){
-
-gpsError({
-code:0
-});
-
-return;
-
-}
-
-
-navigator
-.geolocation
-.getCurrentPosition(
-
-positionReceived,
-
-gpsError,
-
-{
-
-enableHighAccuracy:
-gpsSettings.highAccuracy,
-
-maximumAge:0,
-
-timeout:15000
-
-}
-
-);
-
-
-watchId=
-navigator
-.geolocation
-.watchPosition(
-
-positionReceived,
-
-gpsError,
-
-{
-
-enableHighAccuracy:
-gpsSettings.highAccuracy,
-
-maximumAge:1000,
-
-timeout:15000
-
-}
-
-);
-
-
-timer=
-setInterval(
-
-function(){
-
-if(
-running &&
-!paused
-){
-
-elapsed=
-(
-Date.now()-
-startTime
-)/1000;
-
-
-updateDisplay();
-
-checkCoach();
-
-checkPhaseEnd();
-
-}
-
-},
-
-250
-);
-
-}
-
-
-/* =====================================================
-   GPS POSITION
-===================================================== */
-
-function positionReceived(
-position
-){
-
-if(
-!running ||
-paused
-)
-return;
-
-
-const c=
-position.coords;
-
-
-const lat=
-c.latitude;
-
-const lon=
-c.longitude;
-
-const accuracy=
-Number(c.accuracy)||999;
-
-const now=
-Date.now();
-
-
-if(
-!isFinite(lat) ||
-!isFinite(lon)
-)
-return;
-
-
-if(
-accuracy>
-gpsSettings.maxAccuracy
-){
-
-$("gps")
-.textContent=
-"GPS ~";
-
-
-$("gpsStatus")
-.textContent=
-"● GPS poco preciso · ±"+
-Math.round(accuracy)+
-" m";
-
-
-return;
-
-}
-
-
-$("gps")
-.textContent=
-accuracy<=25
-?
-"GPS ✓"
-:
-"GPS ~";
-
-
-$("gpsStatus")
-.textContent=
-"● GPS attivo · ±"+
-Math.round(accuracy)+
-" m";
-
-
-const current={
-
-lat:lat,
-
-lon:lon,
-
-accuracy:accuracy
-
-};
-
-
-if(
-lastPosition
-){
-
-const dt=
-(
-now-
-lastPositionTime
-)/1000;
-
-
-const dm=
-calculateDistance(
-lastPosition,
-current
-);
-
-
-if(
-
-dt>=0.5 &&
-
-dt<=20 &&
-
-dm>=1.5 &&
-
-dm<100
-
-){
-
-const speedMps=
-dm/dt;
-
-const speedKmh=
-speedMps*3.6;
-
-
-if(
-speedKmh<=
-gpsSettings.maxSpeed
-){
-
-if(
-gpsSettings.filter
-){
-
-totalDistance+=
-dm/1000;
-
-gpsSamples.push({
-
-speed:speedKmh,
-
-distance:dm,
-
-time:now
-
-});
-
-
-if(
-gpsSamples.length>12
-){
-
-gpsSamples.shift();
-
-}
-
-
-updateFilteredSpeed();
-
-}
-
-else{
-
-totalDistance+=
-dm/1000;
-
-filteredSpeedKmh=
-speedKmh;
-
-}
-
-}
-
-}
-
-}
-
-
-lastPosition=
-current;
-
-lastPositionTime=
-now;
-
-
-if(
-runMode==="free"
-){
-
-$("coach")
-.textContent=
-"Registrazione attiva · nessun feedback";
-
-}
-else if(
-coachState==="idle"
-){
-
-$("coach")
-.textContent=
-"Registrazione attiva";
-
-}
-
-
-updateDisplay();
-
-}
-
-
-/* =====================================================
-   FILTER
-===================================================== */
-
-function updateFilteredSpeed(){
-
-if(
-!gpsSamples.length
-){
-
-filteredSpeedKmh=0;
-
-return;
-
-}
-
-
-const samples=
-gpsSamples.slice(-8);
-
-
-let weighted=0;
-
-let weights=0;
-
-
-samples.forEach(
-(sample,index)=>{
-
-const weight=
-index+1;
-
-weighted+=
-sample.speed*
-weight;
-
-weights+=
-weight;
-
-});
-
-
-const calculated=
-weighted/weights;
-
-
-if(
-filteredSpeedKmh<=0
-){
-
-filteredSpeedKmh=
-calculated;
-
-}
-
-else{
-
-const maxIncrease=
-filteredSpeedKmh*1.6;
-
-const maxDecrease=
-filteredSpeedKmh*0.55;
-
-
-if(
-calculated>maxIncrease
-){
-
-filteredSpeedKmh=
-maxIncrease;
-
-}
-
-else if(
-calculated<maxDecrease
-){
-
-filteredSpeedKmh=
-maxDecrease;
-
-}
-
-else{
-
-filteredSpeedKmh=
-filteredSpeedKmh*0.65+
-calculated*0.35;
-
-}
-
-}
-
-
-if(
-!isFinite(filteredSpeedKmh) ||
-filteredSpeedKmh<0
-){
-
-filteredSpeedKmh=0;
-
-}
-
-
-if(
-filteredSpeedKmh>
-gpsSettings.maxSpeed
-){
-
-filteredSpeedKmh=
-gpsSettings.maxSpeed;
-
-}
+    processDistanceNotifications();
 
 }
 
@@ -3772,86 +2934,72 @@ gpsSettings.maxSpeed;
    GPS ERROR
 ===================================================== */
 
-function gpsError(error){
+function gpsError(error) {
 
-$("gps")
-.textContent=
-"GPS ✕";
+    $("gps").textContent =
+        "GPS ✕";
 
+    $("gpsStatus").textContent =
+        "● GPS NON DISPONIBILE";
 
-$("gpsStatus")
-.textContent=
-"● GPS non disponibile";
+    if (
+        error &&
+        error.code === 1
+    ) {
 
+        $("coach").textContent =
+            "Permetti l'accesso alla posizione nelle impostazioni del browser.";
 
-if(
-error?.code===1
-){
+    }
 
-$("coach")
-.textContent=
-"Posizione negata. Abilita il GPS per RUNNER.";
+    else {
 
-}
-else if(
-error?.code===2
-){
+        $("coach").textContent =
+            "Segnale GPS non disponibile.";
 
-$("coach")
-.textContent=
-"Posizione non disponibile. Prova all'aperto.";
-
-}
-else if(
-error?.code===3
-){
-
-$("coach")
-.textContent=
-"GPS lento. Attendo una posizione.";
-
-}
-else{
-
-$("coach")
-.textContent=
-"GPS non disponibile.";
-
-}
+    }
 
 }
 
 
 /* =====================================================
-   PACE
+   TIMER
 ===================================================== */
 
-function getFilteredPace(){
+function updateRunTimer() {
 
-if(
-filteredSpeedKmh<=1.5
-)
-return 0;
+    if (
+        !running ||
+        paused
+    ) {
 
+        return;
 
-return
-60/
-filteredSpeedKmh;
+    }
 
-}
-
-
-function getAveragePace(){
-
-if(
-totalDistance<=0
-)
-return 0;
+    elapsed =
+        (
+            Date.now() -
+            startTime
+        ) / 1000;
 
 
-return
-elapsed/
-totalDistance;
+    if (!freeRun) {
+
+        phaseElapsed =
+            (
+                Date.now() -
+                phaseStartTime
+            ) / 1000;
+
+        checkPhaseCompletion();
+
+    }
+
+
+    updateDisplay();
+
+    processTimeNotifications();
 
 }
 
@@ -3860,657 +3008,702 @@ totalDistance;
    DISPLAY
 ===================================================== */
 
-function updateDisplay(){
+function updateDisplay() {
 
-const pace=
-getFilteredPace();
+    const hours =
+        elapsed / 3600;
 
-const avg=
-getAveragePace();
-
-
-const averageSpeed=
-elapsed>0
-?
-totalDistance/
-elapsed*
-3600
-:
-0;
+    const kmPerHour =
+        elapsed > 0
+            ? totalDistance / hours
+            : 0;
 
 
-$("distance")
-.textContent=
-totalDistance.toFixed(2);
+    const averagePace =
+        totalDistance > 0
+            ? (
+                elapsed /
+                totalDistance
+            )
+            : 0;
 
 
-$("time")
-.textContent=
-formatTime(elapsed);
+    $("distance")
+        .textContent =
+        totalDistance.toFixed(2);
 
+    $("time")
+        .textContent =
+        formatTime(elapsed);
 
-$("speed")
-.textContent=
+    $("speed")
+        .textContent =
+        kmPerHour.toFixed(1);
 
-(
-filteredSpeedKmh>0
-?
-filteredSpeedKmh
-:
-averageSpeed
-)
-.toFixed(1);
-
-
-$("avgPace")
-.textContent=
-formatPace(avg);
-
-
-$("pace")
-.textContent=
-formatPace(pace);
+    $("avgPace")
+        .textContent =
+        secondsToPace(
+            averagePace
+        );
 
 }
 
 
 /* =====================================================
-   PHASE
+   MOVING PACE ENGINE
 ===================================================== */
 
-function setPhase(){
+function updatePaceEngine() {
 
-if(
-!currentPlan
-)
-return;
+    if (
+        totalDistance <= 0 ||
+        !lastPositionTime
+    ) {
 
+        return;
 
-const phase=
-currentPlan
-.phases[
-phaseIndex
-];
+    }
 
 
-phaseStartElapsed=
-elapsed;
+    /*
+       Calcolo una velocità
+       basata sugli ultimi punti GPS.
 
-phaseDistanceStart=
-totalDistance;
+       Non utilizziamo solamente
+       distanza totale / tempo totale.
 
-coachState="idle";
+       Questo rende il ritmo molto
+       più reattivo.
+    */
 
-pendingCorrection=false;
-
-
-$("phaseName")
-.textContent=
-
-typeLabel(
-phase.type
-)
-
-+
-
-" · fase "
-
-+
-
-(
-phaseIndex+1
-)
-
-+
-
-"/"
-
-+
-
-currentPlan.phases.length
-
-+
-
-(
-phase.repeats>1
-
-?
-
-" · ripetizione "+
-phaseRepeat+
-"/"+
-phase.repeats
-
-:
-
-""
-);
+    const now =
+        Date.now();
 
 
-if(
-phase.targetType==="pace"
-){
-
-$("coach")
-.textContent=
-"Target "+
-formatPace(
-phase.targetValue
-)+
-" min/km · ±"+
-phase.tolerance+
-"s";
+    const windowSeconds = 20;
 
 
-speak(
-"Nuova fase. Target "+
-formatPace(
-phase.targetValue
-)+
-" al chilometro."
-);
+    const recent =
+        gpsSamples.filter(
+            sample =>
+                now -
+                sample.time
+                <=
+                windowSeconds * 1000
+        );
 
-}
 
-else if(
-phase.targetType==="speed"
-){
+    if (
+        recent.length < 2
+    ) {
 
-$("coach")
-.textContent=
-"Target "+
-phase.targetValue.toFixed(1)+
-" km/h";
+        return;
 
-speak(
-"Nuova fase. Target "+
-phase.targetValue.toFixed(1)+
-" chilometri orari."
-);
+    }
 
-}
 
-else{
+    let distance = 0;
 
-$("coach")
-.textContent=
-"Fase "+
-typeLabel(
-phase.type
-)+
-" · nessun target";
 
-speak(
-"Nuova fase: "+
-typeLabel(
-phase.type
-)+
-"."
-);
+    for (
+        let i = 1;
+        i < recent.length;
+        i++
+    ) {
 
-}
+        const a =
+            recent[i - 1];
+
+        const b =
+            recent[i];
+
+
+        const d =
+            calculateDistance(
+                a.lat,
+                a.lon,
+                b.lat,
+                b.lon
+            );
+
+
+        if (
+            d >= 1 &&
+            d <= 100
+        ) {
+
+            distance += d;
+
+        }
+
+    }
+
+
+    const first =
+        recent[0];
+
+    const last =
+        recent[recent.length - 1];
+
+
+    const time =
+        (
+            last.time -
+            first.time
+        ) / 1000;
+
+
+    if (
+        distance < 10 ||
+        time <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    const speedMetersSecond =
+        distance / time;
+
+
+    const speedKmHour =
+        speedMetersSecond * 3.6;
+
+
+    /*
+       Ignoriamo velocità
+       chiaramente impossibili.
+    */
+
+    if (
+        speedKmHour < 3 ||
+        speedKmHour > 30
+    ) {
+
+        return;
+
+    }
+
+
+    const paceSeconds =
+        3600 /
+        speedKmHour;
+
+
+    paceHistory.push({
+
+        pace: paceSeconds,
+
+        time: now
+
+    });
+
+
+    /*
+       Manteniamo gli ultimi
+       valori per una seconda
+       media mobile.
+    */
+
+    paceHistory =
+        paceHistory.filter(
+            item =>
+                now -
+                item.time
+                <=
+                15000
+        );
+
+
+    const averageMovingPace =
+        paceHistory.reduce(
+            (sum, item) =>
+                sum + item.pace,
+            0
+        ) /
+        paceHistory.length;
+
+
+    $("pace")
+        .textContent =
+        secondsToPace(
+            averageMovingPace
+        );
+
+
+    /*
+       Il controllo chiuso viene
+       applicato solo agli allenamenti.
+    */
+
+    if (
+        !freeRun &&
+        currentWorkout
+    ) {
+
+        closedLoopCoach(
+            averageMovingPace
+        );
+
+    }
 
 }
 
 
 /* =====================================================
-   PHASE END
+   CLOSED LOOP COACH
 ===================================================== */
 
-function checkPhaseEnd(){
+function closedLoopCoach(
+    currentPace
+) {
 
-if(
-runMode!=="workout" ||
-!currentPlan
-)
-return;
-
-
-const phase=
-currentPlan
-.phases[
-phaseIndex
-];
+    const phase =
+        currentWorkout
+            .phases[
+                currentPhaseIndex
+            ];
 
 
-const phaseElapsed=
-elapsed-
-phaseStartElapsed;
+    if (!phase) {
+
+        return;
+
+    }
 
 
-const phaseDistance=
-totalDistance-
-phaseDistanceStart;
+    const target =
+        paceToSeconds(
+            phase.pace
+        );
 
 
-let completed=false;
+    if (
+        target <= 0
+    ) {
+
+        $("coach").textContent =
+            "Fase senza target di ritmo.";
+
+        return;
+
+    }
 
 
-if(
-phase.durationUnit==="time"
-){
-
-completed=
-phaseElapsed>=
-phase.duration*60;
-
-}
-
-else{
-
-completed=
-phaseDistance>=
-phase.duration;
-
-}
+    const tolerance =
+        Number(
+            settings.paceTolerance
+        ) || 15;
 
 
-if(!completed)
-return;
+    /*
+       IMPORTANTE:
+
+       Ritmo più basso =
+       si corre più veloce.
+
+       Ritmo più alto =
+       si corre più lentamente.
+    */
+
+    const lower =
+        target -
+        tolerance;
+
+    const upper =
+        target +
+        tolerance;
 
 
-if(
-phaseRepeat<
-phase.repeats
-){
+    if (
+        currentPace <
+        lower
+    ) {
 
-phaseRepeat++;
-
-setPhase();
-
-return;
-
-}
+        const difference =
+            lower -
+            currentPace;
 
 
-phaseIndex++;
-
-phaseRepeat=1;
-
-
-if(
-phaseIndex>=
-currentPlan.phases.length
-){
-
-speak(
-"Allenamento completato."
-);
-
-finishRun();
-
-return;
-
-}
+        $("coach").textContent =
+            "Stai andando troppo veloce.";
 
 
-setPhase();
+        speak(
+            "Sei a " +
+            secondsToPace(
+                currentPace
+            ) +
+            " al chilometro. " +
+            "Devi rallentare per arrivare a " +
+            secondsToPace(target) +
+            "."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        currentPace >
+        upper
+    ) {
+
+        const difference =
+            currentPace -
+            upper;
+
+
+        $("coach").textContent =
+            "Stai andando troppo piano.";
+
+
+        speak(
+            "Sei a " +
+            secondsToPace(
+                currentPace
+            ) +
+            " al chilometro. " +
+            "Devi aumentare per arrivare a " +
+            secondsToPace(target) +
+            "."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       SIAMO NEL RANGE.
+
+       Questo è il secondo elemento
+       del controllo chiuso:
+
+       1. errore
+       2. comando
+       3. nuova misura
+       4. verifica
+       5. conferma
+    */
+
+    $("coach").textContent =
+        "✓ Ritmo corretto";
+
+    const now =
+        Date.now();
+
+
+    /*
+       Non confermiamo continuamente.
+       Aspettiamo almeno 20 secondi
+       tra due conferme.
+    */
+
+    if (
+        now -
+        lastTargetNotification
+        >=
+        20000
+    ) {
+
+        speak(
+            "Ritmo corretto. " +
+            "Sei a " +
+            secondsToPace(
+                currentPace
+            ) +
+            "."
+        );
+
+        lastTargetNotification =
+            now;
+
+    }
 
 }
 
 
 /* =====================================================
-   CLOSED LOOP
+   TIME NOTIFICATIONS
 ===================================================== */
 
-function checkClosedLoop(){
-
-if(
-runMode!=="workout" ||
-!currentPlan
-)
-return;
-
-
-const phase=
-currentPlan
-.phases[
-phaseIndex
-];
-
-
-if(
-!phase
-)
-return;
-
-
-if(
-phase.targetType!=="pace"
-)
-return;
-
-
-const pace=
-getFilteredPace();
-
-
-if(!pace)
-return;
-
-
-const target=
-phase.targetValue;
-
-
-const tolerance=
-phase.tolerance;
-
-
-const difference=
-pace-target;
-
-
-const tooSlow=
-difference>
-tolerance;
-
-
-const tooFast=
-difference<
--tolerance;
-
-
-const correct=
-!tooSlow &&
-!tooFast;
-
-
-const now=
-Date.now();
-
-
-const cooldown=
-settings.correctionCooldown*
-1000;
-
-
-/* =====================
-   TOO SLOW
-===================== */
-
-if(
-tooSlow
-){
-
-if(
-!settings.coachSlow
-)
-return;
-
-
-if(
-coachState!=="slow" &&
-now-lastCoachTime>=cooldown
-){
-
-coachState="slow";
-
-pendingCorrection=true;
-
-lastCoachTime=now;
-
-
-speak(
-
-"Sei a "+
-formatPace(pace)+
-". Devi aumentare per arrivare a "+
-formatPace(target)+
-"."
-
-);
-
-}
-
-return;
-
-}
-
-
-/* =====================
-   TOO FAST
-===================== */
-
-if(
-tooFast
-){
-
-if(
-!settings.coachFast
-)
-return;
-
-
-if(
-coachState!=="fast" &&
-now-lastCoachTime>=cooldown
-){
-
-coachState="fast";
-
-pendingCorrection=true;
-
-lastCoachTime=now;
-
-
-speak(
-
-"Sei a "+
-formatPace(pace)+
-". Devi rallentare per arrivare a "+
-formatPace(target)+
-"."
-
-);
-
-}
-
-return;
-
-}
-
-
-/* =====================
-   CORRECT
-===================== */
-
-if(
-correct
-){
-
-if(
-pendingCorrection &&
-settings.coachConfirm &&
-now-lastCoachTime>=3000
-){
-
-coachState="ok";
-
-pendingCorrection=false;
-
-lastCoachTime=now;
-
-
-speak(
-
-"Sei a "+
-formatPace(pace)+
-". Ritmo corretto, continua così."
-
-);
-
-}
-
-}
+function processTimeNotifications() {
+
+    if (
+        !settings.notifyPace ||
+        settings.notifyPace <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        elapsed -
+        lastPaceNotification
+        >=
+        settings.notifyPace
+    ) {
+
+        lastPaceNotification =
+            elapsed;
+
+        if (
+            !freeRun
+        ) {
+
+            const phase =
+                currentWorkout
+                    ?.phases[
+                        currentPhaseIndex
+                    ];
+
+            const target =
+                phase
+                    ? paceToSeconds(
+                        phase.pace
+                    )
+                    : 0;
+
+            if (target) {
+
+                speak(
+                    "Sei a " +
+                    secondsToPace(
+                        getCurrentMovingPace()
+                    ) +
+                    ". Target " +
+                    secondsToPace(
+                        target
+                    ) +
+                    "."
+                );
+
+            }
+
+        }
+
+    }
 
 }
 
 
 /* =====================================================
-   NOTIFICATIONS
+   DISTANCE NOTIFICATIONS
 ===================================================== */
 
-function checkCoachNotifications(){
+function processDistanceNotifications() {
 
-if(
-runMode!=="workout" ||
-!currentPlan ||
-paused
-)
-return;
+    if (
+        !settings.notifyKm ||
+        settings.notifyKm <= 0
+    ) {
 
+        return;
 
-const now=
-Date.now();
+    }
 
 
-const pace=
-getFilteredPace();
+    if (
+        totalDistance >=
+        nextKmNotification
+    ) {
+
+        speak(
+            "Hai raggiunto " +
+            nextKmNotification.toFixed(1) +
+            " chilometri."
+        );
 
 
-const phase=
-currentPlan
-.phases[
-phaseIndex
-];
+        nextKmNotification +=
+            settings.notifyKm;
 
-
-/* CLOSED LOOP */
-
-if(
-phase &&
-phase.targetType==="pace"
-){
-
-checkClosedLoop();
-
-}
-
-
-/* PACE */
-
-if(
-settings.coachPace &&
-settings.paceNotify>0 &&
-pace
-){
-
-if(
-now-lastPaceNotification>=
-settings.paceNotify*1000
-){
-
-lastPaceNotification=
-now;
-
-
-if(
-!phase ||
-!phase.targetType ||
-phase.targetType==="none"
-){
-
-speak(
-"Ritmo "+
-formatPace(pace)+
-" al chilometro."
-);
-
-}
-
-}
-
-}
-
-
-/* TARGET */
-
-if(
-settings.coachTarget &&
-phase &&
-phase.targetType==="pace" &&
-settings.targetNotify>0
-){
-
-if(
-now-lastTargetNotification>=
-settings.targetNotify*1000
-){
-
-lastTargetNotification=
-now;
-
-
-speak(
-
-"Target "+
-formatPace(
-phase.targetValue
-)+
-" al chilometro."
-
-);
-
-}
-
-}
-
-
-/* KM */
-
-if(
-settings.coachKm &&
-settings.kmNotify>0
-){
-
-const reached=
-Math.floor(
-totalDistance/
-settings.kmNotify
-)
-*
-settings.kmNotify;
-
-
-if(
-reached>0 &&
-reached>
-lastDistanceNotification
-){
-
-lastDistanceNotification=
-reached;
-
-
-speak(
-
-reached.toFixed(
-settings.kmNotify<1
-?
-1
-:
-0
-)
-+
-" chilometri."
-
-);
-
-}
-
-}
+    }
 
 }
 
 
 /* =====================================================
-   COACH
+   CURRENT PACE
 ===================================================== */
 
-function checkCoach(){
+function getCurrentMovingPace() {
 
-checkCoachNotifications();
+    if (
+        !paceHistory.length
+    ) {
+
+        return 0;
+
+    }
+
+    return (
+        paceHistory.reduce(
+            (sum, item) =>
+                sum + item.pace,
+            0
+        ) /
+        paceHistory.length
+    );
+
+}
+
+
+/* =====================================================
+   WORKOUT PHASES
+===================================================== */
+
+function setupCurrentPhase() {
+
+    if (
+        !currentWorkout
+    ) {
+
+        return;
+
+    }
+
+
+    const phase =
+        currentWorkout
+            .phases[
+                currentPhaseIndex
+            ];
+
+
+    if (!phase) {
+
+        return;
+
+    }
+
+
+    phaseStartTime =
+        Date.now();
+
+    phaseElapsed = 0;
+
+
+    $("phase")
+        .textContent =
+        phase.type;
+
+
+    if (
+        phase.pace
+    ) {
+
+        $("coach")
+            .textContent =
+            "Target " +
+            phase.pace +
+            " min/km";
+
+    }
+
+    else {
+
+        $("coach")
+            .textContent =
+            phase.note ||
+            "Inizia la fase.";
+
+    }
+
+
+    let message =
+        "Inizia " +
+        phase.type.toLowerCase();
+
+
+    if (phase.pace) {
+
+        message +=
+            ". Target " +
+            phase.pace +
+            " al chilometro";
+
+    }
+
+
+    if (phase.note) {
+
+        message +=
+            ". " +
+            phase.note;
+
+    }
+
+
+    speak(message, true);
+
+}
+
+
+function checkPhaseCompletion() {
+
+    const phase =
+        currentWorkout
+            ?.phases[
+                currentPhaseIndex
+            ];
+
+
+    if (!phase) {
+
+        return;
+
+    }
+
+
+    const durationSeconds =
+        Number(
+            phase.duration
+        ) * 60;
+
+
+    if (
+        phaseElapsed >=
+        durationSeconds
+    ) {
+
+        currentPhaseIndex++;
+
+        phaseCompletedDistance =
+            totalDistance;
+
+
+        if (
+            currentPhaseIndex >=
+            currentWorkout.phases.length
+        ) {
+
+            speak(
+                "Allenamento completato. Ottimo lavoro.",
+                true
+            );
+
+            $("phase")
+                .textContent =
+                "COMPLETATO";
+
+            $("coach")
+                .textContent =
+                "Allenamento completato.";
+
+            return;
+
+        }
+
+
+        setupCurrentPhase();
+
+    }
 
 }
 
@@ -4519,345 +3712,286 @@ checkCoachNotifications();
    PAUSE
 ===================================================== */
 
-function togglePause(){
+function togglePause() {
 
-if(!running)
-return;
+    if (!running) {
 
+        return;
 
-paused=
-!paused;
-
-
-if(paused){
-
-elapsed=
-(
-Date.now()-
-startTime
-)/
-1000;
+    }
 
 
-$("pauseButton")
-.textContent=
-"▶ RIPRENDI";
+    paused =
+        !paused;
 
 
-$("coach")
-.textContent=
-"Corsa in pausa";
+    if (paused) {
+
+        $("pauseButton")
+            .textContent =
+            "▶ RIPRENDI";
+
+        $("coach")
+            .textContent =
+            "Corsa in pausa";
+
+        speak(
+            "Corsa in pausa.",
+            true
+        );
+
+    }
+
+    else {
+
+        /*
+           Ricostruiamo startTime
+           per non conteggiare
+           la pausa.
+        */
+
+        startTime =
+            Date.now() -
+            elapsed * 1000;
 
 
-if(
-"speechSynthesis"
-in window
-){
-
-window
-.speechSynthesis
-.cancel();
-
-}
-
-}
-
-else{
-
-startTime=
-Date.now()-
-elapsed*1000;
+        phaseStartTime =
+            Date.now() -
+            phaseElapsed * 1000;
 
 
-lastPosition=null;
+        lastPosition = null;
 
-lastPositionTime=null;
+        lastPositionTime = null;
+
+        gpsSamples = [];
+
+        paceHistory = [];
 
 
-$("pauseButton")
-.textContent=
-"Ⅱ PAUSA";
+        $("pauseButton")
+            .textContent =
+            "Ⅱ PAUSA";
 
+        $("coach")
+            .textContent =
+            "Corsa ripresa";
 
-$("coach")
-.textContent=
+        speak(
+            "Corsa ripresa.",
+            true
+        );
 
-runMode==="free"
-
-?
-
-"Registrazione ripresa · nessun feedback"
-
-:
-
-"Corsa ripresa";
-
-}
+    }
 
 }
 
 
 /* =====================================================
-   FINISH
+   STOP GPS
 ===================================================== */
 
-function finishRun(){
+function stopGPS() {
 
-if(!running)
-return;
+    if (
+        watchId !== null
+    ) {
 
+        navigator.geolocation
+            .clearWatch(
+                watchId
+            );
 
-running=false;
+        watchId = null;
 
-
-if(timer)
-clearInterval(timer);
-
-
-if(
-watchId!==null &&
-navigator.geolocation
-){
-
-navigator
-.geolocation
-.clearWatch(
-watchId
-);
-
-}
-
-
-watchId=null;
-
-timer=null;
-
-
-if(
-"speechSynthesis"
-in window
-){
-
-window
-.speechSynthesis
-.cancel();
-
-}
-
-
-$("summaryTitle")
-.textContent=
-
-runMode==="free"
-
-?
-
-"Corsa libera"
-
-:
-
-"Allenamento: "+
-(
-currentPlan?.name ||
-""
-);
-
-
-$("summaryDistance")
-.textContent=
-totalDistance.toFixed(2);
-
-
-$("summaryTime")
-.textContent=
-formatTime(elapsed);
-
-
-$("summaryPace")
-.textContent=
-formatPace(
-getAveragePace()
-);
-
-
-$("summarySpeed")
-.textContent=
-
-(
-elapsed>0
-?
-totalDistance/
-elapsed*
-3600
-:
-0
-)
-.toFixed(1);
-
-
-let km=
-Number(
-localStorage.getItem(
-STORAGE_KM
-)
-)||0;
-
-
-let runs=
-Number(
-localStorage.getItem(
-STORAGE_RUNS
-)
-)||0;
-
-
-localStorage.setItem(
-STORAGE_KM,
-km+
-totalDistance
-);
-
-
-localStorage.setItem(
-STORAGE_RUNS,
-runs+1
-);
-
-
-refreshStats();
-
-show("summary");
+    }
 
 }
 
 
 /* =====================================================
-   CANCEL
+   EXIT RUN
 ===================================================== */
 
-function cancelRun(){
+function requestExitRun() {
 
-if(
-!confirm(
-"Uscire dalla corsa senza salvare?"
-)
-)
-return;
+    if (!running) {
 
+        showHome();
 
-running=false;
+        return;
 
+    }
 
-if(timer)
-clearInterval(timer);
-
-
-if(
-watchId!==null &&
-navigator.geolocation
-){
-
-navigator
-.geolocation
-.clearWatch(
-watchId
-);
+    $("exitModal")
+        .classList
+        .add("active");
 
 }
 
 
-if(
-"speechSynthesis"
-in window
-){
+function closeExitModal() {
 
-window
-.speechSynthesis
-.cancel();
+    $("exitModal")
+        .classList
+        .remove("active");
 
 }
 
 
-watchId=null;
+function confirmExitRun() {
 
-timer=null;
+    closeExitModal();
 
-showHome();
+    running = false;
+
+    paused = false;
+
+    if (timer) {
+
+        clearInterval(timer);
+
+        timer = null;
+
+    }
+
+    stopGPS();
+
+    if (
+        "speechSynthesis" in window
+    ) {
+
+        speechSynthesis.cancel();
+
+    }
+
+    currentWorkout = null;
+
+    showHome();
 
 }
 
 
 /* =====================================================
-   STATS
+   FINISH RUN
 ===================================================== */
 
-function refreshStats(){
+function finishRun() {
 
-$("weekKm")
-.textContent=
+    if (!running) {
 
-(
-Number(
-localStorage.getItem(
-STORAGE_KM
-)
-)||0
-)
-.toFixed(1);
+        return;
+
+    }
 
 
-$("weekRuns")
-.textContent=
+    running = false;
 
-Number(
-localStorage.getItem(
-STORAGE_RUNS
-)
-)||0;
-
-}
+    paused = false;
 
 
-/* =====================================================
-   RESET DATA
-===================================================== */
+    if (timer) {
 
-function resetAllData(){
+        clearInterval(timer);
 
-if(
-!confirm(
-"ATTENZIONE: verranno cancellati piani, statistiche e impostazioni. Continuare?"
-)
-)
-return;
+        timer = null;
+
+    }
 
 
-localStorage.removeItem(
-STORAGE_PLANS
-);
-
-localStorage.removeItem(
-STORAGE_SELECTED
-);
-
-localStorage.removeItem(
-STORAGE_AUDIO
-);
-
-localStorage.removeItem(
-STORAGE_GPS
-);
-
-localStorage.removeItem(
-STORAGE_KM
-);
-
-localStorage.removeItem(
-STORAGE_RUNS
-);
+    stopGPS();
 
 
-location.reload();
+    if (
+        "speechSynthesis" in window
+    ) {
+
+        speechSynthesis.cancel();
+
+    }
+
+
+    const averagePace =
+        totalDistance > 0
+            ? elapsed /
+              totalDistance
+            : 0;
+
+
+    const averageSpeed =
+        elapsed > 0
+            ? (
+                totalDistance /
+                (elapsed / 3600)
+            )
+            : 0;
+
+
+    $("summaryDistance")
+        .textContent =
+        totalDistance.toFixed(2);
+
+
+    $("summaryTime")
+        .textContent =
+        formatTime(elapsed);
+
+
+    $("summaryPace")
+        .textContent =
+        secondsToPace(
+            averagePace
+        );
+
+
+    $("summarySpeed")
+        .textContent =
+        averageSpeed.toFixed(1);
+
+
+    const oldKm =
+        Number(
+            localStorage.getItem(
+                STORAGE_KM
+            )
+        ) || 0;
+
+
+    const oldRuns =
+        Number(
+            localStorage.getItem(
+                STORAGE_RUNS
+            )
+        ) || 0;
+
+
+    localStorage.setItem(
+        STORAGE_KM,
+        oldKm +
+        totalDistance
+    );
+
+
+    localStorage.setItem(
+        STORAGE_RUNS,
+        oldRuns + 1
+    );
+
+
+    currentWorkout = null;
+
+    freeRun = false;
+
+
+    hideAllScreens();
+
+    $("summary")
+        .classList
+        .add("active");
+
+    updateNavigation(
+        "summary"
+    );
 
 }
 
@@ -4866,17 +4000,24 @@ location.reload();
    INIT
 ===================================================== */
 
-loadAudioUI();
+function initialize() {
 
-loadGpsUI();
+    refreshStats();
 
-renderDraft();
+    refreshHomeWorkout();
 
-renderPlans();
+    loadSettingsUI();
 
-refreshStats();
+    loadVoices();
 
-updateHomePlan();
+}
+
+
+/*
+   Avviamo l'app.
+*/
+
+initialize();
 
 </script>
 
