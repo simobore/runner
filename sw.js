@@ -1,4 +1,4 @@
-const CACHE_NAME = "runner-v1";
+const CACHE_NAME = "runner-v2";
 
 const FILES_TO_CACHE = [
   "./",
