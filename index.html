@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.13 -->
+<!-- RUNNER GPS v6.15 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -823,7 +823,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.13
+        🔧 DIAGNOSTICA GPS v6.15
     </div>
     <div class="grid">
         <div>
@@ -1624,7 +1624,7 @@ function showToast(message) {
 function showScreen(screen) {
 
     /*
-     * v6.13:
+     * v6.15:
      * cambiare schermata NON interrompe mai una corsa in corso.
      * running / GPS / timer / distanza / fase rimangono vivi.
      */
@@ -3073,6 +3073,130 @@ let elapsed = 0;
 
 let totalDistance = 0;
 
+const distanceEngineV615 = {
+    initialized: false,
+    lastLat: null,
+    lastLon: null,
+    lastTimestamp: null,
+    acceptedSpeedMeters: 0,
+    acceptedCoordMeters: 0,
+    rejectedCoordMeters: 0,
+    agreementCount: 0,
+    disagreementCount: 0,
+    lastUsedSource: "—"
+};
+
+function resetDistanceEngineV615() {
+    distanceEngineV615.initialized = false;
+    distanceEngineV615.lastLat = null;
+    distanceEngineV615.lastLon = null;
+    distanceEngineV615.lastTimestamp = null;
+    distanceEngineV615.acceptedSpeedMeters = 0;
+    distanceEngineV615.acceptedCoordMeters = 0;
+    distanceEngineV615.rejectedCoordMeters = 0;
+    distanceEngineV615.agreementCount = 0;
+    distanceEngineV615.disagreementCount = 0;
+    distanceEngineV615.lastUsedSource = "—";
+}
+
+function hybridDistanceV615(coordMeters, speedMps, dt) {
+
+    const result = {
+        meters: 0,
+        source: "none",
+        speedMeters: null,
+        coordMeters:
+            Number.isFinite(coordMeters)
+                ? coordMeters
+                : null
+    };
+
+    const validDt =
+        Number.isFinite(dt) &&
+        dt > 0 &&
+        dt <= 20;
+
+    const validSpeed =
+        Number.isFinite(speedMps) &&
+        speedMps >= 0 &&
+        speedMps <= (30 / 3.6);
+
+    if (validDt && validSpeed) {
+        result.speedMeters =
+            speedMps * dt;
+    }
+
+    const speedAvailable =
+        result.speedMeters !== null;
+
+    const coordAvailable =
+        validDt &&
+        Number.isFinite(result.coordMeters) &&
+        result.coordMeters >= 0 &&
+        result.coordMeters <= (12 * dt + 8);
+
+    if (speedAvailable && coordAvailable) {
+
+        /*
+         * La speed GPS resta dominante.
+         * Le coordinate riducono il rischio di affidarsi
+         * ciecamente a una singola misura.
+         */
+        const tolerance =
+            Math.max(
+                2.5,
+                result.speedMeters * 0.75
+            );
+
+        const difference =
+            Math.abs(
+                result.coordMeters -
+                result.speedMeters
+            );
+
+        if (difference <= tolerance) {
+
+            result.meters =
+                result.speedMeters * 0.80 +
+                result.coordMeters * 0.20;
+
+            result.source = "mix";
+
+        } else {
+
+            /*
+             * Forte discordanza = possibile salto GPS.
+             * La posizione non può gonfiare la distanza.
+             */
+            result.meters =
+                result.speedMeters;
+
+            result.source = "speed";
+        }
+
+    } else if (speedAvailable) {
+
+        result.meters =
+            result.speedMeters;
+
+        result.source = "speed";
+
+    } else if (coordAvailable) {
+
+        /*
+         * Fallback: se manca la speed GPS, possiamo ancora
+         * recuperare la distanza dalle coordinate.
+         */
+        result.meters =
+            result.coordMeters;
+
+        result.source = "coords";
+    }
+
+    return result;
+}
+
+
 let lastPosition = null;
 
 let lastPositionTime = null;
@@ -3118,7 +3242,7 @@ let gpsDiag = {
 let adaptiveSpeedMps = null;
 let adaptiveSource = "—";
 
-// v6.13: stato del ritmo istantaneo
+// v6.15: stato del ritmo istantaneo
 let paceSpeedSamplesV68 = [];
 let paceAverageSpeedV68 = null;
 let paceWindowStartV68 = null;
@@ -3429,6 +3553,8 @@ function startRunEngine(
 
     totalDistance = 0;
 
+    resetDistanceEngineV615();
+
     executedPhasesV613 = [];
     phaseStartActiveTimeV613 = 0;
 
@@ -3535,6 +3661,10 @@ function startRunEngine(
 
     if (typeof showToast === "function") {
         showToast("🏃 CORSA INIZIATA");
+    }
+
+    if (settings.audioEnabled) {
+        speak("Allenamento iniziato. Buon allenamento.");
     }
 
     startGPS();
@@ -3669,38 +3799,63 @@ function positionReceived(position) {
 
     if (!running || paused) return;
 
-    const coords = position.coords || {};
-    const lat = Number(coords.latitude);
-    const lon = Number(coords.longitude);
-    const accuracy = Number(coords.accuracy);
-    const timestamp = Number(position.timestamp) || Date.now();
+    const coords =
+        position.coords || {};
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    const lat =
+        Number(coords.latitude);
 
-    // Manteniamo visibile la qualità del segnale anche quando il fix non è
-    // abbastanza buono per entrare nei calcoli.
-    if (Number.isFinite(accuracy)) {
-        $("gps").textContent = `GPS ~${Math.round(accuracy)}m`;
+    const lon =
+        Number(coords.longitude);
+
+    const accuracy =
+        Number(coords.accuracy);
+
+    const timestamp =
+        Number(position.timestamp) ||
+        Date.now();
+
+    if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon)
+    ) {
+        return;
     }
 
-    const maxAccuracy = Math.max(20, Number(settings.gpsAccuracy) || 30);
+    if (Number.isFinite(accuracy)) {
+        $("gps").textContent =
+            `GPS ~${Math.round(accuracy)}m`;
+    }
+
+    const maxAccuracy =
+        Math.max(
+            20,
+            Number(settings.gpsAccuracy) || 30
+        );
 
     if (
         settings.gpsFiltering &&
         Number.isFinite(accuracy) &&
         accuracy > maxAccuracy
     ) {
-        $("gpsStatus").textContent = "● GPS POCO PRECISO";
+
+        $("gpsStatus").textContent =
+            "● GPS POCO PRECISO";
+
         if (!isMoving) {
             $("coach").textContent =
                 "GPS in acquisizione · attendo una posizione migliore";
         }
+
         return;
     }
 
-    const reportedSpeed = Number(coords.speed);
+    const reportedSpeed =
+        Number(coords.speed);
+
     const deviceSpeed =
-        Number.isFinite(reportedSpeed) && reportedSpeed >= 0
+        Number.isFinite(reportedSpeed) &&
+        reportedSpeed >= 0
             ? reportedSpeed
             : null;
 
@@ -3708,69 +3863,131 @@ function positionReceived(position) {
         lat,
         lon,
         time: timestamp,
-        accuracy: Number.isFinite(accuracy) ? accuracy : maxAccuracy,
-        speed: deviceSpeed
+        accuracy:
+            Number.isFinite(accuracy)
+                ? accuracy
+                : maxAccuracy,
+        speed:
+            deviceSpeed
     };
 
-    // Primo fix: non conteggiare nulla. Serve solo a stabilire l'origine.
     if (!lastPosition) {
-        lastPosition = { lat, lon };
-        lastPositionTime = timestamp;
-        gpsPositionHistory = [current];
-        gpsAcceptedPositions = [current];
-        lastGpsSpeed = deviceSpeed;
-        gpsLastReliableTimestamp = timestamp;
+
+        lastPosition = {
+            lat,
+            lon
+        };
+
+        lastPositionTime =
+            timestamp;
+
+        gpsPositionHistory =
+            [current];
+
+        gpsAcceptedPositions =
+            [current];
+
+        lastGpsSpeed =
+            deviceSpeed;
+
+        gpsLastReliableTimestamp =
+            timestamp;
+
         isMoving = false;
         movementCandidateSince = 0;
         stationaryCandidateSince = 0;
 
+        distanceEngineV615.initialized =
+            true;
+
+        distanceEngineV615.lastLat =
+            lat;
+
+        distanceEngineV615.lastLon =
+            lon;
+
+        distanceEngineV615.lastTimestamp =
+            timestamp;
+
         $("gps").textContent =
             `GPS ✓ ${Math.round(current.accuracy)}m`;
-        $("gpsStatus").textContent = "● GPS ATTIVO";
+
+        $("gpsStatus").textContent =
+            "● GPS ATTIVO";
+
         $("coach").textContent =
             runMode === "free"
                 ? "GPS acquisito · in attesa di movimento"
                 : "GPS acquisito · pronto";
+
         updateDisplay();
+
         return;
     }
 
-    const dt = (timestamp - lastPositionTime) / 1000;
+    const dt =
+        (timestamp - lastPositionTime) / 1000;
 
-    // Timestamp non valido o duplicato: aggiorniamo solo lo stato visivo.
-    if (!(dt > 0)) return;
+    if (
+        !Number.isFinite(dt) ||
+        dt <= 0
+    ) {
+        return;
+    }
 
-    const meters = calculateDistance(
-        lastPosition.lat,
-        lastPosition.lon,
-        lat,
-        lon
-    );
+    /*
+     * Sorgente indipendente: distanza geometrica tra coordinate.
+     */
+    const coordMeters =
+        calculateDistance(
+            lastPosition.lat,
+            lastPosition.lon,
+            lat,
+            lon
+        );
 
-    const coordinateSpeed = meters / dt;
+    const coordinateSpeed =
+        coordMeters / dt;
 
-    // v6.3: registriamo separatamente ciò che arriva dal GPS e ciò che
-    // ricaviamo dalle coordinate, prima di qualunque filtro.
-    gpsDiag.rawSpeed = deviceSpeed;
-    gpsDiag.coordinateSpeed = coordinateSpeed;
-    gpsDiag.meters = meters;
-    gpsDiag.dt = dt;
-    gpsDiag.accuracy = accuracy;
+    gpsDiag.rawSpeed =
+        deviceSpeed;
 
-    // Un salto non può essere trasformato in distanza reale. Se il GPS
-    // rimane molto tempo senza fix, concediamo più spazio, ma mai oltre una
-    // velocità realistica per una corsa amatoriale.
-    const maxPhysicalSpeed = 8.5; // 30.6 km/h
+    gpsDiag.coordinateSpeed =
+        coordinateSpeed;
+
+    gpsDiag.meters =
+        coordMeters;
+
+    gpsDiag.dt =
+        dt;
+
+    gpsDiag.accuracy =
+        accuracy;
+
+    /*
+     * MOTORE VELOCITÀ ESISTENTE — NON MODIFICATO.
+     */
+    const maxPhysicalSpeed =
+        8.5;
+
     const jumpTooLarge =
         coordinateSpeed > maxPhysicalSpeed &&
-        (deviceSpeed === null || deviceSpeed > maxPhysicalSpeed);
+        (
+            deviceSpeed === null ||
+            deviceSpeed > maxPhysicalSpeed
+        );
 
-    if (settings.gpsFiltering && jumpTooLarge) {
-        $("gpsStatus").textContent = "● GPS FILTRATO";
+    if (
+        settings.gpsFiltering &&
+        jumpTooLarge
+    ) {
+
+        $("gpsStatus").textContent =
+            "● GPS FILTRATO";
+
         return;
     }
 
-    // v6.5: selezione adattiva tra GPS SPEED e COORD SPEED.
     const selectedSpeed =
         chooseAdaptiveSpeed(
             deviceSpeed,
@@ -3779,153 +3996,212 @@ function positionReceived(position) {
             accuracy
         );
 
-    if (Number.isFinite(selectedSpeed)) {
-        adaptiveSpeedMps = selectedSpeed;
+    if (
+        Number.isFinite(selectedSpeed)
+    ) {
+        adaptiveSpeedMps =
+            selectedSpeed;
     }
 
-    gpsDiag.selectedSpeed = selectedSpeed;
-    gpsDiag.source = adaptiveSource;
+    gpsDiag.selectedSpeed =
+        selectedSpeed;
+
+    gpsDiag.source =
+        adaptiveSource;
 
     const speedForMovement =
         Number.isFinite(selectedSpeed)
             ? selectedSpeed
             : coordinateSpeed;
 
-    // Memoria breve della velocità per evitare oscillazioni GPS.
     gpsPositionHistory.push({
         ...current,
-        speed: speedForMovement
+        speed:
+            speedForMovement
     });
-    if (gpsPositionHistory.length > 3) {
+
+    if (
+        gpsPositionHistory.length > 3
+    ) {
         gpsPositionHistory.shift();
     }
 
-    const recentSpeeds = gpsPositionHistory
-        .map(p => p.speed)
-        .filter(v => Number.isFinite(v) && v >= 0 && v <= maxPhysicalSpeed);
+    const recentSpeeds =
+        gpsPositionHistory
+            .map(
+                p => p.speed
+            )
+            .filter(
+                v =>
+                    Number.isFinite(v) &&
+                    v >= 0 &&
+                    v <= maxPhysicalSpeed
+            );
 
-    const robustSpeed = recentSpeeds.length
-        ? median(recentSpeeds)
-        : speedForMovement;
+    const robustSpeed =
+        recentSpeeds.length
+            ? median(recentSpeeds)
+            : speedForMovement;
 
-    gpsDiag.robustSpeed = robustSpeed;
+    gpsDiag.robustSpeed =
+        robustSpeed;
 
-    updateMovementState(robustSpeed, timestamp);
+    updateMovementState(
+        robustSpeed,
+        timestamp
+    );
 
-    const movingNow = isMoving;
+    const movingNow =
+        isMoving;
 
     /*
-     * v6.13 — DISTANZA
+     * ========================================================
+     * DISTANCE ENGINE v6.15
+     * ========================================================
      *
-     * Non usiamo più la distanza tra due coordinate come contatore
-     * principale: a 4 km/h sono circa 1.11 m al secondo, quindi la
-     * vecchia soglia minima di 2 m scartava sistematicamente molti
-     * campioni di camminata.
-     *
-     * La velocità GPS selezionata è la sorgente affidabile.
-     * Integramo quindi la velocità nel tempo:
-     *
-     *   m/s × secondi = metri
-     *
-     * La distanza tra coordinate resta disponibile in diagnostica,
-     * ma non decide più se hai percorso 10 m o 60 m.
+     * La velocità GPS è la misura primaria.
+     * La posizione è la seconda misura.
      */
-
-    const speedForDistanceMps =
-        Number.isFinite(selectedSpeed)
-            ? selectedSpeed
-            : null;
-
-    const speedForDistanceKmh =
-        speedForDistanceMps !== null
-            ? speedForDistanceMps * 3.6
-            : null;
-
-    const validDistanceSpeed =
-        Number.isFinite(speedForDistanceKmh) &&
-        speedForDistanceKmh >= 1.2 &&
-        speedForDistanceKmh <= 24.0;
+    const hybrid =
+        hybridDistanceV615(
+            coordMeters,
+            selectedSpeed,
+            dt
+        );
 
     if (
         movingNow &&
-        validDistanceSpeed
+        Number.isFinite(hybrid.meters) &&
+        hybrid.meters > 0
     ) {
 
-        const distanceMeters =
-            speedForDistanceMps * dt;
-
         /*
-         * Limite fisico di sicurezza sul singolo intervallo.
-         * Non può esplodere a causa di un fix anomalo.
+         * Nessuna soglia minima in metri:
+         * a 4 km/h -> circa 1,11 m/s -> circa 0,067 km/min.
          */
-        const maxDistanceMeters =
-            Math.max(
-                15,
-                8.5 * dt * 1.8
+        const safeMeters =
+            Math.min(
+                hybrid.meters,
+                30
             );
 
+        totalDistance +=
+            safeMeters / 1000;
+
+        distanceEngineV615.lastUsedSource =
+            hybrid.source;
+
         if (
-            Number.isFinite(distanceMeters) &&
-            distanceMeters >= 0 &&
-            distanceMeters <= maxDistanceMeters
+            hybrid.source === "mix" ||
+            hybrid.source === "speed"
         ) {
-
-            const distanceKm =
-                distanceMeters / 1000;
-
-            totalDistance += distanceKm;
-
-            gpsSamples.push({
-                time: timestamp,
-                distance: distanceKm,
-                seconds: dt,
-                speed: speedForDistanceMps
-            });
-
-            const maxAge =
-                Math.max(
-                    10,
-                    Number(settings.paceWindow) || 20
-                ) * 1000;
-
-            gpsSamples =
-                gpsSamples.filter(
-                    sample =>
-                        timestamp - sample.time <= maxAge
-                );
-
-            gpsLastMovingSpeed =
-                speedForDistanceMps;
+            distanceEngineV615.acceptedSpeedMeters +=
+                Number(hybrid.speedMeters) || 0;
         }
+
+        if (
+            hybrid.source === "mix"
+        ) {
+            distanceEngineV615.acceptedCoordMeters +=
+                Number(hybrid.coordMeters) || 0;
+
+            distanceEngineV615.agreementCount++;
+        }
+
+        if (
+            hybrid.source === "speed" &&
+            Number.isFinite(hybrid.coordMeters)
+        ) {
+            distanceEngineV615.rejectedCoordMeters +=
+                hybrid.coordMeters;
+
+            distanceEngineV615.disagreementCount++;
+        }
+
+        if (
+            hybrid.source === "coords"
+        ) {
+            distanceEngineV615.acceptedCoordMeters +=
+                Number(hybrid.coordMeters) || 0;
+        }
+
+        gpsSamples.push({
+            time:
+                timestamp,
+            distance:
+                safeMeters / 1000,
+            seconds:
+                dt,
+            speed:
+                selectedSpeed,
+            source:
+                hybrid.source
+        });
+
+        const maxAge =
+            Math.max(
+                10,
+                Number(settings.paceWindow) || 20
+            ) * 1000;
+
+        gpsSamples =
+            gpsSamples.filter(
+                sample =>
+                    timestamp -
+                    sample.time <=
+                    maxAge
+            );
+
+        gpsLastMovingSpeed =
+            selectedSpeed;
     }
 
-    // Il punto viene aggiornato solo dopo i controlli: così un fix anomalo
-    // non trascina con sé anche il campione successivo.
-    lastPosition = { lat, lon };
-    lastPositionTime = timestamp;
-    lastGpsSpeed = robustSpeed;
-    gpsLastReliableTimestamp = timestamp;
+    lastPosition = {
+        lat,
+        lon
+    };
 
-    // Conserviamo una piccola storia di posizioni valide per il filtro.
-    gpsAcceptedPositions.push(current);
-    if (gpsAcceptedPositions.length > 8) {
+    lastPositionTime =
+        timestamp;
+
+    lastGpsSpeed =
+        robustSpeed;
+
+    gpsLastReliableTimestamp =
+        timestamp;
+
+    gpsAcceptedPositions.push(
+        current
+    );
+
+    if (
+        gpsAcceptedPositions.length > 8
+    ) {
         gpsAcceptedPositions.shift();
     }
 
     $("gps").textContent =
-        `GPS ✓ ${Math.round(accuracyMeters)}m`;
-    $("gpsStatus").textContent = movingNow
-        ? "● GPS IN MOVIMENTO"
-        : "● GPS FERMO";
+        `GPS ✓ ${Math.round(
+            Number.isFinite(accuracy)
+                ? accuracy
+                : 0
+        )}m`;
+
+    $("gpsStatus").textContent =
+        movingNow
+            ? "● GPS IN MOVIMENTO"
+            : "● GPS FERMO";
 
     if (runMode === "free") {
-        $("coach").textContent = movingNow
-            ? "Registrazione attiva"
-            : "Fermo · GPS stabilizzato";
+        $("coach").textContent =
+            movingNow
+                ? "Registrazione attiva"
+                : "Fermo · GPS stabilizzato";
     }
 
     updateDisplay();
 }
+
 
 function calculateDistance(
     lat1,
@@ -4225,16 +4501,7 @@ function getStableInstantSpeedKmh() {
     return instantSpeedKmh;
 }
 
-function getStableInstantPace() {
 
-    const speedKmh = getStableInstantSpeedKmh();
-
-    if (!(speedKmh > 0.5)) {
-        return null;
-    }
-
-    return 60 / speedKmh;
-}
 
 /* =========================
    PACE ENGINE
@@ -4243,71 +4510,82 @@ function getStableInstantPace() {
 function getFilteredPace() {
 
     /*
-     * RUNNER v6.13 — NUOVO RITMO ISTANTANEO
+     * v6.15 — RITMO ISTANTANEO, UNICO METODO
      *
-     * La sorgente è la velocità GPS selezionata.
-     * Internamente gpsDiag.selectedSpeed è m/s:
+     * selectedSpeed: m/s
+     *       ↓ × 3.6
+     * km/h
+     *       ↓
+     * 10 secondi di campioni
+     *       ↓
+     * media delle VELOCITÀ
+     *       ↓
+     * 60 / km/h
+     *       ↓
+     * min/km
      *
-     *       m/s × 3.6 = km/h
-     *
-     * Poi:
-     *   1. raccogliamo 10 s di velocità;
-     *   2. eliminiamo i valori impossibili;
-     *   3. facciamo la media delle velocità valide;
-     *   4. convertiamo la media in min/km;
-     *   5. aggiorniamo il ritmo una sola volta ogni 10 s.
-     *
-     * Il vecchio calcolo del ritmo NON viene usato.
+     * Non usa coordinate, distanza cumulativa o vecchi stabilizzatori.
      */
 
-    const now = Date.now();
+    const now =
+        Date.now();
 
     const selectedMps =
-        Number.isFinite(gpsDiag.selectedSpeed)
+        Number.isFinite(
+            gpsDiag.selectedSpeed
+        )
             ? gpsDiag.selectedSpeed
             : null;
 
-    // Conversione unica e controllata.
-    const speedKmh =
-        selectedMps !== null
-            ? selectedMps * 3.6
-            : null;
-
-    // Fermata / assenza di velocità: nessun vecchio valore trascinato.
     if (
-        speedKmh === null ||
+        selectedMps === null ||
+        selectedMps < 0
+    ) {
+        return paceAverageSpeedV68 !== null
+            ? 60 / paceAverageSpeedV68
+            : null;
+    }
+
+    const speedKmh =
+        selectedMps * 3.6;
+
+    if (
         speedKmh < 1.2
     ) {
+
         paceSpeedSamplesV68 = [];
         paceAverageSpeedV68 = null;
         paceWindowStartV68 = null;
         paceLastUpdateV68 = null;
+
         return null;
     }
 
     /*
-     * Filtro valori impossibili.
-     * 2 km/h è il limite inferiore utile per il ritmo;
-     * 24 km/h è un limite molto alto per la corsa amatoriale.
+     * Eliminiamo i valori impossibili prima della media.
      */
     if (
         speedKmh >= 2.0 &&
         speedKmh <= 24.0
     ) {
 
-        if (paceWindowStartV68 === null) {
-            paceWindowStartV68 = now;
+        if (
+            paceWindowStartV68 === null
+        ) {
+            paceWindowStartV68 =
+                now;
         }
 
         paceSpeedSamplesV68.push({
-            t: now,
-            speedKmh: speedKmh
+            time:
+                now,
+            speedKmh:
+                speedKmh
         });
     }
 
     /*
-     * Non cambiare il ritmo prima di aver completato
-     * una finestra reale di 10 secondi.
+     * Prima lettura: attendi 10 secondi.
      */
     if (
         paceWindowStartV68 === null ||
@@ -4318,74 +4596,55 @@ function getFilteredPace() {
             : null;
     }
 
-    if (!paceSpeedSamplesV68.length) {
-        paceWindowStartV68 = now;
-        paceLastUpdateV68 = now;
-
-        return paceAverageSpeedV68 !== null
-            ? 60 / paceAverageSpeedV68
-            : null;
-    }
-
-    // MEDIA ARITMETICA DELLE VELOCITÀ, non dei ritmi.
-    const averageKmh =
-        paceSpeedSamplesV68.reduce(
-            (sum, sample) =>
-                sum + sample.speedKmh,
-            0
-        ) /
-        paceSpeedSamplesV68.length;
+    const validSamples =
+        paceSpeedSamplesV68.filter(
+            sample =>
+                Number.isFinite(
+                    sample.speedKmh
+                ) &&
+                sample.speedKmh >= 2.0 &&
+                sample.speedKmh <= 24.0
+        );
 
     if (
-        !Number.isFinite(averageKmh) ||
-        averageKmh < 2.0 ||
-        averageKmh > 24.0
+        validSamples.length > 0
     ) {
-        paceSpeedSamplesV68 = [];
-        paceWindowStartV68 = now;
-        paceLastUpdateV68 = now;
 
-        return paceAverageSpeedV68 !== null
-            ? 60 / paceAverageSpeedV68
-            : null;
+        const averageKmh =
+            validSamples.reduce(
+                (sum, sample) =>
+                    sum + sample.speedKmh,
+                0
+            ) /
+            validSamples.length;
+
+        if (
+            Number.isFinite(averageKmh) &&
+            averageKmh >= 2.0 &&
+            averageKmh <= 24.0
+        ) {
+            paceAverageSpeedV68 =
+                averageKmh;
+        }
     }
 
-    paceAverageSpeedV68 = averageKmh;
-    paceLastUpdateV68 = now;
-
-    // Nuovo blocco: altri 10 secondi.
     paceSpeedSamplesV68 = [];
-    paceWindowStartV68 = now;
+    paceWindowStartV68 =
+        now;
+    paceLastUpdateV68 =
+        now;
 
-    // km/h -> min/km.
-    return 60 / averageKmh;
-}
-
-
-function getInstantaneousSpeedMps() {
-
-    const latest = gpsPositionHistory.length
-        ? gpsPositionHistory[gpsPositionHistory.length - 1]
+    return paceAverageSpeedV68 !== null
+        ? 60 / paceAverageSpeedV68
         : null;
-
-    if (latest && Number.isFinite(latest.speed) && latest.speed >= 0) {
-        return latest.speed;
-    }
-
-    return gpsLastMovingSpeed > 0
-        ? gpsLastMovingSpeed
-        : 0;
-
 }
 
 
 function getAveragePace() {
 
     /*
-     * Ritmo medio:
-     *   tempo attivo totale / distanza totale.
-     *
-     * Non usa il ritmo istantaneo.
+     * RITMO MEDIO = tempo attivo / distanza.
+     * Il ritmo istantaneo non entra nel calcolo.
      */
 
     if (
@@ -4395,7 +4654,10 @@ function getAveragePace() {
         return null;
     }
 
-    return activeElapsedV69 / totalDistance;
+    return (
+        activeElapsedV69 /
+        totalDistance
+    );
 }
 
 
@@ -4542,90 +4804,136 @@ function currentPhaseObject() {
 }
 
 
-function updatePhaseUI() {
 
-    /*
-     * Se stiamo entrando in una nuova fase, chiudiamo quella
-     * precedente con i dati REALMENTE registrati.
-     * Non salviamo semplicemente il piano: salviamo l'esecuzione.
-     */
+function finalizeCurrentPhaseV614() {
+
     if (
-        phaseIndex > 0 &&
-        expandedPhases[phaseIndex - 1] &&
-        phaseStartTime > 0
+        runMode !== "plan" ||
+        !expandedPhases.length ||
+        phaseIndex < 0 ||
+        phaseIndex >= expandedPhases.length ||
+        !phaseStartTime
     ) {
-
-        const previousPhase =
-            expandedPhases[phaseIndex - 1];
-
-        const phaseNow =
-            Date.now();
-
-        const phaseTime =
-            Math.max(
-                0,
-                (phaseNow - phaseStartTime) / 1000
-            );
-
-        const phaseDistance =
-            Math.max(
-                0,
-                totalDistance - phaseStartDistance
-            );
-
-        const phaseActiveTime =
-            Math.max(
-                0,
-                activeElapsedV69 -
-                phaseStartActiveTimeV613
-            );
-
-        const phaseAvgSpeed =
-            phaseTime > 0
-                ? phaseDistance * 3600 / phaseTime
-                : null;
-
-        const phaseAvgPace =
-            phaseDistance > 0
-                ? phaseTime / phaseDistance
-                : null;
-
-        executedPhasesV613.push({
-            index: phaseIndex - 1,
-            name:
-                previousPhase.name ||
-                `Fase ${phaseIndex}`,
-            type:
-                previousPhase.type ||
-                "run",
-            repeatIndex:
-                Number(previousPhase.repeatIndex || 1),
-            repeatTotal:
-                Number(previousPhase.repeatTotal || 1),
-
-            durationType:
-                previousPhase.durationType || "time",
-            targetType:
-                previousPhase.targetType || "none",
-            targetMin:
-                Number.isFinite(previousPhase.targetMin)
-                    ? previousPhase.targetMin
-                    : null,
-            targetMax:
-                Number.isFinite(previousPhase.targetMax)
-                    ? previousPhase.targetMax
-                    : null,
-
-            time: phaseTime,
-            elapsed: phaseTime,
-            activeTime: phaseActiveTime,
-            distance: phaseDistance,
-            avgPace: phaseAvgPace,
-            avgSpeed: phaseAvgSpeed,
-            maxSpeed: null
-        });
+        return;
     }
 
+    const phase =
+        expandedPhases[phaseIndex];
+
+    const alreadySaved =
+        executedPhasesV613.some(
+            item =>
+                item.index === phaseIndex &&
+                item.phaseStartTime === phaseStartTime
+        );
+
+    if (alreadySaved) {
+        return;
+    }
+
+    if (!phase) {
+        return;
+    }
+
+    const now =
+        Date.now();
+
+    const phaseTime =
+        Math.max(
+            0,
+            (now - phaseStartTime) / 1000
+        );
+
+    const phaseDistance =
+        Math.max(
+            0,
+            totalDistance - phaseStartDistance
+        );
+
+    const phaseActiveTime =
+        Math.max(
+            0,
+            activeElapsedV69 -
+            phaseStartActiveTimeV613
+        );
+
+    const phaseAvgSpeed =
+        phaseTime > 0
+            ? phaseDistance * 3600 / phaseTime
+            : null;
+
+    const phaseAvgPace =
+        phaseDistance > 0
+            ? phaseTime / phaseDistance
+            : null;
+
+    executedPhasesV613.push({
+        index:
+            phaseIndex,
+
+        phaseStartTime:
+            phaseStartTime,
+
+        name:
+            phase.name ||
+            `Fase ${phaseIndex + 1}`,
+
+        type:
+            phase.type ||
+            "run",
+
+        repeatIndex:
+            Number(
+                phase.repeatIndex || 1
+            ),
+
+        repeatTotal:
+            Number(
+                phase.repeatTotal || 1
+            ),
+
+        durationType:
+            phase.durationType ||
+            "time",
+
+        targetType:
+            phase.targetType ||
+            "none",
+
+        targetMin:
+            Number.isFinite(phase.targetMin)
+                ? phase.targetMin
+                : null,
+
+        targetMax:
+            Number.isFinite(phase.targetMax)
+                ? phase.targetMax
+                : null,
+
+        time:
+            phaseTime,
+
+        elapsed:
+            phaseTime,
+
+        activeTime:
+            phaseActiveTime,
+
+        distance:
+            phaseDistance,
+
+        avgPace:
+            phaseAvgPace,
+
+        avgSpeed:
+            phaseAvgSpeed,
+
+        maxSpeed:
+            null
+    });
+}
+
+function updatePhaseUI() {
 
     const phase =
         currentPhaseObject();
@@ -4804,33 +5112,31 @@ function advancePhase() {
     if (
         currentPhaseCompleted
     ) {
-
         return;
-
     }
-
 
     currentPhaseCompleted =
         true;
 
-
     const oldPhase =
         currentPhaseObject();
 
+    /*
+     * CHIUDI LA FASE ATTUALE PRIMA DI CAMBIARE phaseIndex.
+     * Così anche le ripetute e l'ultima fase vengono salvate.
+     */
+    finalizeCurrentPhaseV614();
 
     if (
-        settings.audioEnabled
+        settings.audioEnabled &&
+        oldPhase
     ) {
-
         speak(
             `Fase completata. ${oldPhase.name}.`
         );
-
     }
 
-
     phaseIndex++;
-
 
     if (
         phaseIndex >=
@@ -4843,27 +5149,21 @@ function advancePhase() {
         );
 
         return;
-
     }
 
-
     updatePhaseUI();
-
 
     const next =
         currentPhaseObject();
 
-
     if (
-        settings.audioEnabled
+        settings.audioEnabled &&
+        next
     ) {
-
         speak(
             `Prossima fase: ${next.name}.`
         );
-
     }
-
 }
 
 
@@ -5371,7 +5671,7 @@ function togglePause() {
 
 let phaseElapsedBeforePause = 0;
 
-// v6.13: tempo attivo usato esclusivamente per il ritmo medio.
+// v6.15: tempo attivo usato esclusivamente per il ritmo medio.
 let activeElapsedV69 = 0;
 let activeClockLastV69 = null;
 
@@ -5576,76 +5876,15 @@ function finishRun() {
 
 
     /*
-     * Chiudi anche l'ultima fase prima del salvataggio.
+     * Chiudi l'ultima fase ancora attiva.
+     * Se advancePhase l'ha già chiusa, phaseIndex è già oltre
+     * l'ultima e il helper non duplica nulla.
      */
     if (
         runMode === "plan" &&
-        phaseIndex < expandedPhases.length &&
-        phaseStartTime > 0
+        phaseIndex < expandedPhases.length
     ) {
-
-        const currentPhase =
-            expandedPhases[phaseIndex];
-
-        const finishPhaseTime =
-            Math.max(
-                0,
-                (finishNowV69 - phaseStartTime) / 1000
-            );
-
-        const finishPhaseDistance =
-            Math.max(
-                0,
-                totalDistance - phaseStartDistance
-            );
-
-        const finishPhaseActiveTime =
-            Math.max(
-                0,
-                activeElapsedV69 -
-                phaseStartActiveTimeV613
-            );
-
-        executedPhasesV613.push({
-            index: phaseIndex,
-            name:
-                currentPhase.name ||
-                `Fase ${phaseIndex + 1}`,
-            type:
-                currentPhase.type ||
-                "run",
-            repeatIndex:
-                Number(currentPhase.repeatIndex || 1),
-            repeatTotal:
-                Number(currentPhase.repeatTotal || 1),
-
-            durationType:
-                currentPhase.durationType || "time",
-            targetType:
-                currentPhase.targetType || "none",
-            targetMin:
-                Number.isFinite(currentPhase.targetMin)
-                    ? currentPhase.targetMin
-                    : null,
-            targetMax:
-                Number.isFinite(currentPhase.targetMax)
-                    ? currentPhase.targetMax
-                    : null,
-
-            time: finishPhaseTime,
-            elapsed: finishPhaseTime,
-            activeTime: finishPhaseActiveTime,
-            distance: finishPhaseDistance,
-            avgPace:
-                finishPhaseDistance > 0
-                    ? finishPhaseTime / finishPhaseDistance
-                    : null,
-            avgSpeed:
-                finishPhaseTime > 0
-                    ? finishPhaseDistance * 3600 / finishPhaseTime
-                    : null,
-            maxSpeed: null
-        });
+        finalizeCurrentPhaseV614();
     }
 
     const avgPace =
@@ -6268,7 +6507,7 @@ function clearAllData() {
 function updateActiveRunRecoveryV610() {
 
     /*
-     * v6.13:
+     * v6.15:
      * "TORNA ALLA CORSA" è globale e fixed.
      * Non appartiene a Storico: segue l'utente in ogni schermata.
      */
