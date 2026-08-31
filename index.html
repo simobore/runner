@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.2 -->
+<!-- RUNNER GPS v6.6 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -561,6 +561,44 @@ select:focus {
     display: block;
 }
 
+.history-detail-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.84);
+    z-index: 500;
+    overflow-y: auto;
+    padding: 20px 16px 100px;
+}
+.history-detail-card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #1c1c1c;
+    border-radius: 24px;
+    padding: 19px;
+}
+.history-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 12px;
+}
+.history-detail-row {
+    background: #242424;
+    border-radius: 13px;
+    padding: 11px;
+}
+.history-detail-row .label {
+    font-size: 10px;
+    color: #999;
+    text-transform: uppercase;
+}
+.history-detail-row .value {
+    font-size: 18px;
+    margin-top: 4px;
+}
+.active-run-banner { display:none; margin-bottom:15px; }
+.active-run-banner.show { display:block; }
+
 hr {
     border: none;
     border-top: 1px solid #303030;
@@ -601,6 +639,16 @@ audio {
 <!-- ================= HOME ================= -->
 
 <section id="home" class="screen active">
+
+<div id="activeRunBanner" class="card active-run-banner">
+    <div class="muted small">SESSIONE IN CORSO</div>
+    <div id="activeRunBannerText" style="font-size:19px;font-weight:850;margin:7px 0;">
+        Corsa salvata
+    </div>
+    <button class="primary mt" onclick="resumeSavedRun()">
+        ▶ RIPRENDI CORSA
+    </button>
+</div>
 
 <header>
     <div>
@@ -1165,6 +1213,8 @@ audio {
 <div id="historyList"></div>
 
 </section>
+
+<div id="historyDetailPanel" class="history-detail-panel" style="display:none;"></div>
 
 
 <!-- ================= IMPOSTAZIONI ================= -->
@@ -2892,6 +2942,18 @@ function getNextScheduledWorkout() {
 
 function refreshHome() {
 
+    const banner = $("activeRunBanner");
+    if (banner) {
+        const saved = loadJSON(SESSION_KEY, null);
+        if (saved && saved.running) {
+            banner.classList.add("show");
+            $("activeRunBannerText").textContent =
+                `Corsa in corso · ${(Number(saved.totalDistance) || 0).toFixed(2)} km · ${formatTime(Number(saved.elapsed) || 0)}`;
+        } else {
+            banner.classList.remove("show");
+        }
+    }
+
     refreshWeekStats();
 
 
@@ -3031,6 +3093,17 @@ let phaseStartDistance = 0;
 let runStartTime = 0;
 
 let elapsed = 0;
+
+// v6.6: tempo effettivamente in movimento; le soste non entrano nel ritmo medio.
+let activeElapsed = 0;
+let activeClockLast = null;
+
+// v6.6: sessione persistente e traccia diagnostica.
+let activeRunId = null;
+let runTrack = [];
+let lastSessionCheckpoint = 0;
+const SESSION_KEY = "runner_active_session_v6_6";
+const SESSION_CHECKPOINT_MS = 2000;
 
 let totalDistance = 0;
 
@@ -3370,6 +3443,11 @@ function startRunEngine(
     paused = false;
 
     elapsed = 0;
+    activeElapsed = 0;
+    activeClockLast = Date.now();
+    activeRunId = uuid();
+    runTrack = [];
+    lastSessionCheckpoint = 0;
 
     totalDistance = 0;
 
@@ -3394,6 +3472,8 @@ function startRunEngine(
     adaptiveSource = "—";
 
     paceHistory = [];
+    stablePaceSec = null;
+    stablePaceSamples = [];
 
     lastPaceAnnouncement = 0;
 
@@ -3425,6 +3505,7 @@ function startRunEngine(
     runStartTime =
         Date.now();
 
+    saveActiveRunSession(true);
 
     $("pauseButton").textContent =
         "Ⅱ PAUSA";
@@ -3557,25 +3638,28 @@ function median(values) {
 
 function updateMovementState(speedMps, now) {
 
-    const speed = Number.isFinite(speedMps) ? Math.max(0, speedMps) : 0;
+    const speed = Number.isFinite(speedMps)
+        ? Math.max(0, speedMps)
+        : 0;
 
-    // Isteresi: partenza confermata dopo ~1.2 s di movimento,
-    // arresto confermato dopo ~2.5 s. Evita falsi start/stop da drift GPS.
-    if (speed >= 0.85) {
+    const speedKmh = speed * 3.6;
+
+    // v6.6: sotto ~1,2 km/h è direttamente FERMO.
+    if (speedKmh < 1.2) {
+        isMoving = false;
+        movementCandidateSince = 0;
+        stationaryCandidateSince = 0;
+        return false;
+    }
+
+    // Partenza confermata rapidamente, ma non da un singolo picco.
+    if (speedKmh >= 2.0) {
         stationaryCandidateSince = 0;
         if (!isMoving) {
             if (!movementCandidateSince) movementCandidateSince = now;
             if (now - movementCandidateSince >= 600) {
                 isMoving = true;
                 movementCandidateSince = 0;
-            }
-        }
-    } else if (speed <= 0.45) {
-        movementCandidateSince = 0;
-        if (isMoving) {
-            if (!stationaryCandidateSince) stationaryCandidateSince = now;
-            if (now - stationaryCandidateSince >= 2200) {
-                isMoving = false;
             }
         }
     } else {
@@ -3793,6 +3877,26 @@ function positionReceived(position) {
         gpsAcceptedPositions.shift();
     }
 
+    runTrack.push({
+        t: timestamp,
+        lat,
+        lon,
+        accuracy: Number.isFinite(accuracy) ? accuracy : null,
+        gpsSpeed: deviceSpeed,
+        coordSpeed: coordinateSpeed,
+        selectedSpeed,
+        source: adaptiveSource,
+        robustSpeed,
+        distanceDelta: meters,
+        moving: movingNow
+    });
+
+    if (runTrack.length > 2500) {
+        runTrack.shift();
+    }
+
+    saveActiveRunSession();
+
     $("gps").textContent =
         `GPS ✓ ${Math.round(accuracyMeters)}m`;
     $("gpsStatus").textContent = movingNow
@@ -3852,6 +3956,147 @@ function calculateDistance(
    TIME
    ========================= */
 
+
+function updateActiveClock(now = Date.now()) {
+
+    if (activeClockLast === null) {
+        activeClockLast = now;
+        return;
+    }
+
+    const dt = now - activeClockLast;
+
+    if (!paused && isMoving && dt > 0 && dt < 10000) {
+        activeElapsed += dt / 1000;
+    }
+
+    activeClockLast = now;
+}
+
+function buildLiveSession() {
+    return {
+        version: "6.6",
+        id: activeRunId,
+        startedAt: runStartTime ? new Date(runStartTime).toISOString() : new Date().toISOString(),
+        mode: runMode,
+        plan: activePlan ? JSON.parse(JSON.stringify(activePlan)) : null,
+        scheduleId: activeScheduleId,
+        running,
+        paused,
+        elapsed,
+        activeElapsed,
+        totalDistance,
+        phaseIndex,
+        phaseStartDistance,
+        phaseStartTime,
+        lastPosition,
+        lastPositionTime,
+        isMoving,
+        gpsLastMovingSpeed,
+        adaptiveSpeedMps,
+        adaptiveSource,
+        track: runTrack.slice(-2500)
+    };
+}
+
+function saveActiveRunSession(force = false) {
+
+    if (!running || !activeRunId) return;
+
+    const now = Date.now();
+
+    if (!force && now - lastSessionCheckpoint < SESSION_CHECKPOINT_MS) {
+        return;
+    }
+
+    updateActiveClock(now);
+
+    try {
+        localStorage.setItem(
+            SESSION_KEY,
+            JSON.stringify(buildLiveSession())
+        );
+        lastSessionCheckpoint = now;
+    } catch (e) {
+        console.warn("RUNNER: checkpoint non salvato", e);
+    }
+}
+
+function clearActiveRunSession() {
+    localStorage.removeItem(SESSION_KEY);
+}
+
+function resumeSavedRun() {
+
+    const saved = loadJSON(SESSION_KEY, null);
+
+    if (!saved || !saved.running) {
+        clearActiveRunSession();
+        showToast("Nessuna corsa da riprendere.");
+        return;
+    }
+
+    stopGPS();
+    clearInterval(timerId);
+
+    activeRunId = saved.id || uuid();
+    runMode = saved.mode || "free";
+    activePlan = saved.plan || null;
+    activeScheduleId = saved.scheduleId || null;
+    running = true;
+    paused = !!saved.paused;
+
+    elapsed = Number(saved.elapsed) || 0;
+    activeElapsed = Number(saved.activeElapsed) || 0;
+    activeClockLast = Date.now();
+
+    totalDistance = Number(saved.totalDistance) || 0;
+    phaseIndex = Number(saved.phaseIndex) || 0;
+    phaseStartDistance = Number(saved.phaseStartDistance) || 0;
+    phaseStartTime = Number(saved.phaseStartTime) || Date.now();
+
+    lastPosition = saved.lastPosition || null;
+    lastPositionTime = saved.lastPositionTime || null;
+    isMoving = !!saved.isMoving;
+    gpsLastMovingSpeed = Number(saved.gpsLastMovingSpeed) || 0;
+    adaptiveSpeedMps = Number.isFinite(saved.adaptiveSpeedMps)
+        ? saved.adaptiveSpeedMps
+        : null;
+    adaptiveSource = saved.adaptiveSource || "—";
+    runTrack = Array.isArray(saved.track) ? saved.track : [];
+
+    gpsSamples = [];
+    gpsPositionHistory = [];
+    gpsAcceptedPositions = [];
+    lastGpsSpeed = null;
+    movementCandidateSince = 0;
+    stationaryCandidateSince = 0;
+    instantSpeedKmh = null;
+    stablePaceSec = null;
+    stablePaceSamples = [];
+    paceHistory = [];
+
+    runStartTime = Date.now() - elapsed * 1000;
+
+    $("pauseButton").textContent = paused ? "▶ RIPRENDI" : "Ⅱ PAUSA";
+
+    if (runMode === "free") {
+        $("phaseName").textContent = "CORSA LIBERA";
+        $("phaseInfo").textContent = "Solo registrazione dati";
+        $("targetPanel").style.display = "none";
+    } else {
+        $("targetPanel").style.display = "block";
+        updatePhaseUI();
+    }
+
+    showScreen("run");
+    startGPS();
+
+    timerId = setInterval(tickRun, 250);
+    saveActiveRunSession(true);
+    showToast("Corsa recuperata.");
+}
+
 function tickRun() {
 
     if (
@@ -3864,12 +4109,16 @@ function tickRun() {
     }
 
 
+    const now = Date.now();
+
     elapsed =
         (
-            Date.now() -
+            now -
             runStartTime
         ) / 1000;
 
+    updateActiveClock(now);
+    saveActiveRunSession();
 
     updateDisplay();
 
@@ -4103,15 +4352,54 @@ function getStableInstantSpeedKmh() {
     return instantSpeedKmh;
 }
 
+let stablePaceSec = null;
+let stablePaceSamples = [];
+
+const STABLE_PACE_WINDOW_MS = 6000;
+const STABLE_PACE_MIN_KMH = 2.0;
+const STABLE_PACE_MAX_KMH = 25.0;
+
 function getStableInstantPace() {
 
     const speedKmh = getStableInstantSpeedKmh();
 
-    if (!(speedKmh > 0.5)) {
+    if (!(speedKmh >= STABLE_PACE_MIN_KMH)) {
+        stablePaceSamples = [];
+        stablePaceSec = null;
         return null;
     }
 
-    return 60 / speedKmh;
+    if (speedKmh > STABLE_PACE_MAX_KMH) {
+        return stablePaceSec;
+    }
+
+    const now = Date.now();
+
+    stablePaceSamples.push({
+        t: now,
+        pace: 60 / speedKmh
+    });
+
+    stablePaceSamples = stablePaceSamples.filter(
+        sample => now - sample.t <= STABLE_PACE_WINDOW_MS
+    );
+
+    const medianPace = median(
+        stablePaceSamples.map(sample => sample.pace)
+    );
+
+    if (!Number.isFinite(medianPace)) {
+        return stablePaceSec;
+    }
+
+    if (stablePaceSec === null) {
+        stablePaceSec = medianPace;
+    } else {
+        // Molto più stabile della velocità visualizzata.
+        stablePaceSec += 0.20 * (medianPace - stablePaceSec);
+    }
+
+    return stablePaceSec;
 }
 
 /* =========================
@@ -4146,22 +4434,14 @@ function getInstantaneousSpeedMps() {
 function getAveragePace() {
 
     if (
-        elapsed <= 0 ||
+        activeElapsed <= 0 ||
         totalDistance <= 0
     ) {
-
         return null;
-
     }
 
-
-    return (
-        elapsed /
-        (totalDistance * 1000)
-        *
-        1000
-    );
-
+    // secondi / km
+    return activeElapsed / totalDistance;
 }
 
 
@@ -4257,14 +4537,20 @@ function updateDisplay() {
         formatTime(elapsed);
 
 
-    $("speed").textContent =
-        getSpeed().toFixed(1);
+    const displaySpeed = getSpeed();
 
+    $("speed").textContent =
+        displaySpeed.toFixed(1);
+
+    const displayPace =
+        displaySpeed < 1.2
+            ? null
+            : pace;
 
     $("pace").textContent =
-        pace
+        displayPace
         ?
-        secondsToPace(pace)
+        secondsToPace(displayPace)
         :
         "--:--";
 
@@ -5073,8 +5359,8 @@ function finishRun() {
 
     timerId = null;
 
+    updateActiveClock(Date.now());
     stopGPS();
-
 
     const avgPace =
         getAveragePace();
@@ -5144,7 +5430,47 @@ function finishRun() {
             getSpeed(),
 
         scheduleId:
-            activeScheduleId
+            activeScheduleId,
+
+        activeTime:
+            activeElapsed,
+
+        maxSpeed:
+            runTrack.reduce(
+                (max, sample) =>
+                    Math.max(
+                        max,
+                        Number(sample.selectedSpeed || 0) * 3.6
+                    ),
+                0
+            ),
+
+        gpsTrack:
+            runTrack.slice(),
+
+        gpsDiagnostics: {
+            samples: runTrack.length,
+            sources: runTrack.reduce(
+                (acc, sample) => {
+                    const key = sample.source || "—";
+                    acc[key] = (acc[key] || 0) + 1;
+                    return acc;
+                },
+                {}
+            ),
+            avgAccuracy:
+                runTrack.length
+                    ? runTrack.reduce(
+                        (sum, sample) =>
+                            sum + (Number(sample.accuracy) || 0),
+                        0
+                    ) / runTrack.length
+                    : null
+        },
+
+        coach: {
+            finalState: lastCoachState
+        }
 
     };
 
@@ -5159,6 +5485,10 @@ function finishRun() {
         history
     );
 
+    clearActiveRunSession();
+    activeRunId = null;
+    runTrack = [];
+    activeClockLast = null;
 
     if (
         activeScheduleId
@@ -5251,24 +5581,20 @@ function finishRun() {
 function confirmExitRun() {
 
     if (!running) {
-
         showScreen("home");
-
         return;
-
     }
 
+    saveActiveRunSession(true);
 
     if (
         confirm(
-            "Uscire dalla corsa senza salvarla?"
+            "Tornare alla Home? La corsa continuerà e potrai riprenderla."
         )
     ) {
-
-        cancelRun();
-
+        showScreen("home");
+        refreshHome();
     }
-
 }
 
 
@@ -5285,6 +5611,10 @@ function cancelRun() {
     timerId = null;
 
     stopGPS();
+    clearActiveRunSession();
+    activeRunId = null;
+    runTrack = [];
+    activeClockLast = null;
 
     activePlan = null;
 
@@ -5686,6 +6016,205 @@ function clearAllData() {
    HISTORY
    ========================================================= */
 
+
+function activitySourceText(activity) {
+
+    const sources =
+        activity &&
+        activity.gpsDiagnostics &&
+        activity.gpsDiagnostics.sources
+            ? activity.gpsDiagnostics.sources
+            : {};
+
+    return Object.entries(sources)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(" · ") || "—";
+}
+
+function buildActivityChatText(activity) {
+
+    const track =
+        Array.isArray(activity.gpsTrack)
+            ? activity.gpsTrack
+            : [];
+
+    const lines = [
+        "RUNNER — DATI ALLENAMENTO",
+        "",
+        `Data: ${activity.date || "—"}`,
+        `Allenamento: ${activity.planName || "Corsa"}`,
+        `Modalità: ${activity.mode || "—"}`,
+        "",
+        "RIEPILOGO",
+        `Distanza: ${Number(activity.distance || 0).toFixed(2)} km`,
+        `Tempo totale: ${formatTime(activity.time)}`,
+        `Tempo in movimento: ${formatTime(activity.activeTime || activity.time)}`,
+        `Tempo fermo: ${formatTime(Math.max(0, (activity.time || 0) - (activity.activeTime || activity.time)))}`,
+        `Ritmo medio: ${activity.pace ? secondsToPace(activity.pace) : "--:--"} min/km`,
+        `Velocità media: ${Number(activity.speed || 0).toFixed(2)} km/h`,
+        `Velocità massima: ${Number(activity.maxSpeed || 0).toFixed(2)} km/h`,
+        "",
+        "GPS",
+        `Campioni: ${track.length}`,
+        `Precisione media: ${
+            activity.gpsDiagnostics &&
+            Number.isFinite(activity.gpsDiagnostics.avgAccuracy)
+                ? activity.gpsDiagnostics.avgAccuracy.toFixed(1) + " m"
+                : "—"
+        }`,
+        `Sorgenti: ${activitySourceText(activity)}`,
+        "",
+        "TRACCIA / DIAGNOSTICA",
+        "timestamp | lat | lon | accuracy | gpsSpeed m/s | coordSpeed m/s | selectedSpeed m/s | source | robustSpeed m/s | distance m | moving"
+    ];
+
+    track.forEach(sample => {
+        lines.push([
+            sample.t,
+            Number(sample.lat).toFixed(6),
+            Number(sample.lon).toFixed(6),
+            Number(sample.accuracy || 0).toFixed(1),
+            Number(sample.gpsSpeed || 0).toFixed(3),
+            Number(sample.coordSpeed || 0).toFixed(3),
+            Number(sample.selectedSpeed || 0).toFixed(3),
+            sample.source || "—",
+            Number(sample.robustSpeed || 0).toFixed(3),
+            Number(sample.distanceDelta || 0).toFixed(2),
+            sample.moving ? "YES" : "NO"
+        ].join(" | "));
+    });
+
+    return lines.join("\\n");
+}
+
+async function copyActivityForChatGPT(activityId) {
+
+    const activity =
+        loadJSON(STORAGE.history, [])
+            .find(item => item.id === activityId);
+
+    if (!activity) {
+        showToast("Attività non trovata.");
+        return;
+    }
+
+    const text = buildActivityChatText(activity);
+
+    try {
+        await navigator.clipboard.writeText(text);
+        showToast("Dati copiati per ChatGPT.");
+    } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+        showToast("Dati copiati per ChatGPT.");
+    }
+}
+
+function openHistoryDetail(id) {
+
+    const activity =
+        loadJSON(STORAGE.history, [])
+            .find(item => item.id === id);
+
+    if (!activity) return;
+
+    const panel = $("historyDetailPanel");
+    const date = new Date(activity.date);
+    const totalTime = Number(activity.time || 0);
+    const activeTime = Number(activity.activeTime || totalTime);
+    const stoppedTime = Math.max(0, totalTime - activeTime);
+
+    panel.innerHTML = `
+        <div class="history-detail-card">
+            <div class="list-row">
+                <div>
+                    <div style="font-size:21px;font-weight:850;">
+                        ${escapeHTML(activity.planName || "Corsa")}
+                    </div>
+                    <div class="muted small" style="margin-top:5px;">
+                        ${date.toLocaleDateString("it-IT")}
+                        ·
+                        ${date.toLocaleTimeString("it-IT", {
+                            hour:"2-digit", minute:"2-digit"
+                        })}
+                    </div>
+                </div>
+                <button class="icon-btn" onclick="closeHistoryDetail()">✕</button>
+            </div>
+
+            <div class="history-detail-grid">
+                <div class="history-detail-row">
+                    <div class="label">Distanza</div>
+                    <div class="value">${Number(activity.distance || 0).toFixed(2)} km</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">Ritmo medio</div>
+                    <div class="value">${activity.pace ? secondsToPace(activity.pace) : "--:--"} min/km</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">Tempo totale</div>
+                    <div class="value">${formatTime(totalTime)}</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">In movimento</div>
+                    <div class="value">${formatTime(activeTime)}</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">Tempo fermo</div>
+                    <div class="value">${formatTime(stoppedTime)}</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">Velocità media</div>
+                    <div class="value">${Number(activity.speed || 0).toFixed(2)} km/h</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">Velocità massima</div>
+                    <div class="value">${Number(activity.maxSpeed || 0).toFixed(2)} km/h</div>
+                </div>
+                <div class="history-detail-row">
+                    <div class="label">Campioni GPS</div>
+                    <div class="value">${Array.isArray(activity.gpsTrack) ? activity.gpsTrack.length : 0}</div>
+                </div>
+            </div>
+
+            <div class="history-detail card" style="margin-top:15px;">
+                <div class="muted small">DIAGNOSTICA GPS</div>
+                <div style="margin-top:8px;">
+                    Precisione media:
+                    ${
+                        activity.gpsDiagnostics &&
+                        Number.isFinite(activity.gpsDiagnostics.avgAccuracy)
+                            ? activity.gpsDiagnostics.avgAccuracy.toFixed(1) + " m"
+                            : "—"
+                    }
+                </div>
+                <div style="margin-top:6px;">
+                    Sorgenti: ${escapeHTML(activitySourceText(activity))}
+                </div>
+            </div>
+
+            <button class="primary" onclick="copyActivityForChatGPT('${activity.id}')">
+                📋 COPIA DATI PER CHATGPT
+            </button>
+
+            <button class="secondary mt" onclick="closeHistoryDetail()">
+                CHIUDI
+            </button>
+        </div>
+    `;
+
+    panel.style.display = "block";
+}
+
+function closeHistoryDetail() {
+    $("historyDetailPanel").style.display = "none";
+    $("historyDetailPanel").innerHTML = "";
+}
+
 function renderHistory() {
 
     const history =
@@ -5732,6 +6261,11 @@ function renderHistory() {
 
             div.className =
                 "list-item";
+
+            div.style.cursor = "pointer";
+            div.onclick = function () {
+                openHistoryDetail(activity.id);
+            };
 
 
             const pace =
@@ -5787,6 +6321,7 @@ function renderHistory() {
                     <button
                         class="icon-btn"
                         onclick="
+                            event.stopPropagation();
                             deleteHistory(
                                 '${activity.id}'
                             )">
@@ -6006,9 +6541,27 @@ if ("serviceWorker" in navigator) {
 // Il timer è basato su Date.now(), quindi non accumula errori se il browser
 // rallenta setInterval. Al ritorno in primo piano aggiorniamo subito il display.
 document.addEventListener("visibilitychange", function () {
+    if (running) {
+        saveActiveRunSession(true);
+    }
+
     if (!document.hidden && running && !paused) {
         elapsed = Math.max(0, (Date.now() - runStartTime) / 1000);
+        updateActiveClock(Date.now());
         updateDisplay();
+        refreshHome();
+    }
+});
+
+window.addEventListener("pagehide", function () {
+    if (running) {
+        saveActiveRunSession(true);
+    }
+});
+
+window.addEventListener("beforeunload", function () {
+    if (running) {
+        saveActiveRunSession(true);
     }
 });
 </script> 
