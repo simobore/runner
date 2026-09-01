@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.22 -->
+<!-- RUNNER GPS v6.23 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -7590,5 +7590,83 @@ document.addEventListener("visibilitychange", function () {
 })();
 </script>
 
+
+<style id="runnerV623Styles">
+.runner-v623-map-settings{margin-top:14px;padding:14px;border-radius:14px;border:1px solid rgba(127,127,127,.22)}
+.runner-v623-map-settings h4{margin:0 0 5px}.runner-v623-map-settings p{font-size:12px;opacity:.7}
+.runner-v623-map-row{display:grid;grid-template-columns:1fr 82px 44px;gap:8px;align-items:center;margin:7px 0}
+.runner-v623-map-row input{box-sizing:border-box}.runner-v623-map-row input[type=text]{width:100%;padding:8px;border-radius:8px;border:1px solid #bbb}
+.runner-v623-map-row input[type=color]{width:40px;height:32px}.runner-v623-actions{display:flex;gap:8px;margin-top:10px}
+.runner-v623-actions button,.runner-v623-map-button{padding:10px 12px;border:0;border-radius:9px;font-weight:700;cursor:pointer}
+.runner-v623-map-button{width:100%;margin:8px 0}
+.runner-v623-pace-picker{position:absolute;z-index:100010;background:#fff;color:#111;border:1px solid #ccc;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);padding:8px;min-width:220px}
+.runner-v623-pace-picker button{display:flex;justify-content:space-between;width:100%;border:0;background:transparent;padding:9px 8px;border-radius:8px;cursor:pointer;text-align:left}
+</style>
+<script id="runnerV623Module">
+(function(){
+ const KEY="runner_map_color_settings_v623";
+ const DEF={fastMax:330,mediumFastMax:390,mediumMax:450,slowMax:510,
+ colors:{fast:"#22c55e",mediumFast:"#84cc16",medium:"#eab308",slow:"#f97316",verySlow:"#ef4444"}};
+ function get(){try{const x=JSON.parse(localStorage.getItem(KEY)||"null");return {...DEF,...(x||{}),colors:{...DEF.colors,...((x&&x.colors)||{})}}}catch(e){return JSON.parse(JSON.stringify(DEF))}}
+ function save(x){localStorage.setItem(KEY,JSON.stringify(x))}
+ function reset(){save(DEF);return get()}
+ window.RUNNER_V623_MAP_SETTINGS={get:get,save:save,reset:reset};
+
+ function sec(v){
+   v=String(v||"").trim();
+   if(/^\d+:\d{1,2}$/.test(v)){const a=v.split(":").map(Number);return a[0]*60+a[1]}
+   const n=Number(v);return Number.isFinite(n)?n*60:NaN;
+ }
+ function clock(v){v=Math.round(Number(v)||0);return Math.floor(v/60)+":"+String(v%60).padStart(2,"0")}
+
+ window.openRunnerV623MapSettings=function(){
+   const old=document.getElementById("runnerV623SettingsOverlay");if(old)old.remove();
+   const s=get(),o=document.createElement("div");o.id="runnerV623SettingsOverlay";
+   o.style.cssText="position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto";
+   const c=document.createElement("div");c.style.cssText="width:min(560px,100%);background:#fff;color:#111;border-radius:16px;padding:18px";
+   c.innerHTML='<div style="display:flex;justify-content:space-between"><strong>🎨 Colori mappa percorso</strong><button id="v623close">×</button></div>'+
+    '<p style="font-size:12px;opacity:.7">Soglie in min/km. Puoi scegliere i valori consigliati o scriverne di personalizzati.</p>'+
+    row("Veloce","fastMax",s.fastMax,s.colors.fast)+row("Medio-veloce","mediumFastMax",s.mediumFastMax,s.colors.mediumFast)+
+    row("Medio","mediumMax",s.mediumMax,s.colors.medium)+row("Lento","slowMax",s.slowMax,s.colors.slow)+
+    '<div class="runner-v623-map-row"><label>Molto lento</label><span>oltre ultima</span><input id="v623verySlow" type="color" value="'+s.colors.verySlow+'"></div>'+
+    '<div class="runner-v623-actions"><button id="v623save">Salva</button><button id="v623reset">Ripristina</button></div>';
+   function row(label,key,value,color){return '<div class="runner-v623-map-row"><label>'+label+' — sotto</label><input id="v623'+key+'" type="text" value="'+clock(value)+'"><input id="v623'+key+'Color" type="color" value="'+color+'"></div>'}
+   o.appendChild(c);document.body.appendChild(o);
+   document.getElementById("v623close").onclick=function(){o.remove()};
+   document.getElementById("v623save").onclick=function(){
+     const f=sec(document.getElementById("v623fastMax").value),mf=sec(document.getElementById("v623mediumFastMax").value),m=sec(document.getElementById("v623mediumMax").value),sl=sec(document.getElementById("v623slowMax").value);
+     if(![f,mf,m,sl].every(Number.isFinite)||!(f<mf&&mf<m&&m<sl)){alert("Le soglie devono essere valide e crescenti.");return}
+     save({fastMax:f,mediumFastMax:mf,mediumMax:m,slowMax:sl,colors:{
+       fast:document.getElementById("v623fastMaxColor").value,
+       mediumFast:document.getElementById("v623mediumFastMaxColor").value,
+       medium:document.getElementById("v623mediumMaxColor").value,
+       slow:document.getElementById("v623slowMaxColor").value,
+       verySlow:document.getElementById("v623verySlow").value}});
+     if(typeof showToast==="function")showToast("Impostazioni mappa salvate");
+   };
+   document.getElementById("v623reset").onclick=function(){reset();o.remove();window.openRunnerV623MapSettings()};
+ };
+
+ window.runnerV623AttachPacePicker=function(input){
+   if(!input||input.dataset.v623Picker==="1")return;input.dataset.v623Picker="1";
+   input.addEventListener("focus",function(){
+     document.querySelectorAll(".runner-v623-pace-picker").forEach(x=>x.remove());
+     const box=document.createElement("div");box.className="runner-v623-pace-picker";
+     box.innerHTML='<div style="font-size:11px;opacity:.65;padding:4px">Ritmi consigliati — puoi sempre scrivere il tuo</div>'+
+       [["3:00","molto veloce"],["3:30","molto veloce"],["4:00","veloce"],["4:30","veloce"],["5:00","sostenuto"],["5:30","sostenuto"],["6:00","moderato"],["6:30","moderato"],["7:00","tranquillo"],["7:30","tranquillo"],["8:00","facile"],["8:30","facile"],["9:00","molto facile"]].map(function(p){
+         return '<button type="button" data-v="'+p[0]+'"><strong>'+p[0]+' /km</strong><span>'+p[1]+'</span></button>';
+       }).join("")+
+       '<div style="font-size:11px;opacity:.65;padding:7px">✏️ Personalizzato: scrivilo direttamente nel campo</div>';
+     document.body.appendChild(box);const r=input.getBoundingClientRect();
+     box.style.left=(scrollX+r.left)+"px";box.style.top=(scrollY+r.bottom+5)+"px";
+     box.querySelectorAll("[data-v]").forEach(function(b){b.onclick=function(){input.value=b.dataset.v;input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));box.remove()}});
+   });
+ };
+ window.runnerV623AttachAllPacePickers=function(root){
+   (root||document).querySelectorAll('input[placeholder*="ritmo" i],input[name*="ritmo" i],input[id*="ritmo" i],input[name*="pace" i],input[id*="pace" i]').forEach(window.runnerV623AttachPacePicker);
+ };
+ window.addEventListener("load",function(){window.runnerV623AttachAllPacePickers(document)});
+})();
+</script>
 </body>
 </html>
