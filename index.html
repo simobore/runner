@@ -650,7 +650,11 @@ audio {
 }
 </style>
 
-</head>
+<style id="runnerAutomaticMapColorsV1">
+.runner-auto-map-legend-v1{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:8px;padding:7px 9px;border:1px solid rgba(127,127,127,.22);border-radius:8px;font-size:11px;line-height:1.2}
+.runner-auto-map-legend-v1 .item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.runner-auto-map-legend-v1 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
+</style></head>
 
 <body>
 
@@ -1336,65 +1340,7 @@ audio {
     Controllo ritmo
 </div>
 
-<div class="card">
 
-    <div class="info-box">
-        Il controllo è a ciclo chiuso: RUNNER osserva il ritmo
-        GPS filtrato, confronta il valore con il target della fase
-        e modifica il messaggio in base a ciò che succede realmente.
-    </div>
-
-    <div class="form-group" style="margin-top:15px;">
-
-        <label>
-            Tolleranza minima dal target (sec/km)
-        </label>
-
-        <input
-            id="paceToleranceMin"
-            type="number"
-            min="0"
-            step="1"
-            onchange="saveSettings()">
-
-    </div>
-
-    <div class="form-group">
-
-        <label>
-            Tolleranza massima dal target (sec/km)
-        </label>
-
-        <input
-            id="paceToleranceMax"
-            type="number"
-            min="0"
-            step="1"
-            onchange="saveSettings()">
-
-    </div>
-
-    <div class="form-group">
-
-        <label>
-            Finestra GPS utilizzata per il ritmo
-        </label>
-
-        <select
-            id="paceWindow"
-            onchange="saveSettings()">
-
-            <option value="10">10 secondi</option>
-            <option value="15">15 secondi</option>
-            <option value="20">20 secondi</option>
-            <option value="30">30 secondi</option>
-            <option value="45">45 secondi</option>
-
-        </select>
-
-    </div>
-
-</div>
 
 <div class="section-title">
     Mappa del percorso
@@ -1409,7 +1355,6 @@ audio {
     <div class="form-group">
         <label>Veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" inputmode="text" autocomplete="off" id="mapPaceFastV624" placeholder="5:30">
             <input id="mapColorFastV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1417,7 +1362,6 @@ audio {
     <div class="form-group">
         <label>Medio-veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" inputmode="text" autocomplete="off" id="mapPaceMediumFastV624" placeholder="6:30">
             <input id="mapColorMediumFastV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1425,7 +1369,6 @@ audio {
     <div class="form-group">
         <label>Medio — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" inputmode="text" autocomplete="off" id="mapPaceMediumV624" placeholder="7:30">
             <input id="mapColorMediumV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1433,7 +1376,6 @@ audio {
     <div class="form-group">
         <label>Lento — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" inputmode="text" autocomplete="off" id="mapPaceSlowV624" placeholder="8:30">
             <input id="mapColorSlowV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -7687,15 +7629,7 @@ document.addEventListener("visibilitychange", function () {
  function save(x){localStorage.setItem(KEY,JSON.stringify(x))}
  function reset(){save(DEF);return get()}
  window.RUNNER_V623_MAP_SETTINGS={get:get,save:save,reset:reset};
-
- function sec(v){
-   v=String(v||"").trim();
-   if(/^\d+:\d{1,2}$/.test(v)){const a=v.split(":").map(Number);return a[0]*60+a[1]}
-   const n=Number(v);return Number.isFinite(n)?n*60:NaN;
- }
- function clock(v){v=Math.round(Number(v)||0);return Math.floor(v/60)+":"+String(v%60).padStart(2,"0")}
-
- window.openRunnerV623MapSettings=function(){
+    window.openRunnerV623MapSettings=function(){
    const old=document.getElementById("runnerV623SettingsOverlay");if(old)old.remove();
    const s=get(),o=document.createElement("div");o.id="runnerV623SettingsOverlay";
    o.style.cssText="position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto";
@@ -7776,33 +7710,7 @@ document.addEventListener("visibilitychange", function () {
         return Math.floor(v/60)+":"+String(v%60).padStart(2,"0");
     }
     window.RUNNER_V624_MAP_SETTINGS={get:read};
-
-    window.saveMapColorSettingsV624=function(){
-        const f=sec(document.getElementById("mapPaceFastV624").value);
-        const mf=sec(document.getElementById("mapPaceMediumFastV624").value);
-        const m=sec(document.getElementById("mapPaceMediumV624").value);
-        const sl=sec(document.getElementById("mapPaceSlowV624").value);
-        if(![f,mf,m,sl].every(Number.isFinite)||!(f<mf&&mf<m&&m<sl)){
-            alert("Le soglie devono essere valide e in ordine crescente.");return;
-        }
-        localStorage.setItem(KEY,JSON.stringify({
-            fastMax:f,mediumFastMax:mf,mediumMax:m,slowMax:sl,
-            colors:{
-                fast:document.getElementById("mapColorFastV624").value,
-                mediumFast:document.getElementById("mapColorMediumFastV624").value,
-                medium:document.getElementById("mapColorMediumV624").value,
-                slow:document.getElementById("mapColorSlowV624").value,
-                verySlow:document.getElementById("mapColorVerySlowV624").value
-            }
-        }));
-        if(typeof showToast==="function")showToast("Colori mappa salvati");
-    };
-    window.resetMapColorSettingsV624=function(){
-        localStorage.setItem(KEY,JSON.stringify(DEF));
-        fill();
-        if(typeof showToast==="function")showToast("Colori mappa ripristinati");
-    };
-    function fill(){
+function fill(){
         const s=read();
         [["mapPaceFastV624",s.fastMax],["mapPaceMediumFastV624",s.mediumFastMax],
          ["mapPaceMediumV624",s.mediumMax],["mapPaceSlowV624",s.slowMax]]
@@ -7813,6 +7721,64 @@ document.addEventListener("visibilitychange", function () {
         .forEach(function(x){const e=document.getElementById(x[0]);if(e)e.value=x[1];});
     }
     window.addEventListener("load",fill);
+})();
+</script>
+<script id="runnerAutomaticMapColorsV1">
+(function(){
+  const LEVELS=[
+    {key:"muchFaster",label:"Molto più veloce",maxDiff:-45,color:"#16a34a"},
+    {key:"faster",label:"Più veloce",maxDiff:-15,color:"#65a30d"},
+    {key:"average",label:"Ritmo medio",maxDiff:15,color:"#eab308"},
+    {key:"slower",label:"Più lento",maxDiff:45,color:"#f97316"},
+    {key:"muchSlower",label:"Molto più lento",maxDiff:Infinity,color:"#dc2626"}
+  ];
+
+  function classify(segmentPace,averagePace){
+    const p=Number(segmentPace), a=Number(averagePace);
+    if(!Number.isFinite(p)||!Number.isFinite(a)||a<=0)return LEVELS[2];
+    const d=p-a;
+    for(const level of LEVELS)if(d<=level.maxDiff)return level;
+    return LEVELS[4];
+  }
+
+  window.RUNNER_AUTO_MAP_COLORS_V1={
+    levels:LEVELS,
+    classify:classify,
+    color:function(segmentPace,averagePace){return classify(segmentPace,averagePace).color;}
+  };
+
+  function findMap(){
+    return document.getElementById("historyMap")||
+           document.getElementById("runHistoryMap")||
+           document.querySelector("[id*='history'][id*='Map']");
+  }
+
+  function addLegend(){
+    if(document.getElementById("runnerAutoMapLegendV1"))return;
+    const map=findMap();
+    if(!map||!map.parentElement)return;
+    const legend=document.createElement("div");
+    legend.id="runnerAutoMapLegendV1";
+    legend.className="runner-auto-map-legend-v1";
+    LEVELS.forEach(function(level){
+      const item=document.createElement("span");
+      item.className="item";
+      item.innerHTML='<span class="dot" style="background:'+level.color+'"></span>'+level.label;
+      legend.appendChild(item);
+    });
+    map.parentElement.appendChild(legend);
+  }
+
+  function boot(){
+    addLegend();
+    let n=0;
+    const t=setInterval(function(){
+      addLegend();
+      if(document.getElementById("runnerAutoMapLegendV1")||++n>=20)clearInterval(t);
+    },250);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);
+  else boot();
 })();
 </script>
 </body>
