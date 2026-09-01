@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.26 -->
+<!-- RUNNER GPS v6.27 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -650,6 +650,31 @@ audio {
 }
 </style>
 
+
+<style id="runnerV627PacePickerCSS">
+.runner-v627-pace-wrap{display:flex;gap:6px;align-items:center;width:100%}
+.runner-v627-pace-wrap>input{flex:1;min-width:0}
+.runner-v627-pace-btn{
+ width:38px;height:38px;border:1px solid rgba(127,127,127,.3);
+ border-radius:8px;background:transparent;cursor:pointer;font-size:17px;
+ flex:0 0 38px;
+}
+.runner-v627-picker{
+ position:fixed;z-index:999999;background:#fff;color:#111;
+ border:1px solid #bbb;border-radius:12px;padding:8px;
+ box-shadow:0 10px 30px rgba(0,0,0,.25);min-width:225px;
+ max-height:70vh;overflow:auto;
+}
+.runner-v627-picker-title{font-size:11px;opacity:.65;padding:4px 7px 8px}
+.runner-v627-picker button{
+ display:flex;justify-content:space-between;align-items:center;width:100%;
+ padding:9px 8px;border:0;border-radius:8px;background:transparent;
+ cursor:pointer;text-align:left;
+}
+.runner-v627-picker button:hover{background:#eee}
+.runner-v627-picker button span{font-size:11px;opacity:.65}
+.runner-v627-picker-custom{font-size:11px;opacity:.65;padding:8px 7px 3px}
+</style>
 </head>
 
 <body>
@@ -7820,85 +7845,7 @@ document.addEventListener("visibilitychange", function () {
 })();
 </script>
 
-<style id="runnerV626PacePickerStyles">
-.runner-v626-picker{
- position:fixed;z-index:999999;background:#fff;color:#111;
- border:1px solid #bbb;border-radius:12px;padding:8px;
- box-shadow:0 10px 30px rgba(0,0,0,.25);min-width:225px;
-}
-.runner-v626-picker-title{font-size:11px;opacity:.65;padding:4px 7px 8px}
-.runner-v626-picker button{
- display:flex;justify-content:space-between;align-items:center;
- width:100%;padding:9px 8px;border:0;border-radius:8px;
- background:transparent;cursor:pointer;text-align:left;
-}
-.runner-v626-picker button:hover{background:#eee}
-.runner-v626-picker button span{font-size:11px;opacity:.65}
-.runner-v626-picker-custom{font-size:11px;opacity:.65;padding:8px 7px 3px}
-</style>
-<script id="runnerV626PacePicker">
-(function(){
- const values=[
-  ["3:00","molto veloce"],["3:30","molto veloce"],
-  ["4:00","veloce"],["4:30","veloce"],
-  ["5:00","sostenuto"],["5:30","sostenuto"],
-  ["6:00","moderato"],["6:30","moderato"],
-  ["7:00","tranquillo"],["7:30","tranquillo"],
-  ["8:00","facile"],["8:30","facile"],["9:00","molto facile"]
- ];
 
- function close(){
-   document.querySelectorAll(".runner-v626-picker").forEach(function(x){x.remove()});
- }
-
- function isPaceField(el){
-   return el instanceof HTMLInputElement &&
-          el.type==="text" &&
-          el.closest(".phase-editor") &&
-          (el.getAttribute("list")==="runnerPaceSuggestionsV625" ||
-           /Ritmo più veloce|Ritmo più lento/i.test(el.closest(".form-group")?.innerText||""));
- }
-
- function open(input){
-   close();
-   const box=document.createElement("div");
-   box.className="runner-v626-picker";
-   box.innerHTML=
-    '<div class="runner-v626-picker-title">Ritmi consigliati — puoi anche scrivere il tuo</div>'+
-    values.map(function(v){
-      return '<button type="button" data-pace="'+v[0]+'"><strong>'+v[0]+' /km</strong><span>'+v[1]+'</span></button>';
-    }).join("")+
-    '<div class="runner-v626-picker-custom">✏️ Personalizzato: scrivilo direttamente nel campo</div>';
-
-   document.body.appendChild(box);
-   const r=input.getBoundingClientRect();
-   box.style.left=Math.max(8,Math.min(r.left,window.innerWidth-245))+"px";
-   box.style.top=Math.max(8,Math.min(r.bottom+5,window.innerHeight-430))+"px";
-
-   box.querySelectorAll("[data-pace]").forEach(function(btn){
-     btn.addEventListener("click",function(ev){
-       ev.preventDefault();ev.stopPropagation();
-       input.value=btn.getAttribute("data-pace");
-       input.dispatchEvent(new Event("change",{bubbles:true}));
-       close();
-       input.focus();
-     });
-   });
- }
-
- document.addEventListener("pointerdown",function(e){
-   const field=isPaceField(e.target);
-   if(field){
-     e.preventDefault();
-     open(field);
-     return;
-   }
-   if(!e.target.closest(".runner-v626-picker")) close();
- },true);
-
- window.runnerV625AttachAll=function(){};
-})();
-</script>
 
 <script id="runnerV625MapSettingsLogic">
 (function(){
@@ -7917,6 +7864,98 @@ document.addEventListener("visibilitychange", function () {
  };
  window.resetMapColorSettingsV625=function(){localStorage.setItem(KEY,JSON.stringify(DEF));fill()};
  window.addEventListener("load",fill);
+})();
+</script>
+
+<script id="runnerV627PacePicker">
+(function(){
+ const values=[
+  ["3:00","molto veloce"],["3:30","molto veloce"],
+  ["4:00","veloce"],["4:30","veloce"],
+  ["5:00","sostenuto"],["5:30","sostenuto"],
+  ["6:00","moderato"],["6:30","moderato"],
+  ["7:00","tranquillo"],["7:30","tranquillo"],
+  ["8:00","facile"],["8:30","facile"],["9:00","molto facile"]
+ ];
+
+ function isPaceInput(el){
+   if(!(el instanceof HTMLInputElement) || el.type!=="text") return false;
+   const g=el.closest(".form-group");
+   if(!g) return false;
+   const text=(g.innerText||"").toLowerCase();
+   return text.includes("ritmo più veloce") || text.includes("ritmo più lento");
+ }
+
+ function close(){
+   document.querySelectorAll(".runner-v627-picker").forEach(x=>x.remove());
+ }
+
+ function open(input,anchor){
+   close();
+   const box=document.createElement("div");
+   box.className="runner-v627-picker";
+   box.innerHTML=
+    '<div class="runner-v627-picker-title">Ritmi consigliati — puoi scrivere il tuo</div>'+
+    values.map(v=>'<button type="button" data-v="'+v[0]+'"><strong>'+v[0]+' /km</strong><span>'+v[1]+'</span></button>').join("")+
+    '<div class="runner-v627-picker-custom">✏️ Personalizzato: modifica direttamente il campo</div>';
+   document.body.appendChild(box);
+
+   const r=anchor.getBoundingClientRect();
+   box.style.left=Math.max(8,Math.min(r.left,innerWidth-245))+"px";
+   box.style.top=Math.min(r.bottom+5,innerHeight-430)+"px";
+
+   box.querySelectorAll("[data-v]").forEach(btn=>{
+     btn.addEventListener("click",function(){
+       input.value=btn.dataset.v;
+       input.dispatchEvent(new Event("input",{bubbles:true}));
+       input.dispatchEvent(new Event("change",{bubbles:true}));
+       close();
+     });
+   });
+ }
+
+ // Only create a picker button. NEVER intercept typing/focus on the input.
+ function enhance(root){
+   (root||document).querySelectorAll(".form-group input[type=text]").forEach(input=>{
+     if(!isPaceInput(input) || input.dataset.v627Enhanced==="1") return;
+     input.dataset.v627Enhanced="1";
+
+     const wrap=document.createElement("div");
+     wrap.className="runner-v627-pace-wrap";
+     input.parentNode.insertBefore(wrap,input);
+     wrap.appendChild(input);
+
+     const btn=document.createElement("button");
+     btn.type="button";
+     btn.className="runner-v627-pace-btn";
+     btn.title="Scegli un ritmo consigliato";
+     btn.textContent="▾";
+     wrap.appendChild(btn);
+
+     btn.addEventListener("click",function(e){
+       e.preventDefault(); e.stopPropagation();
+       open(input,btn);
+     });
+   });
+ }
+
+ // MutationObserver handles dynamically-created phases.
+ const obs=new MutationObserver(function(mutations){
+   mutations.forEach(m=>{
+     m.addedNodes.forEach(n=>{
+       if(n.nodeType===1)enhance(n);
+     });
+   });
+ });
+ window.addEventListener("load",function(){
+   enhance(document);
+   obs.observe(document.body,{childList:true,subtree:true});
+ });
+
+ document.addEventListener("click",function(e){
+   if(!e.target.closest(".runner-v627-picker") &&
+      !e.target.closest(".runner-v627-pace-btn")) close();
+ });
 })();
 </script>
 </body>
