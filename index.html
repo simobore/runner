@@ -650,6 +650,41 @@ audio {
 }
 </style>
 
+
+<style id="runnerMapLegendCSS">
+.runner-map-legend {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 10px;
+  margin-top:8px;
+  padding:7px 9px;
+  border:1px solid rgba(127,127,127,.22);
+  border-radius:8px;
+  font-size:11px;
+  line-height:1.2;
+}
+.runner-map-legend-title {
+  width:100%;
+  font-weight:600;
+  margin-bottom:1px;
+}
+.runner-map-legend-item {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.runner-map-legend-dot {
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  flex:none;
+  border:1px solid rgba(0,0,0,.15);
+}
+</style>
+
 </head>
 
 <body>
@@ -7307,16 +7342,21 @@ document.addEventListener("visibilitychange", function () {
     }
 
     function colorForPace(pace, averagePace) {
-        const p=Number(pace);
-        const a=Number(averagePace);
-        if(!Number.isFinite(p) || !Number.isFinite(a) || a<=0) return "#8b949e";
-        const d=p-a;
-        if(d<=-45) return "#16a34a";
-        if(d<=-15) return "#65a30d";
-        if(d<=15) return "#eab308";
-        if(d<=45) return "#f97316";
-        return "#dc2626";
+    const p = Number(pace);
+    const a = Number(avg);
+    if (!Number.isFinite(p) || !Number.isFinite(a) || a <= 0) {
+        return "#eab308";
     }
+
+    // Pace is seconds/km: lower than average = faster.
+    const diff = p - a;
+
+    if (diff <= -45) return "#16a34a";
+    if (diff <= -15) return "#65a30d";
+    if (diff <= 15) return "#eab308";
+    if (diff <= 45) return "#f97316";
+    return "#dc2626";
+}
 
     function pointPace(point) {
         const p=Number(point.instantPaceSecondsPerKm);
@@ -7546,6 +7586,78 @@ document.addEventListener("visibilitychange", function () {
 })();
 </script>
 
+
+
+<script id="runnerMapLegendJS">
+(function(){
+  const LEVELS = [
+    {label:"Molto più veloce", range:"≥45″/km più veloce", color:"#16a34a"},
+    {label:"Più veloce", range:"15–45″/km più veloce", color:"#65a30d"},
+    {label:"Ritmo medio", range:"entro ±15″/km", color:"#eab308"},
+    {label:"Più lento", range:"15–45″/km più lento", color:"#f97316"},
+    {label:"Molto più lento", range:"≥45″/km più lento", color:"#dc2626"}
+  ];
+
+  window.RUNNER_MAP_LEGEND_LEVELS = LEVELS;
+
+  function getMap(){
+    return document.getElementById("historyMap") ||
+           document.getElementById("runHistoryMap") ||
+           document.querySelector("[id*='history'][id*='Map']");
+  }
+
+  function addLegend(){
+    if(document.getElementById("runnerMapLegend")) return;
+    const map = getMap();
+    if(!map || !map.parentElement) return;
+
+    const box = document.createElement("div");
+    box.id = "runnerMapLegend";
+    box.className = "runner-map-legend";
+
+    const title = document.createElement("div");
+    title.className = "runner-map-legend-title";
+    title.textContent = "Ritmo del tratto rispetto alla media";
+    box.appendChild(title);
+
+    LEVELS.forEach(function(level){
+      const item = document.createElement("span");
+      item.className = "runner-map-legend-item";
+
+      const dot = document.createElement("span");
+      dot.className = "runner-map-legend-dot";
+      dot.style.background = level.color;
+
+      const text = document.createElement("span");
+      text.textContent = level.label + " · " + level.range;
+
+      item.appendChild(dot);
+      item.appendChild(text);
+      box.appendChild(item);
+    });
+
+    map.parentElement.appendChild(box);
+  }
+
+  function boot(){
+    addLegend();
+    let attempts = 0;
+    const timer = setInterval(function(){
+      addLegend();
+      attempts++;
+      if(document.getElementById("runnerMapLegend") || attempts >= 40){
+        clearInterval(timer);
+      }
+    },250);
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", boot);
+  }else{
+    boot();
+  }
+})();
+</script>
 
 </body>
 </html>
