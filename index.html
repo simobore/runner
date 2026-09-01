@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.20 -->
+<!-- RUNNER GPS v6.21 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -637,6 +637,19 @@ audio {
 .phase-extra-stats { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:10px; font-size:12px; opacity:.78; }
 @media (max-width:600px) { .phase-history-grid { grid-template-columns:repeat(2,1fr); } }
 </style>
+<style id="runnerV621MapControls">
+.runner-v621-current-marker{background:transparent;border:0;}
+.runner-v621-current-dot{
+ width:16px;height:16px;border-radius:50%;background:#2563eb;
+ border:3px solid #fff;box-shadow:0 1px 8px rgba(0,0,0,.55);
+}
+.runner-v621-recenter-control{
+ width:34px;height:34px;border:0;border-radius:8px;background:#fff;
+ color:#222;font-size:21px;font-weight:700;cursor:pointer;
+ box-shadow:0 1px 5px rgba(0,0,0,.35);
+}
+</style>
+
 </head>
 
 <body>
@@ -7045,7 +7058,7 @@ function toggleHistoryDetailV69(activityId) {
         </div>
         <div class="section-title">FASI DELL'ALLENAMENTO</div>
         <div class="section-title" style="margin-top:18px">PERCORSO</div>
-        <div id="runnerV620MapContainer"></div>
+        <div id="runnerV620MapContainer_${activityId}"></div>
 
     `;
 
@@ -7094,7 +7107,7 @@ function toggleHistoryDetailV69(activityId) {
 
     if (typeof runnerV620RenderMap === "function") {
         runnerV620RenderMap(
-            document.getElementById("runnerV620MapContainer"),
+            document.getElementById("runnerV620MapContainer_" + activityId),
             activity
         );
     }
@@ -7450,6 +7463,52 @@ document.addEventListener("visibilitychange", function () {
                 .bindPopup("Arrivo");
 
             map.fitBounds(L.latLngBounds(bounds),{padding:[18,18]});
+
+            /* Posizione attuale: ultimo punto GPS registrato. */
+            const endPoint = points[points.length - 1];
+
+            const currentIcon = L.divIcon({
+                className: "runner-v621-current-marker",
+                html: '<div class="runner-v621-current-dot"></div>',
+                iconSize: [18,18],
+                iconAnchor: [9,9]
+            });
+
+            L.marker(
+                [endPoint.lat,endPoint.lon],
+                {icon:currentIcon,zIndexOffset:1000}
+            )
+                .addTo(map)
+                .bindPopup("Posizione attuale / ultimo punto GPS");
+
+            /* Mappa completamente navigabile + pulsante di ricentraggio. */
+            const RecenterControl = L.Control.extend({
+                options:{position:"topright"},
+                onAdd:function(){
+                    const button=L.DomUtil.create(
+                        "button",
+                        "runner-v621-recenter-control"
+                    );
+                    button.type="button";
+                    button.title="Centra sulla posizione attuale";
+                    button.innerHTML="⌖";
+                    L.DomEvent.disableClickPropagation(button);
+                    L.DomEvent.on(button,"click",function(){
+                        map.setView(
+                            [endPoint.lat,endPoint.lon],
+                            Math.max(map.getZoom(),16),
+                            {animate:true}
+                        );
+                    });
+                    return button;
+                }
+            });
+
+            map.addControl(new RecenterControl());
+
+            setTimeout(function(){
+                map.invalidateSize();
+            },100);
         } catch (error) {
             const node=container.querySelector(".runner-v620-map");
             if (node) {
