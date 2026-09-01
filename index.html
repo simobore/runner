@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.30 -->
+<!-- RUNNER GPS v6.31 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -709,20 +709,17 @@ audio {
     .pace-menu-v629{max-height:70vh}
     .pace-menu-v629 .scroll{max-height:calc(70vh - 95px)}
 }
-</style><style id="runnerV630MapPaceCSS">
-.map-pace-input-v630{display:flex;gap:7px;align-items:center;width:100%}
-.map-pace-input-v630 input{flex:1;min-width:0}
-.map-pace-arrow-v630{width:42px;height:42px;flex:0 0 42px;border:1px solid rgba(127,127,127,.35);border-radius:10px;background:transparent;cursor:pointer;font-weight:800}
-.map-pace-menu-v630{position:fixed;z-index:1000001;width:min(330px,calc(100vw - 20px));max-height:min(520px,72vh);overflow:hidden;background:#fff;color:#111;border:1px solid rgba(0,0,0,.14);border-radius:18px;box-shadow:0 16px 45px rgba(0,0,0,.28);padding:10px}
-.map-pace-menu-v630 .head{padding:7px 8px 10px}
-.map-pace-menu-v630 .head strong{display:block;font-size:15px}
-.map-pace-menu-v630 .head span{display:block;font-size:11px;opacity:.6;margin-top:3px}
-.map-pace-menu-v630 .scroll{max-height:410px;overflow-y:auto;padding:2px}
-.map-pace-menu-v630 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.map-pace-menu-v630 .option{min-height:48px;border:1px solid rgba(127,127,127,.18);border-radius:11px;background:#f7f7f7;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center}
-.map-pace-menu-v630 .option strong{font-size:15px}
-.map-pace-menu-v630 .option small{font-size:9px;opacity:.55;margin-top:2px}
-.map-pace-menu-v630 .custom{font-size:11px;opacity:.62;padding:8px 7px 3px;text-align:center}
+</style><style id="runnerV631PacePickerCSS">
+.pace-menu-v631-backdrop{position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.28);display:flex;align-items:flex-end;justify-content:center}
+.pace-menu-v631{width:min(520px,100vw);max-height:min(78vh,650px);background:#fff;color:#111;border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.25);padding:12px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.pace-menu-v631 .grab{width:42px;height:4px;border-radius:5px;background:#bbb;margin:0 auto 10px}
+.pace-menu-v631 .title{font-size:17px;font-weight:800;text-align:center}.pace-menu-v631 .sub{font-size:12px;opacity:.62;text-align:center;margin:4px 0 10px}
+.pace-menu-v631 .scroll{overflow-y:auto;overscroll-behavior:contain;padding:3px 2px 8px}
+.pace-menu-v631 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pace-menu-v631 .opt{min-height:48px;border:1px solid rgba(127,127,127,.2);border-radius:12px;background:#f7f7f7;font-size:15px;font-weight:700;cursor:pointer}
+.pace-menu-v631 .opt.selected{outline:2px solid currentColor;outline-offset:-2px}
+.pace-menu-v631 .manual{margin-top:7px;text-align:center;font-size:11px;opacity:.62}.pace-menu-v631 .close{margin-top:9px;width:100%;height:42px;border:0;border-radius:11px;font-weight:800;cursor:pointer}
+@media(max-width:420px){.pace-menu-v631 .grid{grid-template-columns:repeat(2,1fr)}}
 </style></head>
 
 <body>
@@ -7979,19 +7976,29 @@ document.addEventListener("visibilitychange", function () {
     window.addEventListener("resize",close);
     window.addEventListener("scroll",close,true);
 })();
-</script><script id="runnerV630MapPacePicker">
+</script><script id="runnerV631PacePicker">
 (function(){
  const P=[];for(let s=180;s<=1200;s+=30)P.push(Math.floor(s/60)+":"+String(s%60).padStart(2,"0"));
- function close(){document.querySelectorAll(".map-pace-menu-v630").forEach(x=>x.remove())}
- function open(b){
-  close();const input=document.getElementById(b.dataset.mapPaceId);if(!input)return;
-  const m=document.createElement("div");m.className="map-pace-menu-v630";
-  m.innerHTML='<div class="head"><strong>Soglia ritmo mappa</strong><span>Scegli un valore oppure scorri. Puoi anche scriverlo manualmente.</span></div><div class="scroll"><div class="grid">'+P.map(v=>'<button type="button" class="option" data-v="'+v+'"><strong>'+v+'</strong><small>min/km</small></button>').join("")+'</div></div><div class="custom">✏️ Personalizzato: modifica direttamente il campo.</div>';
-  document.body.appendChild(m);const r=b.getBoundingClientRect(),mw=m.offsetWidth,mh=m.offsetHeight;
-  let l=Math.max(10,Math.min(r.right-mw,innerWidth-mw-10)),t=r.bottom+6;if(t+mh>innerHeight-10)t=r.top-mh-6;if(t<10)t=10;m.style.left=l+"px";m.style.top=t+"px";
-  m.querySelectorAll("[data-v]").forEach(o=>o.onclick=function(){input.value=o.dataset.v;input.dispatchEvent(new Event("change",{bubbles:true}));close()});
+ function close(){document.querySelectorAll(".pace-menu-v631-backdrop").forEach(x=>x.remove())}
+ function open(btn){
+  close();
+  const input=btn.closest(".map-pace-input-v630")?.querySelector("input");if(!input)return;
+  const back=document.createElement("div");back.className="pace-menu-v631-backdrop";
+  const sheet=document.createElement("div");sheet.className="pace-menu-v631";
+  const cur=String(input.value||"").trim();
+  sheet.innerHTML='<div class="grab"></div><div class="title">Soglia ritmo</div><div class="sub">Scegli il ritmo desiderato · scorri per vedere tutti i valori</div><div class="scroll"><div class="grid">'+P.map(v=>'<button type="button" class="opt'+(v===cur?" selected":"")+'" data-v="'+v+'">'+v+' /km</button>').join("")+'</div></div><div class="manual">✏️ Per un valore personalizzato, scrivilo direttamente nel campo.</div><button type="button" class="close">Chiudi</button>';
+  back.appendChild(sheet);document.body.appendChild(back);
+  sheet.querySelectorAll("[data-v]").forEach(o=>o.addEventListener("click",function(){
+   input.value=o.dataset.v;close();input.dispatchEvent(new Event("change",{bubbles:true}));
+  }));
+  sheet.querySelector(".close").addEventListener("click",close);
+  back.addEventListener("click",e=>{if(e.target===back)close()});
+  const active=sheet.querySelector(".selected");if(active)setTimeout(()=>active.scrollIntoView({block:"center"}),30);
  }
- document.addEventListener("click",function(e){const b=e.target.closest(".map-pace-arrow-v630");if(b){e.preventDefault();e.stopPropagation();open(b)}else if(!e.target.closest(".map-pace-menu-v630"))close()});
+ document.addEventListener("click",function(e){
+  const btn=e.target.closest(".map-pace-arrow-v630");
+  if(btn){e.preventDefault();e.stopPropagation();open(btn)}
+ });
 })();
 </script></body>
 </html>
