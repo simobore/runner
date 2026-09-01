@@ -650,6 +650,14 @@ audio {
 }
 </style>
 
+<style id="runnerPreStartOnlyV72">
+#run.pre-start-only > * { display:none !important; }
+#run.pre-start-only > .run-controls { display:block !important; }
+#run.pre-start-only > .run-controls #preRunStartButton {
+  display:block !important; width:100%; margin:22px 0 0;
+  font-size:20px; padding:18px;
+}
+</style>
 </head>
 
 <body>
@@ -3370,6 +3378,14 @@ function confirmRunStart() {
     if (!running || !runReadyV70) return;
 
     runReadyV70 = false;
+
+    const runScreenV72 =
+        document.getElementById("run");
+
+    if (runScreenV72) {
+        runScreenV72.classList.remove("pre-start-only");
+    }
+
     elapsed = 0;
     activeElapsedV69 = 0;
     activeClockLastV69 = Date.now();
@@ -3681,8 +3697,11 @@ function startRunEngine(
 
     showScreen("run");
 
-    if (typeof showToast === "function") {
-        showToast("🏃 CORSA INIZIATA");
+    const runScreenV72 =
+        document.getElementById("run");
+
+    if (runScreenV72) {
+        runScreenV72.classList.add("pre-start-only");
     }
 
     startGPS();
@@ -6821,8 +6840,6 @@ function clearAllData() {
 
 function updateActiveRunRecoveryV610() {
 
-    // Mostra il pulsante solo durante una corsa attiva e solo
-    // quando l'utente si trova in una schermata diversa da "run".
     const activeScreen =
         document.querySelector(".screen.active");
 
@@ -6831,9 +6848,7 @@ function updateActiveRunRecoveryV610() {
         activeScreen.id === "run";
 
     let button =
-        document.getElementById(
-            "globalActiveRunRecoveryV611"
-        );
+        document.getElementById("globalActiveRunRecoveryV611");
 
     if (!running || isRunScreen) {
         if (button) button.remove();
@@ -6853,21 +6868,21 @@ function updateActiveRunRecoveryV610() {
         };
 
         button.style.cssText = `
-            position: fixed;
-            left: 50%;
-            bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-            transform: translateX(-50%);
-            z-index: 99999;
-            width: min(calc(100vw - 32px), 360px);
-            padding: 13px 18px;
-            border: 2px solid currentColor;
-            border-radius: 16px;
-            background: #111;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 850;
-            box-shadow: 0 8px 24px rgba(0,0,0,.35);
-            cursor: pointer;
+            position:fixed;
+            left:50%;
+            bottom:calc(76px + env(safe-area-inset-bottom,0px));
+            transform:translateX(-50%);
+            z-index:99999;
+            width:min(calc(100vw - 32px),360px);
+            padding:13px 18px;
+            border:2px solid currentColor;
+            border-radius:16px;
+            background:#111;
+            color:#fff;
+            font-size:15px;
+            font-weight:850;
+            box-shadow:0 8px 24px rgba(0,0,0,.35);
+            cursor:pointer;
         `;
 
         document.body.appendChild(button);
