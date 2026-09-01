@@ -6822,20 +6822,22 @@ function clearAllData() {
 function updateActiveRunRecoveryV610() {
 
     /*
-     * Mostra "TORNA ALLA CORSA" solo quando una corsa è attiva
-     * e l'utente si trova in una schermata diversa da CORSA.
-     * Nella schermata CORSA il pulsante viene nascosto perché occupa spazio.
+     * Mostra "TORNA ALLA CORSA" in tutte le schermate mentre una corsa
+     * è attiva, MAI nella schermata effettiva CORSA.
      */
+    const activeScreen =
+        document.querySelector(".screen.active");
 
-    const runScreen = document.getElementById("run");
-    const isRunScreenActive = !!(runScreen && runScreen.classList.contains("active"));
+    const isRunScreen =
+        activeScreen &&
+        activeScreen.id === "run";
 
     let button =
         document.getElementById(
             "globalActiveRunRecoveryV611"
         );
 
-    if (!running || isRunScreenActive) {
+    if (!running || isRunScreen) {
 
         if (button) {
             button.style.display = "none";
@@ -6890,7 +6892,7 @@ function updateActiveRunRecoveryV610() {
         document.body.appendChild(button);
     }
 
-    button.style.display = isRunScreenActive ? "none" : "block";
+    button.style.display = "block";
 }
 
 function renderHistory() {
