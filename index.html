@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.23 -->
+<!-- RUNNER GPS v6.24 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -1397,6 +1397,63 @@ audio {
 </div>
 
 <div class="section-title">
+    Mappa del percorso
+</div>
+
+<div class="card">
+    <div class="info-box">
+        Personalizza le fasce di ritmo usate per colorare il percorso.
+        Inserisci le soglie nel formato min:sec/km.
+    </div>
+
+    <div class="form-group">
+        <label>Veloce — sotto</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <input id="mapPaceFastV624" type="text" inputmode="decimal" placeholder="5:30">
+            <input id="mapColorFastV624" type="color" style="width:48px;height:38px;">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Medio-veloce — sotto</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <input id="mapPaceMediumFastV624" type="text" inputmode="decimal" placeholder="6:30">
+            <input id="mapColorMediumFastV624" type="color" style="width:48px;height:38px;">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Medio — sotto</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <input id="mapPaceMediumV624" type="text" inputmode="decimal" placeholder="7:30">
+            <input id="mapColorMediumV624" type="color" style="width:48px;height:38px;">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Lento — sotto</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <input id="mapPaceSlowV624" type="text" inputmode="decimal" placeholder="8:30">
+            <input id="mapColorSlowV624" type="color" style="width:48px;height:38px;">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Molto lento — oltre l'ultima soglia</label>
+        <input id="mapColorVerySlowV624" type="color" style="width:48px;height:38px;">
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="primary" type="button" onclick="saveMapColorSettingsV624()">💾 SALVA COLORI MAPPA</button>
+        <button class="secondary" type="button" onclick="resetMapColorSettingsV624()">↩️ RIPRISTINA</button>
+    </div>
+
+    <div style="font-size:12px;opacity:.7;margin-top:10px;">
+        Puoi inserire qualsiasi valore personalizzato, ad esempio 7:13.
+    </div>
+</div>
+
+<div class="section-title">
     GPS
 </div>
 
@@ -1461,6 +1518,16 @@ audio {
 
 </div>
 
+
+<datalist id="runnerPaceSuggestionsV624">
+<option value="3:00"></option><option value="3:30"></option>
+<option value="4:00"></option><option value="4:30"></option>
+<option value="5:00"></option><option value="5:30"></option>
+<option value="6:00"></option><option value="6:30"></option>
+<option value="7:00"></option><option value="7:30"></option>
+<option value="8:00"></option><option value="8:30"></option>
+<option value="9:00"></option>
+</datalist>
 
 <!-- ================= NAV ================= -->
 
@@ -2048,6 +2115,7 @@ function renderPhaseEditors() {
 
                             <input
                                 type="text"
+                                list="runnerPaceSuggestionsV624"
                                 placeholder="5:15"
                                 value="${secondsToPace(phase.targetMin)}"
                                 onchange="
@@ -2068,6 +2136,7 @@ function renderPhaseEditors() {
 
                             <input
                                 type="text"
+                                list="runnerPaceSuggestionsV624"
                                 placeholder="5:30"
                                 value="${secondsToPace(phase.targetMax)}"
                                 onchange="
@@ -7356,12 +7425,19 @@ document.addEventListener("visibilitychange", function () {
 
     function colorForPace(pace) {
         const p=Number(pace);
-        if (!Number.isFinite(p)) return "#8b949e";
-        if (p < 330) return "#22c55e";
-        if (p < 390) return "#84cc16";
-        if (p < 450) return "#eab308";
-        if (p < 510) return "#f97316";
-        return "#ef4444";
+        if(!Number.isFinite(p)) return "#8b949e";
+        const cfg=window.RUNNER_V624_MAP_SETTINGS
+            ? window.RUNNER_V624_MAP_SETTINGS.get()
+            : null;
+        const s=cfg||{
+            fastMax:330,mediumFastMax:390,mediumMax:450,slowMax:510,
+            colors:{fast:"#22c55e",mediumFast:"#84cc16",medium:"#eab308",slow:"#f97316",verySlow:"#ef4444"}
+        };
+        if(p<s.fastMax)return s.colors.fast;
+        if(p<s.mediumFastMax)return s.colors.mediumFast;
+        if(p<s.mediumMax)return s.colors.medium;
+        if(p<s.slowMax)return s.colors.slow;
+        return s.colors.verySlow;
     }
 
     function pointPace(point) {
@@ -7666,6 +7742,77 @@ document.addEventListener("visibilitychange", function () {
    (root||document).querySelectorAll('input[placeholder*="ritmo" i],input[name*="ritmo" i],input[id*="ritmo" i],input[name*="pace" i],input[id*="pace" i]').forEach(window.runnerV623AttachPacePicker);
  };
  window.addEventListener("load",function(){window.runnerV623AttachAllPacePickers(document)});
+})();
+</script>
+
+<script id="runnerV624MapLogic">
+(function(){
+    const KEY="runner_map_color_settings_v624";
+    const DEF={
+        fastMax:330,mediumFastMax:390,mediumMax:450,slowMax:510,
+        colors:{
+            fast:"#22c55e",mediumFast:"#84cc16",
+            medium:"#eab308",slow:"#f97316",verySlow:"#ef4444"
+        }
+    };
+    function read(){
+        try{
+            const x=JSON.parse(localStorage.getItem(KEY)||"null");
+            return {...DEF,...(x||{}),colors:{...DEF.colors,...((x&&x.colors)||{})}};
+        }catch(e){return DEF;}
+    }
+    function sec(v){
+        const s=String(v||"").trim();
+        if(/^\d+:\d{1,2}$/.test(s)){
+            const a=s.split(":").map(Number);
+            if(a[1]>=60)return NaN;
+            return a[0]*60+a[1];
+        }
+        const n=Number(s);
+        return Number.isFinite(n)?n*60:NaN;
+    }
+    function clock(v){
+        v=Math.round(Number(v)||0);
+        return Math.floor(v/60)+":"+String(v%60).padStart(2,"0");
+    }
+    window.RUNNER_V624_MAP_SETTINGS={get:read};
+
+    window.saveMapColorSettingsV624=function(){
+        const f=sec(document.getElementById("mapPaceFastV624").value);
+        const mf=sec(document.getElementById("mapPaceMediumFastV624").value);
+        const m=sec(document.getElementById("mapPaceMediumV624").value);
+        const sl=sec(document.getElementById("mapPaceSlowV624").value);
+        if(![f,mf,m,sl].every(Number.isFinite)||!(f<mf&&mf<m&&m<sl)){
+            alert("Le soglie devono essere valide e in ordine crescente.");return;
+        }
+        localStorage.setItem(KEY,JSON.stringify({
+            fastMax:f,mediumFastMax:mf,mediumMax:m,slowMax:sl,
+            colors:{
+                fast:document.getElementById("mapColorFastV624").value,
+                mediumFast:document.getElementById("mapColorMediumFastV624").value,
+                medium:document.getElementById("mapColorMediumV624").value,
+                slow:document.getElementById("mapColorSlowV624").value,
+                verySlow:document.getElementById("mapColorVerySlowV624").value
+            }
+        }));
+        if(typeof showToast==="function")showToast("Colori mappa salvati");
+    };
+    window.resetMapColorSettingsV624=function(){
+        localStorage.setItem(KEY,JSON.stringify(DEF));
+        fill();
+        if(typeof showToast==="function")showToast("Colori mappa ripristinati");
+    };
+    function fill(){
+        const s=read();
+        [["mapPaceFastV624",s.fastMax],["mapPaceMediumFastV624",s.mediumFastMax],
+         ["mapPaceMediumV624",s.mediumMax],["mapPaceSlowV624",s.slowMax]]
+        .forEach(function(x){const e=document.getElementById(x[0]);if(e)e.value=clock(x[1]);});
+        [["mapColorFastV624",s.colors.fast],["mapColorMediumFastV624",s.colors.mediumFast],
+         ["mapColorMediumV624",s.colors.medium],["mapColorSlowV624",s.colors.slow],
+         ["mapColorVerySlowV624",s.colors.verySlow]]
+        .forEach(function(x){const e=document.getElementById(x[0]);if(e)e.value=x[1];});
+    }
+    window.addEventListener("load",fill);
 })();
 </script>
 </body>
