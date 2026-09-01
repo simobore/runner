@@ -7342,21 +7342,16 @@ document.addEventListener("visibilitychange", function () {
     }
 
     function colorForPace(pace, averagePace) {
-    const p = Number(pace);
-    const a = Number(avg);
-    if (!Number.isFinite(p) || !Number.isFinite(a) || a <= 0) {
-        return "#eab308";
+        const p=Number(pace);
+        const a=Number(averagePace);
+        if(!Number.isFinite(p) || !Number.isFinite(a) || a<=0) return "#8b949e";
+        const d=p-a;
+        if(d<=-45) return "#16a34a";
+        if(d<=-15) return "#65a30d";
+        if(d<=15) return "#eab308";
+        if(d<=45) return "#f97316";
+        return "#dc2626";
     }
-
-    // Pace is seconds/km: lower than average = faster.
-    const diff = p - a;
-
-    if (diff <= -45) return "#16a34a";
-    if (diff <= -15) return "#65a30d";
-    if (diff <= 15) return "#eab308";
-    if (diff <= 45) return "#f97316";
-    return "#dc2626";
-}
 
     function pointPace(point) {
         const p=Number(point.instantPaceSecondsPerKm);
