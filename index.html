@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.18 FIX -->
+<!-- RUNNER GPS v6.19 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -631,6 +631,12 @@ audio {
 }
 
 </style>
+<style id="runnerV619HistoryStyles">
+.history-detail-summary { margin-bottom: 16px; }
+.phase-history-grid { grid-template-columns: repeat(4, 1fr); }
+.phase-extra-stats { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:10px; font-size:12px; opacity:.78; }
+@media (max-width:600px) { .phase-history-grid { grid-template-columns:repeat(2,1fr); } }
+</style>
 </head>
 
 <body>
@@ -823,7 +829,7 @@ audio {
             background:#303030;border:2px solid #8cff72;
             position:relative;z-index:10;">
     <div style="font-weight:900;font-size:16px;margin-bottom:10px;color:#8cff72;">
-        🔧 DIAGNOSTICA GPS v6.18 FIX
+        🔧 DIAGNOSTICA GPS v6.19
     </div>
     <div class="grid">
         <div>
@@ -6946,22 +6952,11 @@ function renderHistory() {
 
 function toggleHistoryDetailV69(activityId) {
 
-    const history =
-        loadJSON(
-            STORAGE.history,
-            []
-        );
-
-    const activity =
-        history.find(
-            item => item.id === activityId
-        );
-
+    const history = loadJSON(STORAGE.history, []);
+    const activity = history.find(item => item.id === activityId);
     if (!activity) return;
 
-    const panel =
-        $("historyDetail_" + activityId);
-
+    const panel = $("historyDetail_" + activityId);
     if (!panel) return;
 
     if (panel.style.display !== "none") {
@@ -6969,162 +6964,66 @@ function toggleHistoryDetailV69(activityId) {
         return;
     }
 
-    const phases =
-        Array.isArray(activity.phases)
-            ? activity.phases
-            : [];
+    const phases = Array.isArray(activity.phases) ? activity.phases : [];
+    const activeTime = Number(activity.activeTime || 0);
 
     let detail = `
-
-        <div class="grid">
-
-            <div class="metric">
-                <div class="value">
-                    ${Number(activity.distance || 0).toFixed(3)}
-                </div>
-                <div class="label">KM</div>
-            </div>
-
-            <div class="metric">
-                <div class="value">
-                    ${formatTime(Number(activity.time || 0))}
-                </div>
-                <div class="label">TEMPO</div>
-            </div>
-
-            <div class="metric">
-                <div class="value">
-                    ${
-                        Number.isFinite(activity.pace)
-                            ? secondsToPace(activity.pace)
-                            : "--:--"
-                    }
-                </div>
-                <div class="label">RITMO MEDIO</div>
-            </div>
-
-            <div class="metric">
-                <div class="value">
-                    ${Number(activity.speed || 0).toFixed(1)}
-                </div>
-                <div class="label">KM/H</div>
-            </div>
-
+        <div class="grid history-detail-summary">
+            <div class="metric"><div class="value">${Number(activity.distance || 0).toFixed(3)}</div><div class="label">KM</div></div>
+            <div class="metric"><div class="value">${formatTime(Number(activity.time || 0))}</div><div class="label">TEMPO</div></div>
+            <div class="metric"><div class="value">${formatTime(activeTime)}</div><div class="label">TEMPO MOVIMENTO</div></div>
+            <div class="metric"><div class="value">${Number.isFinite(activity.pace) ? secondsToPace(activity.pace) : "--:--"}</div><div class="label">RITMO MEDIO</div></div>
+            <div class="metric"><div class="value">${Number(activity.speed || 0).toFixed(2)}</div><div class="label">KM/H MEDI</div></div>
+            <div class="metric"><div class="value">${phases.length}</div><div class="label">FASI</div></div>
         </div>
-
-        <div class="section-title">
-            FASI DELL'ALLENAMENTO
-        </div>
+        <div class="section-title">FASI DELL'ALLENAMENTO</div>
     `;
 
     if (!phases.length) {
-
-        detail += `
-            <div class="empty">
-                Nessuna suddivisione delle fasi è stata salvata
-                in questa attività.
-            </div>
-        `;
-
+        detail += `<div class="empty">Nessuna suddivisione delle fasi è stata salvata in questa attività.</div>`;
     } else {
-
         phases.forEach((phase, index) => {
-
-            const phasePace =
-                Number.isFinite(phase.avgPace)
-                    ? secondsToPace(phase.avgPace)
-                    : "--:--";
+            const phaseTime = Number(phase.activeTime ?? phase.time ?? phase.elapsed ?? 0);
+            const phaseDistance = Number(phase.distance || 0);
+            const phasePace = Number.isFinite(phase.avgPace)
+                ? secondsToPace(phase.avgPace)
+                : (phaseDistance > 0 && phaseTime > 0 ? secondsToPace(phaseTime / phaseDistance) : "--:--");
+            const avgSpeed = Number.isFinite(phase.avgSpeed) ? Number(phase.avgSpeed).toFixed(2) + " km/h" : "—";
+            const maxSpeed = Number.isFinite(phase.maxSpeed) ? Number(phase.maxSpeed).toFixed(2) + " km/h" : "—";
+            const repeatTotal = Number(phase.repeatTotal || 1);
+            const repeat = repeatTotal > 1 ? ` · RIPETIZIONE ${Number(phase.repeatIndex || 1)}/${repeatTotal}` : "";
 
             detail += `
-
                 <div class="phase-history-card">
-
-                    <div class="phase-history-title">
-                        FASE ${index + 1}
-                        ·
-                        ${escapeHTML(
-                            phase.name || "—"
-                        )}
-                        ${
-                            phase.repeatTotal > 1
-                                ? ` · ${phase.repeatIndex}/${phase.repeatTotal}`
-                                : ""
-                        }
+                    <div class="phase-history-title">FASE ${index + 1} · ${escapeHTML(phase.name || "—")}${repeat}</div>
+                    <div class="history-stat phase-history-grid">
+                        <div class="metric"><div class="value">${formatTime(phaseTime)}</div><div class="label">TEMPO ATTIVO</div></div>
+                        <div class="metric"><div class="value">${phaseDistance.toFixed(3)}</div><div class="label">KM</div></div>
+                        <div class="metric"><div class="value">${phasePace}</div><div class="label">RITMO MEDIO</div></div>
+                        <div class="metric"><div class="value">${avgSpeed}</div><div class="label">VELOCITÀ MEDIA</div></div>
                     </div>
-
-                    <div class="history-stat">
-
-                        <div class="metric">
-                            <div class="value">
-                                ${formatTime(
-                                    Number(
-                                        phase.time ||
-                                        phase.elapsed ||
-                                        0
-                                    )
-                                )}
-                            </div>
-                            <div class="label">TEMPO</div>
-                        </div>
-
-                        <div class="metric">
-                            <div class="value">
-                                ${Number(
-                                    phase.distance || 0
-                                ).toFixed(3)}
-                            </div>
-                            <div class="label">KM</div>
-                        </div>
-
-                        <div class="metric">
-                            <div class="value">
-                                ${phasePace}
-                            </div>
-                            <div class="label">RITMO</div>
-                        </div>
-
+                    <div class="phase-extra-stats">
+                        <span>Tipo: <strong>${escapeHTML(phase.type || "—")}</strong></span>
+                        <span>Velocità massima: <strong>${maxSpeed}</strong></span>
+                        <span>Obiettivo: <strong>${escapeHTML(phase.targetType || "nessuno")}</strong></span>
                     </div>
-
-                    <div class="muted small" style="margin-top:8px;">
-                        Velocità media:
-                        ${
-                            Number.isFinite(phase.avgSpeed)
-                                ? Number(phase.avgSpeed).toFixed(2) + " km/h"
-                                : "—"
-                        }
-                        <br>
-                        Velocità massima:
-                        ${
-                            Number.isFinite(phase.maxSpeed)
-                                ? Number(phase.maxSpeed).toFixed(2) + " km/h"
-                                : "—"
-                        }
-                    </div>
-
                 </div>
             `;
         });
     }
 
     detail += `
-
         <div class="history-actions">
-
-            <button
-                onclick="
-                    event.stopPropagation();
-                    copyChatGPTActivityV68(
-                        ${JSON.stringify(activity).replace(/</g, "\\u003c")}
-                    )">
-                📋 COPIA DATI PER CHATGPT
+            <button onclick="event.stopPropagation(); copyChatGPTActivityV68(${JSON.stringify(activity).replace(/</g, "\\u003c")})">
+                📋 COPIA TUTTI I DATI PER CHATGPT
             </button>
-
         </div>
     `;
 
     panel.innerHTML = detail;
     panel.style.display = "block";
 }
+
 
 function deleteHistory(id) {
 
