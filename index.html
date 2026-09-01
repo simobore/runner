@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.31 -->
+<!-- RUNNER GPS v6.36 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -709,17 +709,223 @@ audio {
     .pace-menu-v629{max-height:70vh}
     .pace-menu-v629 .scroll{max-height:calc(70vh - 95px)}
 }
-</style><style id="runnerV631PacePickerCSS">
-.pace-menu-v631-backdrop{position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.28);display:flex;align-items:flex-end;justify-content:center}
-.pace-menu-v631{width:min(520px,100vw);max-height:min(78vh,650px);background:#fff;color:#111;border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.25);padding:12px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
-.pace-menu-v631 .grab{width:42px;height:4px;border-radius:5px;background:#bbb;margin:0 auto 10px}
-.pace-menu-v631 .title{font-size:17px;font-weight:800;text-align:center}.pace-menu-v631 .sub{font-size:12px;opacity:.62;text-align:center;margin:4px 0 10px}
-.pace-menu-v631 .scroll{overflow-y:auto;overscroll-behavior:contain;padding:3px 2px 8px}
-.pace-menu-v631 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.pace-menu-v631 .opt{min-height:48px;border:1px solid rgba(127,127,127,.2);border-radius:12px;background:#f7f7f7;font-size:15px;font-weight:700;cursor:pointer}
-.pace-menu-v631 .opt.selected{outline:2px solid currentColor;outline-offset:-2px}
-.pace-menu-v631 .manual{margin-top:7px;text-align:center;font-size:11px;opacity:.62}.pace-menu-v631 .close{margin-top:9px;width:100%;height:42px;border:0;border-radius:11px;font-weight:800;cursor:pointer}
-@media(max-width:420px){.pace-menu-v631 .grid{grid-template-columns:repeat(2,1fr)}}
+</style><style id="runnerV633PaceCSS">
+.pace-field-v633{
+ position:relative;display:flex;align-items:center;width:100%;
+ border:1px solid rgba(127,127,127,.35);border-radius:10px;
+ background:transparent;overflow:hidden;
+}
+.pace-field-v633 input{
+ flex:1;min-width:0;width:100%;border:0!important;outline:0!important;
+ background:transparent!important;border-radius:0!important;
+ padding-right:2px;
+}
+.pace-arrow-v633{
+ flex:0 0 42px;width:42px;height:42px;border:0;
+ border-left:1px solid rgba(127,127,127,.20);
+ background:transparent;cursor:pointer;font-size:15px;font-weight:800;
+}
+.pace-arrow-v633:active{transform:scale(.98)}
+.pace-dropdown-v633{
+ position:absolute;z-index:1000000;left:0;right:0;top:calc(100% + 5px);
+ max-height:280px;overflow-y:auto;
+ background:#fff;color:#111;border:1px solid rgba(0,0,0,.15);
+ border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.22);
+ padding:4px;
+}
+.pace-dropdown-v633 button{
+ width:100%;min-height:40px;border:0;border-radius:7px;
+ background:transparent;text-align:left;padding:7px 10px;
+ display:flex;align-items:center;justify-content:space-between;
+ cursor:pointer;font-size:14px;
+}
+.pace-dropdown-v633 button:hover{background:#eee}
+.pace-dropdown-v633 button.selected{font-weight:800;background:#e9e9e9}
+.pace-dropdown-v633 .scroll-tip{
+ padding:7px 10px;font-size:10px;opacity:.55;text-align:center;
+ border-top:1px solid rgba(0,0,0,.06);
+}
+</style><style id="runnerV634TargetPickerCSS">
+.target-control-v634{position:relative;width:100%}
+.target-control-button-v634{
+ width:100%;min-height:42px;padding:0 11px;
+ display:flex;align-items:center;justify-content:space-between;
+ border:1px solid rgba(127,127,127,.35);border-radius:10px;
+ background:transparent;color:inherit;cursor:pointer;text-align:left;
+}
+.target-control-text-v634{font-size:14px}
+.target-control-arrow-v634{font-size:15px;font-weight:800;opacity:.8}
+.pace-control-v634{display:flex;align-items:center;overflow:visible}
+.target-input-inner-v634{flex:1;min-width:0}
+.target-input-inner-v634 input{
+ width:100%;border:0!important;outline:0!important;
+ background:transparent!important;border-radius:0!important;
+}
+.pace-button-v634{width:42px;min-width:42px;border:0;border-left:1px solid rgba(127,127,127,.2);border-radius:0;justify-content:center;padding:0}
+.target-choice-menu-v634{
+ position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:1000000;
+ background:#fff;color:#111;border:1px solid rgba(0,0,0,.15);
+ border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.22);
+ max-height:280px;overflow-y:auto;padding:4px;
+}
+.target-choice-menu-v634 button{
+ width:100%;min-height:42px;border:0;border-radius:8px;background:transparent;
+ display:flex;align-items:center;justify-content:space-between;
+ padding:0 10px;cursor:pointer;font-size:14px;
+}
+.target-choice-menu-v634 button:hover,.target-choice-menu-v634 button.selected{background:#e9e9e9;font-weight:800}
+</style>
+<style id="runnerV635TargetVisualCSS">
+/* Target controls: deliberately match the existing phase select boxes. */
+.target-control-v634{
+ position:relative;
+ width:100%;
+ height:42px;
+ box-sizing:border-box;
+}
+.target-control-button-v634{
+ width:100%;
+ height:42px;
+ min-height:42px;
+ box-sizing:border-box;
+ padding:0 34px 0 12px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ border:1px solid rgba(127,127,127,.35);
+ border-radius:8px;
+ background:transparent;
+ color:inherit;
+ font:inherit;
+ line-height:1.2;
+ cursor:pointer;
+ text-align:left;
+ position:relative;
+}
+.target-control-arrow-v634{
+ position:absolute;
+ right:10px;
+ top:50%;
+ transform:translateY(-50%);
+ font-size:13px;
+ font-weight:700;
+ opacity:.7;
+ pointer-events:none;
+}
+.pace-control-v634{
+ display:flex;
+ align-items:center;
+ width:100%;
+ height:42px;
+ box-sizing:border-box;
+ border:1px solid rgba(127,127,127,.35);
+ border-radius:8px;
+ background:transparent;
+ overflow:hidden;
+}
+.target-input-inner-v634{
+ flex:1;
+ min-width:0;
+ height:100%;
+ display:flex;
+ align-items:center;
+}
+.target-input-inner-v634 input{
+ width:100%;
+ height:100%;
+ box-sizing:border-box;
+ border:0!important;
+ outline:0!important;
+ background:transparent!important;
+ border-radius:0!important;
+ padding:0 12px!important;
+ margin:0!important;
+ font:inherit;
+ color:inherit;
+}
+.pace-button-v634{
+ width:38px!important;
+ min-width:38px!important;
+ height:100%!important;
+ min-height:0!important;
+ padding:0!important;
+ border:0!important;
+ border-left:1px solid rgba(127,127,127,.22)!important;
+ border-radius:0!important;
+ background:transparent!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ position:relative!important;
+}
+.pace-button-v634 .target-control-arrow-v634{
+ position:static;
+ transform:none;
+}
+.target-choice-menu-v634{
+ position:absolute;
+ left:0;
+ right:0;
+ top:calc(100% + 4px);
+ z-index:1000000;
+ box-sizing:border-box;
+ background:#fff;
+ color:#111;
+ border:1px solid rgba(0,0,0,.15);
+ border-radius:8px;
+ box-shadow:0 8px 24px rgba(0,0,0,.22);
+ max-height:280px;
+ overflow-y:auto;
+ padding:4px;
+}
+.target-choice-menu-v634 button{
+ width:100%;
+ min-height:40px;
+ border:0;
+ border-radius:6px;
+ background:transparent;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 10px;
+ cursor:pointer;
+ font:inherit;
+ font-size:14px;
+ text-align:left;
+}
+.target-choice-menu-v634 button:hover,
+.target-choice-menu-v634 button.selected{
+ background:#e9e9e9;
+ font-weight:700;
+}
+</style>
+<style id="runnerV636TargetPickerCSS">
+.target-choice-menu-v634{
+ position:absolute!important;
+ left:0!important;right:0!important;top:calc(100% + 5px)!important;
+ z-index:2147483647!important;
+ background:#fff!important;color:#111!important;
+ border:1px solid rgba(0,0,0,.15)!important;
+ border-radius:8px!important;
+ box-shadow:0 8px 24px rgba(0,0,0,.25)!important;
+ max-height:300px!important;
+ overflow-y:auto!important;
+ -webkit-overflow-scrolling:touch!important;
+ padding:4px!important;
+}
+.target-option-v636{
+ width:100%!important;min-height:40px!important;
+ border:0!important;border-radius:6px!important;
+ background:transparent!important;color:#111!important;
+ display:flex!important;align-items:center!important;
+ justify-content:space-between!important;
+ padding:0 10px!important;cursor:pointer!important;
+ font-size:14px!important;text-align:left!important;
+}
+.target-option-v636:hover,.target-option-v636.selected{
+ background:#e9e9e9!important;font-weight:700!important;
+}
+.target-control-v634{position:relative!important;z-index:10}
 </style></head>
 
 <body>
@@ -1479,7 +1685,7 @@ audio {
     <div class="form-group">
         <label>Veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <div class="map-pace-input-v630"><input id="mapPaceFastV625" type="text" inputmode="text" autocomplete="off" placeholder="5:30"><button type="button" class="map-pace-arrow-v630" data-map-pace-id="mapPaceFastV625" aria-label="Scegli soglia ritmo">▼</button></div>
+            <div class="pace-field-v633"><input id="mapPaceFastV625" type="text" inputmode="text" autocomplete="off" placeholder="5:30"><button type="button" class="pace-arrow-v633" data-map-pace-id="mapPaceFastV625" aria-label="Apri elenco ritmi">⌄</button></div>
             <input id="mapColorFastV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1487,7 +1693,7 @@ audio {
     <div class="form-group">
         <label>Medio-veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <div class="map-pace-input-v630"><input id="mapPaceMediumFastV625" type="text" inputmode="text" autocomplete="off" placeholder="6:30"><button type="button" class="map-pace-arrow-v630" data-map-pace-id="mapPaceMediumFastV625" aria-label="Scegli soglia ritmo">▼</button></div>
+            <div class="pace-field-v633"><input id="mapPaceMediumFastV625" type="text" inputmode="text" autocomplete="off" placeholder="6:30"><button type="button" class="pace-arrow-v633" data-map-pace-id="mapPaceMediumFastV625" aria-label="Apri elenco ritmi">⌄</button></div>
             <input id="mapColorMediumFastV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1495,7 +1701,7 @@ audio {
     <div class="form-group">
         <label>Medio — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <div class="map-pace-input-v630"><input id="mapPaceMediumV625" type="text" inputmode="text" autocomplete="off" placeholder="7:30"><button type="button" class="map-pace-arrow-v630" data-map-pace-id="mapPaceMediumV625" aria-label="Scegli soglia ritmo">▼</button></div>
+            <div class="pace-field-v633"><input id="mapPaceMediumV625" type="text" inputmode="text" autocomplete="off" placeholder="7:30"><button type="button" class="pace-arrow-v633" data-map-pace-id="mapPaceMediumV625" aria-label="Apri elenco ritmi">⌄</button></div>
             <input id="mapColorMediumV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1503,7 +1709,7 @@ audio {
     <div class="form-group">
         <label>Lento — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <div class="map-pace-input-v630"><input id="mapPaceSlowV625" type="text" inputmode="text" autocomplete="off" placeholder="8:30"><button type="button" class="map-pace-arrow-v630" data-map-pace-id="mapPaceSlowV625" aria-label="Scegli soglia ritmo">▼</button></div>
+            <div class="pace-field-v633"><input id="mapPaceSlowV625" type="text" inputmode="text" autocomplete="off" placeholder="8:30"><button type="button" class="pace-arrow-v633" data-map-pace-id="mapPaceSlowV625" aria-label="Apri elenco ritmi">⌄</button></div>
             <input id="mapColorSlowV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -2119,29 +2325,12 @@ function renderPhaseEditors() {
                             Target
                         </label>
 
-                        <select
-                            onchange="
-                                updatePhase(
-                                    ${index},
-                                    'targetType',
-                                    this.value
-                                );
-                                renderPhaseEditors();
-                            ">
-
-                            <option
-                                value="pace"
-                                ${phase.targetType === "pace" ? "selected" : ""}>
-                                Ritmo
-                            </option>
-
-                            <option
-                                value="none"
-                                ${phase.targetType === "none" ? "selected" : ""}>
-                                Nessuno
-                            </option>
-
-                        </select>
+                        <div class="target-control-v634">
+<button type="button" class="target-control-button-v634" data-target-choice="type">
+<span class="target-control-text-v634">${phase.targetType === "pace" ? "Ritmo" : "Nessuno"}</span>
+<span class="target-control-arrow-v634">⌄</span>
+</button>
+</div>
 
                     </div>
 
@@ -2178,25 +2367,27 @@ function renderPhaseEditors() {
 
                         <div class="form-group">
 <label>Ritmo più veloce (min/km)</label>
-<div class="pace-input-v628">
-<input type="text" inputmode="text" autocomplete="off" placeholder="5:15"
+<div class="target-control-v634 pace-control-v634">
+<div class="target-input-inner-v634"><input type="text" inputmode="text" autocomplete="off" placeholder="5:15"
 value="${secondsToPace(phase.targetMin)}"
-onchange="updatePhase(${index}, 'targetMin', paceToSeconds(this.value))">
-<button type="button" class="pace-arrow-v628" data-pace-picker-v628="min" aria-label="Ritmi consigliati">▼</button>
+onchange="updatePhase(${index}, 'targetMin', paceToSeconds(this.value))"></div>
+<button type="button" class="target-control-button-v634 pace-button-v634" data-target-choice="min">
+<span class="target-control-arrow-v634">⌄</span>
+</button>
 </div>
-
-                        </div>
+</div>
 
                         <div class="form-group">
 <label>Ritmo più lento (min/km)</label>
-<div class="pace-input-v628">
-<input type="text" inputmode="text" autocomplete="off" placeholder="5:30"
+<div class="target-control-v634 pace-control-v634">
+<div class="target-input-inner-v634"><input type="text" inputmode="text" autocomplete="off" placeholder="5:30"
 value="${secondsToPace(phase.targetMax)}"
-onchange="updatePhase(${index}, 'targetMax', paceToSeconds(this.value))">
-<button type="button" class="pace-arrow-v628" data-pace-picker-v628="max" aria-label="Ritmi consigliati">▼</button>
+onchange="updatePhase(${index}, 'targetMax', paceToSeconds(this.value))"></div>
+<button type="button" class="target-control-button-v634 pace-button-v634" data-target-choice="max">
+<span class="target-control-arrow-v634">⌄</span>
+</button>
 </div>
-
-                        </div>
+</div>
 
                     </div>
                     `
@@ -7976,29 +8167,140 @@ document.addEventListener("visibilitychange", function () {
     window.addEventListener("resize",close);
     window.addEventListener("scroll",close,true);
 })();
-</script><script id="runnerV631PacePicker">
+</script><script id="runnerV633PacePicker">
 (function(){
- const P=[];for(let s=180;s<=1200;s+=30)P.push(Math.floor(s/60)+":"+String(s%60).padStart(2,"0"));
- function close(){document.querySelectorAll(".pace-menu-v631-backdrop").forEach(x=>x.remove())}
- function open(btn){
-  close();
-  const input=btn.closest(".map-pace-input-v630")?.querySelector("input");if(!input)return;
-  const back=document.createElement("div");back.className="pace-menu-v631-backdrop";
-  const sheet=document.createElement("div");sheet.className="pace-menu-v631";
-  const cur=String(input.value||"").trim();
-  sheet.innerHTML='<div class="grab"></div><div class="title">Soglia ritmo</div><div class="sub">Scegli il ritmo desiderato · scorri per vedere tutti i valori</div><div class="scroll"><div class="grid">'+P.map(v=>'<button type="button" class="opt'+(v===cur?" selected":"")+'" data-v="'+v+'">'+v+' /km</button>').join("")+'</div></div><div class="manual">✏️ Per un valore personalizzato, scrivilo direttamente nel campo.</div><button type="button" class="close">Chiudi</button>';
-  back.appendChild(sheet);document.body.appendChild(back);
-  sheet.querySelectorAll("[data-v]").forEach(o=>o.addEventListener("click",function(){
-   input.value=o.dataset.v;close();input.dispatchEvent(new Event("change",{bubbles:true}));
-  }));
-  sheet.querySelector(".close").addEventListener("click",close);
-  back.addEventListener("click",e=>{if(e.target===back)close()});
-  const active=sheet.querySelector(".selected");if(active)setTimeout(()=>active.scrollIntoView({block:"center"}),30);
+ const VALUES=[];
+ for(let s=180;s<=1200;s+=30) VALUES.push(Math.floor(s/60)+":"+String(s%60).padStart(2,"0"));
+
+ function closeAll(){
+   document.querySelectorAll(".pace-dropdown-v633").forEach(x=>x.remove());
  }
+
+ function open(btn){
+   closeAll();
+   const field=btn.closest(".pace-field-v633");
+   const input=field&&field.querySelector("input");
+   if(!input)return;
+
+   const menu=document.createElement("div");
+   menu.className="pace-dropdown-v633";
+   const current=String(input.value||"").trim();
+
+   menu.innerHTML=VALUES.map(v=>
+     '<button type="button" class="'+(v===current?'selected':'')+'" data-v="'+v+'">'+
+     '<span>'+v+' /km</span><span>'+(v===current?'✓':'')+'</span></button>'
+   ).join("")+'<div class="scroll-tip">Scorri per vedere tutti i ritmi · puoi anche scrivere manualmente</div>';
+
+   field.appendChild(menu);
+
+   menu.querySelectorAll("[data-v]").forEach(function(opt){
+     opt.addEventListener("click",function(e){
+       e.preventDefault();e.stopPropagation();
+       // Only set the value. No change/input event, so selecting a preset
+       // cannot trigger the old freeze path.
+       input.value=opt.dataset.v;
+       closeAll();
+       input.focus();
+       try{input.setSelectionRange(input.value.length,input.value.length)}catch(_){}
+     });
+   });
+
+   const selected=menu.querySelector(".selected");
+   if(selected)setTimeout(()=>selected.scrollIntoView({block:"center"}),0);
+ }
+
  document.addEventListener("click",function(e){
-  const btn=e.target.closest(".map-pace-arrow-v630");
-  if(btn){e.preventDefault();e.stopPropagation();open(btn)}
+   const btn=e.target.closest(".pace-arrow-v633");
+   if(btn){e.preventDefault();e.stopPropagation();open(btn);return}
+   if(!e.target.closest(".pace-field-v633"))closeAll();
  });
+})();
+</script><script id="runnerV636TargetPickerJS">
+(function(){
+ const pace=[];
+ for(let s=180;s<=1200;s+=30)
+   pace.push(Math.floor(s/60)+":"+String(s%60).padStart(2,"0"));
+
+ function closeMenus(){
+   document.querySelectorAll(".target-choice-menu-v634").forEach(function(x){x.remove();});
+ }
+
+ function makeOption(label,value,current,onSelect){
+   const b=document.createElement("button");
+   b.type="button";
+   b.className="target-option-v636"+(value===current?" selected":"");
+   b.innerHTML="<span>"+label+"</span><span>"+(value===current?"✓":"")+"</span>";
+   b.addEventListener("click",function(e){
+     e.preventDefault();
+     e.stopPropagation();
+     onSelect(value);
+   });
+   return b;
+ }
+
+ function open(button){
+   closeMenus();
+   const root=button.closest(".target-control-v634");
+   if(!root)return;
+
+   const kind=button.getAttribute("data-target-choice");
+   const menu=document.createElement("div");
+   menu.className="target-choice-menu-v634";
+
+   if(kind==="type"){
+     const current=(root.querySelector(".target-control-text-v634")||{}).textContent?.trim()||"";
+     const options=[
+       ["Riscaldamento","warmup"],
+       ["Corsa","run"],
+       ["Recupero","recovery"],
+       ["Defaticamento","cooldown"],
+       ["Nessuno","none"]
+     ];
+     options.forEach(function(o){
+       menu.appendChild(makeOption(o[0],o[1],current==="Ritmo"?"":current,function(value){
+         // The phase index is encoded in the button's nearest phase editor.
+         const editor=button.closest("[data-phase-index]");
+         const idx=editor ? Number(editor.getAttribute("data-phase-index")) :
+                   (typeof index!=="undefined"?index:0);
+         if(typeof updatePhase==="function"){
+           updatePhase(idx,"type",value);
+         }
+         closeMenus();
+       }));
+     });
+   } else {
+     const input=root.querySelector("input");
+     if(!input)return;
+     const current=String(input.value||"").trim();
+     pace.forEach(function(v){
+       menu.appendChild(makeOption(v+" /km",v,current,function(value){
+         // Deliberately update only the visible input. The existing onchange
+         // remains responsible for persistence when the field is committed.
+         input.value=value;
+         closeMenus();
+         input.focus();
+       }));
+     });
+   }
+
+   root.appendChild(menu);
+
+   // Keep the selected item visible in the scrollable list.
+   const selected=menu.querySelector(".selected");
+   if(selected) selected.scrollIntoView({block:"center"});
+ }
+
+ // Direct listener on the actual target buttons.
+ document.addEventListener("click",function(e){
+   const button=e.target.closest(".target-control-button-v634");
+   if(button && button.hasAttribute("data-target-choice")){
+     e.preventDefault();
+     e.stopPropagation();
+     open(button);
+     return;
+   }
+   if(!e.target.closest(".target-choice-menu-v634")) closeMenus();
+ },true);
 })();
 </script></body>
 </html>
