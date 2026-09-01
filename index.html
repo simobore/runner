@@ -1,4 +1,4 @@
-<!-- RUNNER GPS v6.24 -->
+<!-- RUNNER GPS v6.26 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -1409,43 +1409,43 @@ audio {
     <div class="form-group">
         <label>Veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceFastV624" type="text" inputmode="decimal" placeholder="5:30">
-            <input id="mapColorFastV624" type="color" style="width:48px;height:38px;">
+            <input id="mapPaceFastV625" type="text" inputmode="decimal" placeholder="5:30">
+            <input id="mapColorFastV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
 
     <div class="form-group">
         <label>Medio-veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceMediumFastV624" type="text" inputmode="decimal" placeholder="6:30">
-            <input id="mapColorMediumFastV624" type="color" style="width:48px;height:38px;">
+            <input id="mapPaceMediumFastV625" type="text" inputmode="decimal" placeholder="6:30">
+            <input id="mapColorMediumFastV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
 
     <div class="form-group">
         <label>Medio — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceMediumV624" type="text" inputmode="decimal" placeholder="7:30">
-            <input id="mapColorMediumV624" type="color" style="width:48px;height:38px;">
+            <input id="mapPaceMediumV625" type="text" inputmode="decimal" placeholder="7:30">
+            <input id="mapColorMediumV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
 
     <div class="form-group">
         <label>Lento — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceSlowV624" type="text" inputmode="decimal" placeholder="8:30">
-            <input id="mapColorSlowV624" type="color" style="width:48px;height:38px;">
+            <input id="mapPaceSlowV625" type="text" inputmode="decimal" placeholder="8:30">
+            <input id="mapColorSlowV625" type="color" style="width:48px;height:38px;">
         </div>
     </div>
 
     <div class="form-group">
         <label>Molto lento — oltre l'ultima soglia</label>
-        <input id="mapColorVerySlowV624" type="color" style="width:48px;height:38px;">
+        <input id="mapColorVerySlowV625" type="color" style="width:48px;height:38px;">
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="primary" type="button" onclick="saveMapColorSettingsV624()">💾 SALVA COLORI MAPPA</button>
-        <button class="secondary" type="button" onclick="resetMapColorSettingsV624()">↩️ RIPRISTINA</button>
+        <button class="primary" type="button" onclick="saveMapColorSettingsV625()">💾 SALVA COLORI MAPPA</button>
+        <button class="secondary" type="button" onclick="resetMapColorSettingsV625()">↩️ RIPRISTINA</button>
     </div>
 
     <div style="font-size:12px;opacity:.7;margin-top:10px;">
@@ -1519,7 +1519,7 @@ audio {
 </div>
 
 
-<datalist id="runnerPaceSuggestionsV624">
+<datalist id="runnerPaceSuggestionsV625">
 <option value="3:00"></option><option value="3:30"></option>
 <option value="4:00"></option><option value="4:30"></option>
 <option value="5:00"></option><option value="5:30"></option>
@@ -2115,7 +2115,7 @@ function renderPhaseEditors() {
 
                             <input
                                 type="text"
-                                list="runnerPaceSuggestionsV624"
+                                list="runnerPaceSuggestionsV625"
                                 placeholder="5:15"
                                 value="${secondsToPace(phase.targetMin)}"
                                 onchange="
@@ -2136,7 +2136,7 @@ function renderPhaseEditors() {
 
                             <input
                                 type="text"
-                                list="runnerPaceSuggestionsV624"
+                                list="runnerPaceSuggestionsV625"
                                 placeholder="5:30"
                                 value="${secondsToPace(phase.targetMax)}"
                                 onchange="
@@ -2160,6 +2160,10 @@ function renderPhaseEditors() {
 
         }
     );
+
+    if (typeof runnerV625AttachAll === "function") {
+        runnerV625AttachAll(container);
+    }
 
 }
 
@@ -7775,44 +7779,144 @@ document.addEventListener("visibilitychange", function () {
         v=Math.round(Number(v)||0);
         return Math.floor(v/60)+":"+String(v%60).padStart(2,"0");
     }
-    window.RUNNER_V624_MAP_SETTINGS={get:read};
+    window.RUNNER_V625_MAP_SETTINGS={get:read};
 
-    window.saveMapColorSettingsV624=function(){
-        const f=sec(document.getElementById("mapPaceFastV624").value);
-        const mf=sec(document.getElementById("mapPaceMediumFastV624").value);
-        const m=sec(document.getElementById("mapPaceMediumV624").value);
-        const sl=sec(document.getElementById("mapPaceSlowV624").value);
+    window.saveMapColorSettingsV625=function(){
+        const f=sec(document.getElementById("mapPaceFastV625").value);
+        const mf=sec(document.getElementById("mapPaceMediumFastV625").value);
+        const m=sec(document.getElementById("mapPaceMediumV625").value);
+        const sl=sec(document.getElementById("mapPaceSlowV625").value);
         if(![f,mf,m,sl].every(Number.isFinite)||!(f<mf&&mf<m&&m<sl)){
             alert("Le soglie devono essere valide e in ordine crescente.");return;
         }
         localStorage.setItem(KEY,JSON.stringify({
             fastMax:f,mediumFastMax:mf,mediumMax:m,slowMax:sl,
             colors:{
-                fast:document.getElementById("mapColorFastV624").value,
-                mediumFast:document.getElementById("mapColorMediumFastV624").value,
-                medium:document.getElementById("mapColorMediumV624").value,
-                slow:document.getElementById("mapColorSlowV624").value,
-                verySlow:document.getElementById("mapColorVerySlowV624").value
+                fast:document.getElementById("mapColorFastV625").value,
+                mediumFast:document.getElementById("mapColorMediumFastV625").value,
+                medium:document.getElementById("mapColorMediumV625").value,
+                slow:document.getElementById("mapColorSlowV625").value,
+                verySlow:document.getElementById("mapColorVerySlowV625").value
             }
         }));
         if(typeof showToast==="function")showToast("Colori mappa salvati");
     };
-    window.resetMapColorSettingsV624=function(){
+    window.resetMapColorSettingsV625=function(){
         localStorage.setItem(KEY,JSON.stringify(DEF));
         fill();
         if(typeof showToast==="function")showToast("Colori mappa ripristinati");
     };
     function fill(){
         const s=read();
-        [["mapPaceFastV624",s.fastMax],["mapPaceMediumFastV624",s.mediumFastMax],
-         ["mapPaceMediumV624",s.mediumMax],["mapPaceSlowV624",s.slowMax]]
+        [["mapPaceFastV625",s.fastMax],["mapPaceMediumFastV625",s.mediumFastMax],
+         ["mapPaceMediumV625",s.mediumMax],["mapPaceSlowV625",s.slowMax]]
         .forEach(function(x){const e=document.getElementById(x[0]);if(e)e.value=clock(x[1]);});
-        [["mapColorFastV624",s.colors.fast],["mapColorMediumFastV624",s.colors.mediumFast],
-         ["mapColorMediumV624",s.colors.medium],["mapColorSlowV624",s.colors.slow],
-         ["mapColorVerySlowV624",s.colors.verySlow]]
+        [["mapColorFastV625",s.colors.fast],["mapColorMediumFastV625",s.colors.mediumFast],
+         ["mapColorMediumV625",s.colors.medium],["mapColorSlowV625",s.colors.slow],
+         ["mapColorVerySlowV625",s.colors.verySlow]]
         .forEach(function(x){const e=document.getElementById(x[0]);if(e)e.value=x[1];});
     }
     window.addEventListener("load",fill);
+})();
+</script>
+
+<style id="runnerV626PacePickerStyles">
+.runner-v626-picker{
+ position:fixed;z-index:999999;background:#fff;color:#111;
+ border:1px solid #bbb;border-radius:12px;padding:8px;
+ box-shadow:0 10px 30px rgba(0,0,0,.25);min-width:225px;
+}
+.runner-v626-picker-title{font-size:11px;opacity:.65;padding:4px 7px 8px}
+.runner-v626-picker button{
+ display:flex;justify-content:space-between;align-items:center;
+ width:100%;padding:9px 8px;border:0;border-radius:8px;
+ background:transparent;cursor:pointer;text-align:left;
+}
+.runner-v626-picker button:hover{background:#eee}
+.runner-v626-picker button span{font-size:11px;opacity:.65}
+.runner-v626-picker-custom{font-size:11px;opacity:.65;padding:8px 7px 3px}
+</style>
+<script id="runnerV626PacePicker">
+(function(){
+ const values=[
+  ["3:00","molto veloce"],["3:30","molto veloce"],
+  ["4:00","veloce"],["4:30","veloce"],
+  ["5:00","sostenuto"],["5:30","sostenuto"],
+  ["6:00","moderato"],["6:30","moderato"],
+  ["7:00","tranquillo"],["7:30","tranquillo"],
+  ["8:00","facile"],["8:30","facile"],["9:00","molto facile"]
+ ];
+
+ function close(){
+   document.querySelectorAll(".runner-v626-picker").forEach(function(x){x.remove()});
+ }
+
+ function isPaceField(el){
+   return el instanceof HTMLInputElement &&
+          el.type==="text" &&
+          el.closest(".phase-editor") &&
+          (el.getAttribute("list")==="runnerPaceSuggestionsV625" ||
+           /Ritmo più veloce|Ritmo più lento/i.test(el.closest(".form-group")?.innerText||""));
+ }
+
+ function open(input){
+   close();
+   const box=document.createElement("div");
+   box.className="runner-v626-picker";
+   box.innerHTML=
+    '<div class="runner-v626-picker-title">Ritmi consigliati — puoi anche scrivere il tuo</div>'+
+    values.map(function(v){
+      return '<button type="button" data-pace="'+v[0]+'"><strong>'+v[0]+' /km</strong><span>'+v[1]+'</span></button>';
+    }).join("")+
+    '<div class="runner-v626-picker-custom">✏️ Personalizzato: scrivilo direttamente nel campo</div>';
+
+   document.body.appendChild(box);
+   const r=input.getBoundingClientRect();
+   box.style.left=Math.max(8,Math.min(r.left,window.innerWidth-245))+"px";
+   box.style.top=Math.max(8,Math.min(r.bottom+5,window.innerHeight-430))+"px";
+
+   box.querySelectorAll("[data-pace]").forEach(function(btn){
+     btn.addEventListener("click",function(ev){
+       ev.preventDefault();ev.stopPropagation();
+       input.value=btn.getAttribute("data-pace");
+       input.dispatchEvent(new Event("change",{bubbles:true}));
+       close();
+       input.focus();
+     });
+   });
+ }
+
+ document.addEventListener("pointerdown",function(e){
+   const field=isPaceField(e.target);
+   if(field){
+     e.preventDefault();
+     open(field);
+     return;
+   }
+   if(!e.target.closest(".runner-v626-picker")) close();
+ },true);
+
+ window.runnerV625AttachAll=function(){};
+})();
+</script>
+
+<script id="runnerV625MapSettingsLogic">
+(function(){
+ const KEY="runner_map_color_settings_v625";
+ const DEF={fastMax:330,mediumFastMax:390,mediumMax:450,slowMax:510,colors:{fast:"#22c55e",mediumFast:"#84cc16",medium:"#eab308",slow:"#f97316",verySlow:"#ef4444"}};
+ function get(){try{const x=JSON.parse(localStorage.getItem(KEY)||"null");return {...DEF,...(x||{}),colors:{...DEF.colors,...((x&&x.colors)||{})}}}catch(e){return DEF}}
+ function sec(v){const s=String(v||"").trim();if(/^\d+:\d{1,2}$/.test(s)){const a=s.split(":").map(Number);return a[0]*60+a[1]}const n=Number(s);return Number.isFinite(n)?n*60:NaN}
+ function clock(v){v=Math.round(v);return Math.floor(v/60)+":"+String(v%60).padStart(2,"0")}
+ function fill(){const s=get();[["mapPaceFastV625",s.fastMax],["mapPaceMediumFastV625",s.mediumFastMax],["mapPaceMediumV625",s.mediumMax],["mapPaceSlowV625",s.slowMax]].forEach(x=>{const e=document.getElementById(x[0]);if(e)e.value=clock(x[1])});[["mapColorFastV625",s.colors.fast],["mapColorMediumFastV625",s.colors.mediumFast],["mapColorMediumV625",s.colors.medium],["mapColorSlowV625",s.colors.slow],["mapColorVerySlowV625",s.colors.verySlow]].forEach(x=>{const e=document.getElementById(x[0]);if(e)e.value=x[1]})}
+ window.RUNNER_V625_MAP_SETTINGS={get:get};
+ window.saveMapColorSettingsV625=function(){
+   const f=sec(document.getElementById("mapPaceFastV625").value),mf=sec(document.getElementById("mapPaceMediumFastV625").value),m=sec(document.getElementById("mapPaceMediumV625").value),sl=sec(document.getElementById("mapPaceSlowV625").value);
+   if(![f,mf,m,sl].every(Number.isFinite)||!(f<mf&&mf<m&&m<sl)){alert("Le soglie devono essere valide e crescenti.");return}
+   localStorage.setItem(KEY,JSON.stringify({fastMax:f,mediumFastMax:mf,mediumMax:m,slowMax:sl,colors:{fast:document.getElementById("mapColorFastV625").value,mediumFast:document.getElementById("mapColorMediumFastV625").value,medium:document.getElementById("mapColorMediumV625").value,slow:document.getElementById("mapColorSlowV625").value,verySlow:document.getElementById("mapColorVerySlowV625").value}}));
+   if(typeof showToast==="function")showToast("Colori mappa salvati");
+ };
+ window.resetMapColorSettingsV625=function(){localStorage.setItem(KEY,JSON.stringify(DEF));fill()};
+ window.addEventListener("load",fill);
 })();
 </script>
 </body>
