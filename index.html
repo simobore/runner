@@ -1409,7 +1409,7 @@ audio {
     <div class="form-group">
         <label>Veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceFastV624" type="text" placeholder="5:30" inputmode="text">
+            <input id="mapPaceFastV624" type="text" inputmode="text" autocomplete="off" placeholder="5:30">
             <input id="mapColorFastV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1417,7 +1417,7 @@ audio {
     <div class="form-group">
         <label>Medio-veloce — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceMediumFastV624" type="text" placeholder="6:30" inputmode="text">
+            <input id="mapPaceMediumFastV624" type="text" inputmode="text" autocomplete="off" placeholder="6:30">
             <input id="mapColorMediumFastV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1425,7 +1425,7 @@ audio {
     <div class="form-group">
         <label>Medio — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceMediumV624" type="text" placeholder="7:30" inputmode="text">
+            <input id="mapPaceMediumV624" type="text" inputmode="text" autocomplete="off" placeholder="7:30">
             <input id="mapColorMediumV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -1433,7 +1433,7 @@ audio {
     <div class="form-group">
         <label>Lento — sotto</label>
         <div style="display:flex;gap:8px;align-items:center;">
-            <input id="mapPaceSlowV624" type="text" placeholder="8:30" inputmode="text">
+            <input id="mapPaceSlowV624" type="text" inputmode="text" autocomplete="off" placeholder="8:30">
             <input id="mapColorSlowV624" type="color" style="width:48px;height:38px;">
         </div>
     </div>
@@ -7813,36 +7813,6 @@ document.addEventListener("visibilitychange", function () {
         .forEach(function(x){const e=document.getElementById(x[0]);if(e)e.value=x[1];});
     }
     window.addEventListener("load",fill);
-})();
-</script>
-
-<script id="mapPaceTextInputV2">
-(function(){
-    const ids = [
-        "mapPaceFastV624",
-        "mapPaceMediumFastV624",
-        "mapPaceMediumV624",
-        "mapPaceSlowV624"
-    ];
-
-    function init(){
-        ids.forEach(function(id){
-            const el = document.getElementById(id);
-            if(!el || el.dataset.mapPaceV2Ready === "1") return;
-            el.dataset.mapPaceV2Ready = "1";
-            el.type = "text";
-            el.inputMode = "text";
-            el.addEventListener("input", function(){
-                this.value = this.value.replace(/\s+/g, "");
-            });
-        });
-    }
-
-    if(document.readyState === "loading"){
-        document.addEventListener("DOMContentLoaded", init);
-    }else{
-        init();
-    }
 })();
 </script>
 
