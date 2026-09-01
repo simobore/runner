@@ -6822,20 +6822,23 @@ function clearAllData() {
 function updateActiveRunRecoveryV610() {
 
     /*
-     * v6.18:
-     * "TORNA ALLA CORSA" è globale e fixed.
-     * Non appartiene a Storico: segue l'utente in ogni schermata.
+     * Mostra "TORNA ALLA CORSA" solo quando una corsa è attiva
+     * e l'utente si trova in una schermata diversa da CORSA.
+     * Nella schermata CORSA il pulsante viene nascosto perché occupa spazio.
      */
+
+    const runScreen = document.getElementById("run");
+    const isRunScreenActive = !!(runScreen && runScreen.classList.contains("active"));
 
     let button =
         document.getElementById(
             "globalActiveRunRecoveryV611"
         );
 
-    if (!running) {
+    if (!running || isRunScreenActive) {
 
         if (button) {
-            button.remove();
+            button.style.display = "none";
         }
 
         return;
@@ -6887,7 +6890,7 @@ function updateActiveRunRecoveryV610() {
         document.body.appendChild(button);
     }
 
-    button.style.display = "block";
+    button.style.display = isRunScreenActive ? "none" : "block";
 }
 
 function renderHistory() {
