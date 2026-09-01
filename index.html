@@ -6821,10 +6821,8 @@ function clearAllData() {
 
 function updateActiveRunRecoveryV610() {
 
-    /*
-     * Mostra "TORNA ALLA CORSA" in tutte le schermate mentre una corsa
-     * è attiva, MAI nella schermata effettiva CORSA.
-     */
+    // Mostra il pulsante solo durante una corsa attiva e solo
+    // quando l'utente si trova in una schermata diversa da "run".
     const activeScreen =
         document.querySelector(".screen.active");
 
@@ -6838,43 +6836,26 @@ function updateActiveRunRecoveryV610() {
         );
 
     if (!running || isRunScreen) {
-
-        if (button) {
-            button.style.display = "none";
-        }
-
+        if (button) button.remove();
         return;
     }
 
     if (!button) {
+        button = document.createElement("button");
+        button.id = "globalActiveRunRecoveryV611";
+        button.type = "button";
+        button.textContent = "🏃 TORNA ALLA CORSA";
 
-        button =
-            document.createElement("button");
-
-        button.id =
-            "globalActiveRunRecoveryV611";
-
-        button.type =
-            "button";
-
-        button.textContent =
-            "🏃 TORNA ALLA CORSA";
-
-        button.onclick =
-            function(event) {
-
-                event.preventDefault();
-                event.stopPropagation();
-
-                showScreen("run");
-            };
+        button.onclick = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            showScreen("run");
+        };
 
         button.style.cssText = `
             position: fixed;
             left: 50%;
-            bottom: calc(
-                76px + env(safe-area-inset-bottom, 0px)
-            );
+            bottom: calc(76px + env(safe-area-inset-bottom, 0px));
             transform: translateX(-50%);
             z-index: 99999;
             width: min(calc(100vw - 32px), 360px);
